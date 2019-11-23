@@ -1,9 +1,10 @@
 package log
 
 import (
+	"testing"
+
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestInit(t *testing.T) {
