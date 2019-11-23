@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/sharovik/devbot/internal/dto"
-	"github.com/sharovik/devbot/internal/log"
-	"golang.org/x/net/websocket"
 	"io/ioutil"
 	"net/http"
 	"sync/atomic"
+
+	"github.com/sharovik/devbot/internal/dto"
+	"github.com/sharovik/devbot/internal/log"
+	"golang.org/x/net/websocket"
 )
 
 //SlackClient client for slack api calls

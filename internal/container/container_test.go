@@ -1,9 +1,10 @@
 package container
 
 import (
+	"testing"
+
 	"github.com/sharovik/devbot/internal/log"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestMain_Init(t *testing.T) {

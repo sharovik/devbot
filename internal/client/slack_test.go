@@ -1,14 +1,15 @@
 package client_test
 
 import (
+	"net/http"
+	"testing"
+
 	mockhttp "github.com/karupanerura/go-mock-http-response"
 	"github.com/sharovik/devbot/internal/client"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/sharovik/devbot/test"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"testing"
 )
 
 var slackClient *client.SlackClient

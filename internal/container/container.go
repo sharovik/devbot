@@ -2,11 +2,12 @@ package container
 
 import (
 	"crypto/tls"
+	"net/http"
+	"time"
+
 	"github.com/sharovik/devbot/internal/client"
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/log"
-	"net/http"
-	"time"
 )
 
 //Main container object
