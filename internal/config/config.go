@@ -20,9 +20,10 @@ type SlackConfig struct {
 
 //Config configuration object
 type Config struct {
-	appEnv      string
-	SlackConfig SlackConfig
-	initialised bool
+	appEnv        string
+	AppDictionary string
+	SlackConfig   SlackConfig
+	initialised   bool
 }
 
 //cfg variable which contains initialised Config
@@ -36,8 +37,18 @@ const (
 
 	environmentTesting = "testing"
 
+	appEnv                   = "APP_ENV"
+	appDictionary            = "APP_DICTIONARY"
+	SlackEnvUserID           = "SLACK_USER_ID"
+	SlackEnvMainChannelID    = "SLACK_MAIN_CHANNEL_ID"
+	SlackEnvMainChannelAlias = "SLACK_MAIN_CHANNEL_ALIAS"
+	SlackEnvBotName          = "SLACK_BOT_NAME"
+	SlackEnvBaseUrl          = "SLACK_BASE_URL"
+	SlackEnvOAuthToken       = "SLACK_OAUTH_TOKEN"
+
 	defaultMainChannelAlias = "general"
 	defaultBotName          = "devbot"
+	defaultAppDictionary    = "slack"
 )
 
 //Init initialise configuration for this project
@@ -56,23 +67,29 @@ func Init() Config {
 		}
 
 		mainChannelAlias := defaultMainChannelAlias
-		if os.Getenv("SLACK_MAIN_CHANNEL_ALIAS") != "" {
-			mainChannelAlias = os.Getenv("SLACK_MAIN_CHANNEL_ALIAS")
+		if os.Getenv(SlackEnvMainChannelAlias) != "" {
+			mainChannelAlias = os.Getenv(SlackEnvMainChannelAlias)
 		}
 
 		BotName := defaultBotName
-		if os.Getenv("SLACK_BOT_NAME") != "" {
-			mainChannelAlias = os.Getenv("SLACK_BOT_NAME")
+		if os.Getenv(SlackEnvBotName) != "" {
+			mainChannelAlias = os.Getenv(SlackEnvBotName)
+		}
+
+		AppDictionary := defaultAppDictionary
+		if os.Getenv(appDictionary) != "" {
+			mainChannelAlias = os.Getenv(appDictionary)
 		}
 
 		cfg = Config{
-			appEnv: os.Getenv("APP_ENV"),
+			appEnv: os.Getenv(appEnv),
+			AppDictionary: AppDictionary,
 			SlackConfig: SlackConfig{
-				BaseURL:          os.Getenv("SLACK_BASE_URL"),
-				OAuthToken:       os.Getenv("SLACK_OAUTH_TOKEN"),
+				BaseURL:          os.Getenv(SlackEnvBaseUrl),
+				OAuthToken:       os.Getenv(SlackEnvOAuthToken),
 				MainChannelAlias: mainChannelAlias,
-				MainChannelID:    os.Getenv("SLACK_MAIN_CHANNEL_ID"),
-				BotUserID:        os.Getenv("SLACK_USER_ID"),
+				MainChannelID:    os.Getenv(SlackEnvMainChannelID),
+				BotUserID:        os.Getenv(SlackEnvUserID),
 				BotName:          BotName,
 			},
 			initialised: true,

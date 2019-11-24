@@ -2,6 +2,8 @@ BIN_DIR=bin
 CMD:=$(patsubst cmd/%/main.go,%,$(shell find cmd -type f -name 'main.go'))
 LDFLAGS=-ldflags="-s -w"
 
+DICTIONARY_SCRIPT_DIR=scripts/dictionary-loader
+
 build: $(addprefix $(BIN_DIR)/,$(CMD))
 
 vendor:
@@ -19,5 +21,8 @@ imports:
 
 format:
 	go fmt $(go list ./... | grep -v /vendor/)
+
+build-dictionary-script:
+	go build -o $(DICTIONARY_SCRIPT_DIR)/dictionary-loader $(DICTIONARY_SCRIPT_DIR)/main.go
 
 .PHONY: vendor build

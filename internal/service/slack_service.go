@@ -3,18 +3,12 @@ package service
 import (
 	"encoding/json"
 	"errors"
+	"github.com/sharovik/devbot/internal/config"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/sharovik/devbot/internal/log"
 	"golang.org/x/net/websocket"
-)
-
-const (
-	slackEnvUserID        = "SLACK_USER_ID"
-	slackEnvMainChannelID = "SLACK_MAIN_CHANNEL_ID"
-
-	eventTypeMessage = "message"
 )
 
 func fetchMainChannelID() error {
@@ -33,7 +27,7 @@ func fetchMainChannelID() error {
 	}
 
 	if container.C.Config.SlackConfig.MainChannelID == "" {
-		if err := container.C.Config.SetToEnv(slackEnvMainChannelID, generalChannel.ID, true); err != nil {
+		if err := container.C.Config.SetToEnv(config.SlackEnvMainChannelID, generalChannel.ID, true); err != nil {
 			log.Logger().AddError(err).Str("channel_id", generalChannel.ID).Msg("Failed to save slackEnvMainChannelID in .env file")
 			return err
 		}
@@ -60,7 +54,7 @@ func fetchBotUserID() error {
 	}
 
 	if container.C.Config.SlackConfig.BotUserID == "" {
-		if err := container.C.Config.SetToEnv(slackEnvUserID, botMember.ID, true); err != nil {
+		if err := container.C.Config.SetToEnv(config.SlackEnvUserID, botMember.ID, true); err != nil {
 			log.Logger().AddError(err).Str("user_id", botMember.ID).Msg("Failed to save slackEnvMainChannelID in .env file")
 			return err
 		}
@@ -120,6 +114,7 @@ func InitWebSocketReceiver() error {
 		err = websocket.JSON.Receive(ws, &message)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Something went wrong with message receiving from EventsAPI")
+			panic(err)
 		}
 
 		if !isValidMessage(&message) {
@@ -152,61 +147,4 @@ func wsConnect() (*websocket.Conn, int, error) {
 	ws, err := websocket.Dial(dtoResponse.URL, "", "https://api.slack.com/")
 
 	return ws, statusCode, nil
-}
-
-func isValidMessage(message *dto.SlackResponseEventMessage) bool {
-	if message.Type != eventTypeMessage {
-		log.Logger().Debug().Str("type", message.Type).Msg("Skip message check for this message type")
-		return false
-	}
-
-	if message.Channel == "" {
-		log.Logger().Debug().Msg("Message channel cannot be empty")
-		return false
-	}
-
-	if message.User == container.C.Config.SlackConfig.BotUserID {
-		log.Logger().Debug().Msg("This message is from our bot user")
-		return false
-	}
-
-	return true
-}
-
-func processMessage(message *dto.SlackResponseEventMessage) error {
-	log.Logger().Debug().
-		Str("type", message.Type).
-		Str("text", message.Text).
-		Str("team", message.Team).
-		Str("source_team", message.SourceTeam).
-		Str("ts", message.Ts).
-		Str("user", message.User).
-		Str("channel", message.Channel).
-		Msg("Message received")
-
-	m := dto.SlackRequestChatPostMessage{
-		Channel: message.Channel,
-		Text:    "Text",
-		AsUser:  true,
-	}
-
-	if err := answerToMessage(m); err != nil {
-		log.Logger().AddError(err).Msg("Failed to sent answer message")
-	}
-
-	log.Logger().Info().Interface("message", m).Msg("Message sent")
-	return nil
-}
-
-func answerToMessage(m dto.SlackRequestChatPostMessage) error {
-	response, statusCode, err := container.C.SlackClient.SendMessage(m)
-	if err != nil {
-		log.Logger().AddError(err).
-			Interface("response", response).
-			Interface("status", statusCode).
-			Msg("Failed to sent answer message")
-		return err
-	}
-
-	return nil
 }

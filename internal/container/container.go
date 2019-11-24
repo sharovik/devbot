@@ -2,6 +2,10 @@ package container
 
 import (
 	"crypto/tls"
+	"encoding/json"
+	"fmt"
+	"github.com/sharovik/devbot/internal/dto"
+	"github.com/sharovik/devbot/internal/helper"
 	"net/http"
 	"time"
 
@@ -14,6 +18,7 @@ import (
 type Main struct {
 	Config      config.Config
 	SlackClient client.SlackClientInterface
+	Dictionary dto.DevBotMessageDictionary
 }
 
 //C container variable
@@ -42,6 +47,22 @@ func (container Main) Init() Main {
 	}
 
 	container.SlackClient = slackClient
+	container.Dictionary = container.loadDictionary()
 
 	return container
+}
+
+func (container Main) loadDictionary() dto.DevBotMessageDictionary {
+	pathToDictionary := fmt.Sprintf("./internal/dictionary/%s_dictionary.json", container.Config.AppDictionary)
+	bytes, err := helper.FileToBytes(pathToDictionary)
+	if err != nil {
+		panic("Can't load dictionary: " + pathToDictionary)
+	}
+
+	var dictionary dto.DevBotMessageDictionary
+	if err := json.Unmarshal(bytes, &dictionary); err != nil {
+		panic("Can't unmarshal dictionary file. Error: "+err.Error())
+	}
+
+	return dictionary
 }
