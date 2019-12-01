@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/sharovik/devbot/internal/config"
+	"strings"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
@@ -106,14 +107,28 @@ func InitWebSocketReceiver() error {
 	}
 
 	var (
+		event interface{}
 		message dto.SlackResponseEventMessage
 	)
 
 	for {
 		//Receive message
-		err = websocket.JSON.Receive(ws, &message)
+		err = websocket.JSON.Receive(ws, &event)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Something went wrong with message receiving from EventsAPI")
+			panic(err)
+		}
+
+		str, _ := json.Marshal(&event)
+		if strings.Contains(string(str), `"channel":{"created"`) {
+			log.Logger().Warn().RawJSON("message_body", str).Msg("Received unsupported type of message")
+			continue
+		}
+
+		if err := json.Unmarshal(str, &message); err != nil {
+			log.Logger().AddError(err).
+				RawJSON("message_body", str).
+				Msg("Something went wrong with message parsing")
 			panic(err)
 		}
 

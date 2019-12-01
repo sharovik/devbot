@@ -6,15 +6,31 @@ import (
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/sharovik/devbot/internal/log"
 	"regexp"
+	"time"
 )
 
 const (
 	eventTypeMessage = "message"
+	eventTypeDesktopNotification = "desktop_notification"
 
-	defaultAnswer = "Sorry I don't know what to answer :("
+	defaultAnswer = "Sorry, I don't have answer for that :("
+)
+
+var (
+	messagesReceived = map[string]dto.SlackRequestChatPostMessage{}
 )
 
 func isValidMessage(message *dto.SlackResponseEventMessage) bool {
+	if message.Type == eventTypeDesktopNotification {
+		var emptyAnswer dto.SlackRequestChatPostMessage
+		if messagesReceived[message.Channel] == emptyAnswer {
+			log.Logger().Debug().Str("type", message.Type).Msg("We received desktop notification, but answer wasn't prepared before.")
+			return false
+		}
+
+		return true
+	}
+
 	if message.Type != eventTypeMessage {
 		log.Logger().Debug().Str("type", message.Type).Msg("Skip message check for this message type")
 		return false
@@ -44,24 +60,52 @@ func processMessage(message *dto.SlackResponseEventMessage) error {
 		Str("channel", message.Channel).
 		Msg("Message received")
 
-	m, dmAnswer, err := analyseMessage(message)
-	if err != nil {
-		log.Logger().AddError(err).Msg("Failed to analyse received")
-		return err
+	switch message.Type {
+	case eventTypeMessage:
+		m, dmAnswer, err := analyseMessage(message)
+		if err != nil {
+			log.Logger().AddError(err).Msg("Failed to analyse received message")
+			return err
+		}
+
+		//We put a dictionary message into our message object,
+		// so later we can identify what kind of reaction will be executed
+		m.DictionaryMessage = dmAnswer
+
+		//We need to put this message into our small queue,
+		//because we need to make sure if we received our notification.
+		readyToAnswer(m)
+		break
+	case eventTypeDesktopNotification:
+		if !isAnswerWasPrepared(message) {
+			log.Logger().Warn().
+				Interface("message_object", message).
+				Msg("Answer wasn't prepared")
+			return nil
+		}
+
+		answerMessage := getPreparedAnswer(message)
+
+		if err := sendAnswersForReceivedMessages(answerMessage); err != nil {
+			log.Logger().AddError(err).Msg("Failed to send prepared answers")
+			return err
+		}
+
+		if answerMessage.DictionaryMessage.ReactionType != "" {
+			//@todo: Add reaction action here
+			log.Logger().Debug().
+				Str("reaction_type", answerMessage.DictionaryMessage.ReactionType).
+				Msg("Reaction type executed")
+		}
 	}
 
-	if err := answerToMessage(m); err != nil {
-		log.Logger().AddError(err).Msg("Failed to sent answer message")
-		return err
-	}
+	refreshPreparedMessages()
 
-	if dmAnswer.ReactionType != "" {
-		//@todo: Add reaction action here
-		log.Logger().Debug().Str("reaction_type", dmAnswer.ReactionType).Msg("Reaction type executed")
-	}
-
-	log.Logger().Info().Interface("message", m).Msg("Message sent")
 	return nil
+}
+
+func getPreparedAnswer(message *dto.SlackResponseEventMessage) dto.SlackRequestChatPostMessage {
+	return messagesReceived[message.Channel]
 }
 
 func answerToMessage(m dto.SlackRequestChatPostMessage) error {
@@ -74,6 +118,7 @@ func answerToMessage(m dto.SlackRequestChatPostMessage) error {
 		return err
 	}
 
+	log.Logger().Info().Interface("message", m).Msg("Message sent")
 	return nil
 }
 
@@ -92,6 +137,47 @@ func analyseMessage(message *dto.SlackResponseEventMessage) (dto.SlackRequestCha
 	}
 
 	return responseMessage, dmAnswer, nil
+}
+
+func readyToAnswer(message dto.SlackRequestChatPostMessage) {
+	messagesReceived[message.Channel] = message
+}
+
+func isAnswerWasPrepared(message *dto.SlackResponseEventMessage) bool {
+	var emptyAnswer dto.SlackRequestChatPostMessage
+	return messagesReceived[message.Channel] != emptyAnswer
+}
+
+func sendAnswersForReceivedMessages(message dto.SlackRequestChatPostMessage) error {
+
+	if err := answerToMessage(message); err != nil {
+		log.Logger().AddError(err).Msg("Failed to sent answer message")
+		return err
+	}
+
+	messageExpired(message)
+
+	return nil
+}
+
+func messageExpired(message dto.SlackRequestChatPostMessage) {
+	delete(messagesReceived, message.Channel)
+}
+
+func refreshPreparedMessages() {
+	log.Logger().Debug().
+		Interface("answers_prepared", messagesReceived).
+		Msg("Trigger refresh messages")
+
+	for channelID, msg := range messagesReceived {
+		if time.Since(msg.Ts).Seconds() >= 1 {
+			log.Logger().Debug().
+				Time("message_ts", msg.Ts).
+				Interface("message_object", msg).
+				Msg("Message timestamp expired")
+			delete(messagesReceived, channelID)
+		}
+	}
 }
 
 func findDictionaryMessageType(message *dto.SlackResponseEventMessage) dto.DictionaryMessage {
@@ -143,6 +229,7 @@ func prepareAnswer(message *dto.SlackResponseEventMessage, dm dto.DictionaryMess
 		Channel: message.Channel,
 		Text:    answer,
 		AsUser:  true,
+		Ts: time.Now(),
 	}
 
 	log.Logger().FinishMessage("Answer prepare")
