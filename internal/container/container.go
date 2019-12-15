@@ -31,7 +31,7 @@ func (container Main) Init() Main {
 	_ = log.Init(log.Config(container.Config))
 
 	netTransport := &http.Transport{
-		TLSHandshakeTimeout: 5 * time.Second,
+		TLSHandshakeTimeout: 7 * time.Second,
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
 		},
@@ -39,7 +39,7 @@ func (container Main) Init() Main {
 
 	slackClient := client.SlackClient{
 		Client: &http.Client{
-			Timeout:   time.Duration(5) * time.Second,
+			Timeout:   time.Duration(15) * time.Second,
 			Transport: netTransport,
 		},
 		BaseURL:    container.Config.SlackConfig.BaseURL,

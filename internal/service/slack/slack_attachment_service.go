@@ -88,6 +88,10 @@ func processFile(channel string, file dto.File) (dto.File, error) {
 		return file, err
 	}
 
+	if err := deleteSrc(src); err != nil {
+		return file, err
+	}
+
 	return file, nil
 }
 
