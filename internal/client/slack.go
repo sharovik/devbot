@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
+	"os"
 	"sync/atomic"
 
 	"github.com/sharovik/devbot/internal/dto"
@@ -24,7 +27,7 @@ type SlackClient struct {
 //SlackClientInterface interface for slack client
 type SlackClientInterface interface {
 	//Http methods
-	request(string, string, []byte) ([]byte, int, error)
+	Request(string, string, []byte) ([]byte, int, error)
 	Post(string, []byte) ([]byte, int, error)
 	Get(string) ([]byte, int, error)
 	Put(string, []byte) ([]byte, int, error)
@@ -36,21 +39,136 @@ type SlackClientInterface interface {
 
 	//PM messages
 	SendMessage(dto.SlackRequestChatPostMessage) (dto.SlackResponseChatPostMessage, int, error)
+
+	//Send attachment
+	AttachFileTo(channel string, pathToFile string, filename string) ([]byte, int, error)
 }
 
-func (client SlackClient) request(method string, endpoint string, body []byte) ([]byte, int, error) {
+func (client SlackClient) generateAPIUrl(endpoint string) string {
+	log.Logger().Debug().
+		Str("base_url", client.BaseURL).
+		Str("endpoint", endpoint).
+		Msg("Generate API url")
+
+	return client.BaseURL + endpoint
+}
+
+func (client SlackClient) AttachFileTo(channel string, pathToFile string, filename string) ([]byte, int, error) {
+	log.Logger().StartMessage("Slack attachment request")
+
+	var buf bytes.Buffer
+
+	writer := multipart.NewWriter(&buf)
+
+	log.Logger().Debug().
+		Str("channel", channel).
+		Str("file_path", pathToFile).
+		Str("filename", filename).
+		Msg("Received parameters")
+
+	fieldWriter, err := writer.CreateFormField("channels")
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if _, err := fieldWriter.Write([]byte(channel)); err != nil {
+		return nil, 0, err
+	}
+
+	part, err := writer.CreateFormFile("file", filename)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	file, err := os.Open(pathToFile)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if _, err = io.Copy(part, file); err != nil {
+		return nil, 0, err
+	}
+
+	writer.Close()
+	file.Close()
+
+	request, err := http.NewRequest(http.MethodPost, client.generateAPIUrl("/files.upload"), &buf)
+	if err != nil {
+		log.Logger().AddError(err).Msg("Error during the request generation")
+		log.Logger().FinishMessage("Slack attachment request")
+		return nil, 0, err
+	}
+
+	log.Logger().Debug().Msg("Step endpoint call")
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+	request.Header.Add("Authorization", fmt.Sprintf("Bearer %s", client.OAuthToken))
+	resp, errorResponse := client.Client.Do(request)
+
+	log.Logger().Debug().Msg("Step response processing")
+	if resp == nil {
+		err = errors.New("Response cannot be null ")
+		errMsg := err.Error()
+		if errorResponse != nil {
+			errMsg = errorResponse.Error()
+		}
+		log.Logger().AddError(errorResponse).
+			Str("response_error", errMsg).
+			Msg("Error during response body parse")
+
+		log.Logger().FinishMessage("Slack attachment request")
+		return nil, 0, err
+	}
+
+	log.Logger().Debug().Msg("Step body processing")
+	defer resp.Body.Close()
+	byteResp, errorConversion := ioutil.ReadAll(resp.Body)
+	if errorConversion != nil {
+		log.Logger().AddError(errorConversion).
+			Err(errorConversion).
+			Msg("Error during response body parse")
+		log.Logger().FinishMessage("Slack attachment request")
+		return byteResp, 0, errorConversion
+	}
+
+	var response []byte
+	if string(byteResp) == "" {
+		response = []byte(`{}`)
+	} else {
+		response = byteResp
+	}
+
+	log.Logger().Debug().
+		Int("status", resp.StatusCode).
+		RawJSON("response", response).
+		Msg("Prepared response")
+
+	if resp.StatusCode >= http.StatusBadRequest {
+		err = fmt.Errorf("Bad status code received: %d ", resp.StatusCode)
+		log.Logger().Warn().Int("status_code", resp.StatusCode).
+			Err(err).
+			Str("response", string(response)).
+			Msg("Bad status code received")
+		log.Logger().FinishMessage("Slack attachment request")
+		return byteResp, resp.StatusCode, err
+	}
+
+	log.Logger().FinishMessage("Slack attachment request")
+	return byteResp, resp.StatusCode, nil
+}
+
+//Request method for API requests
+func (client SlackClient) Request(method string, url string, body []byte) ([]byte, int, error) {
 
 	log.Logger().StartMessage("Slack request")
 
 	var resp *http.Response
 
-	log.Logger().Info().
-		Str("base_url", client.BaseURL).
-		Str("endpoint", endpoint).
+	log.Logger().Debug().
+		Str("url", url).
 		Str("method", method).
 		Msg("Endpoint call")
 
-	request, err := http.NewRequest(method, client.BaseURL+endpoint, bytes.NewReader(body))
+	request, err := http.NewRequest(method, url, bytes.NewReader(body))
 	if err != nil {
 		log.Logger().AddError(err).Msg("Error during the request generation")
 		log.Logger().FinishMessage("Slack request")
@@ -75,7 +193,6 @@ func (client SlackClient) request(method string, endpoint string, body []byte) (
 		return nil, 0, err
 	}
 
-	//1. Parse the response body
 	defer resp.Body.Close()
 	byteResp, errorConversion := ioutil.ReadAll(resp.Body)
 	if errorConversion != nil {
@@ -93,7 +210,6 @@ func (client SlackClient) request(method string, endpoint string, body []byte) (
 		response = byteResp
 	}
 
-	//5. For status codes, which are equal or more then 400, we should return an error. But we must mark it as a warning, because sometimes bad status code related to the validation
 	if resp.StatusCode >= http.StatusBadRequest {
 		err = fmt.Errorf("Bad status code received: %d ", resp.StatusCode)
 		log.Logger().Warn().Int("status_code", resp.StatusCode).
@@ -110,24 +226,24 @@ func (client SlackClient) request(method string, endpoint string, body []byte) (
 
 //Post method for POST http requests
 func (client SlackClient) Post(endpoint string, body []byte) ([]byte, int, error) {
-	return client.request(http.MethodPost, endpoint, body)
+	return client.Request(http.MethodPost, client.generateAPIUrl(endpoint), body)
 }
 
 //Put method for PUT http requests
 func (client SlackClient) Put(endpoint string, body []byte) ([]byte, int, error) {
-	return client.request(http.MethodPut, endpoint, body)
+	return client.Request(http.MethodPut, client.generateAPIUrl(endpoint), body)
 }
 
 //Get method for GET http requests
 func (client SlackClient) Get(endpoint string) ([]byte, int, error) {
-	return client.request(http.MethodGet, endpoint, []byte(``))
+	return client.Request(http.MethodGet, client.generateAPIUrl(endpoint), []byte(``))
 }
 
 //SendMessageToWs sends message to selected WebSocket EventsAPI
 func (client SlackClient) SendMessageToWs(ws *websocket.Conn, m dto.SlackRequestEventMessage) error {
 	log.Logger().Debug().Interface("message", m).Msg("Send message to EventsAPI")
 	var counter uint64
-	m.Id = atomic.AddUint64(&counter, 1)
+	m.ID = atomic.AddUint64(&counter, 1)
 	return websocket.JSON.Send(ws, m)
 }
 

@@ -1,5 +1,6 @@
 package dto
 
+//SlackResponseChatPostMessage response object for slack chat postMessage endpoint response
 type SlackResponseChatPostMessage struct {
 	Ok      bool   `json:"ok"`
 	Channel string `json:"channel"`
