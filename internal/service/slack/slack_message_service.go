@@ -10,19 +10,19 @@ import (
 )
 
 const (
-	eventTypeMessage = "message"
+	eventTypeMessage             = "message"
 	eventTypeDesktopNotification = "desktop_notification"
-	eventTypeFileShared = "file_shared"
+	eventTypeFileShared          = "file_shared"
 
 	defaultAnswer = "Sorry, I don't have answer for that :("
 )
 
 var (
-	messagesReceived = map[string]dto.SlackRequestChatPostMessage{}
+	messagesReceived     = map[string]dto.SlackRequestChatPostMessage{}
 	acceptedMessageTypes = map[string]string{
-		eventTypeMessage: eventTypeMessage,
+		eventTypeMessage:             eventTypeMessage,
 		eventTypeDesktopNotification: eventTypeDesktopNotification,
-		eventTypeFileShared: eventTypeFileShared,
+		eventTypeFileShared:          eventTypeFileShared,
 	}
 )
 
@@ -72,6 +72,12 @@ func processMessage(message *dto.SlackResponseEventMessage) error {
 		if err != nil {
 			log.Logger().AddError(err).Msg("Failed to analyse received message")
 			return err
+		}
+
+		emptyDmMessage := dto.DictionaryMessage{}
+		if dmAnswer == emptyDmMessage {
+			log.Logger().Debug().Msg("No answer found for the received message")
+			return nil
 		}
 
 		//We put a dictionary message into our message object,
@@ -168,7 +174,7 @@ func analyseMessage(message *dto.SlackResponseEventMessage) (dto.SlackRequestCha
 	var (
 		responseMessage dto.SlackRequestChatPostMessage
 		err             error
-		dmAnswer dto.DictionaryMessage
+		dmAnswer        dto.DictionaryMessage
 	)
 
 	dmAnswer = findDictionaryMessageType(message)
@@ -250,7 +256,6 @@ func findDictionaryMessageType(message *dto.SlackResponseEventMessage) dto.Dicti
 }
 
 func getMessageDictionary(message *dto.SlackResponseEventMessage) []dto.DictionaryMessage {
-	fmt.Println(len(message.Files))
 	if len(message.Files) > 0 {
 		log.Logger().Debug().Str("dictionary", "file_message_dictionary").Msg("Selected dictionary")
 		return container.C.Dictionary.FileMessageDictionary
@@ -272,7 +277,7 @@ func prepareAnswer(message *dto.SlackResponseEventMessage, dm dto.DictionaryMess
 		Channel: message.Channel,
 		Text:    answer,
 		AsUser:  true,
-		Ts: time.Now(),
+		Ts:      time.Now(),
 	}
 
 	log.Logger().FinishMessage("Answer prepare")

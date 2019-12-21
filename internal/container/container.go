@@ -18,7 +18,7 @@ import (
 type Main struct {
 	Config      config.Config
 	SlackClient client.SlackClientInterface
-	Dictionary dto.DevBotMessageDictionary
+	Dictionary  dto.DevBotMessageDictionary
 }
 
 //C container variable
@@ -52,6 +52,7 @@ func (container Main) Init() Main {
 	return container
 }
 
+//@todo: start using sqlite database for that
 func (container Main) loadDictionary() dto.DevBotMessageDictionary {
 	pathToDictionary := fmt.Sprintf("./internal/dictionary/%s_dictionary.json", container.Config.AppDictionary)
 	bytes, err := helper.FileToBytes(pathToDictionary)
@@ -61,7 +62,7 @@ func (container Main) loadDictionary() dto.DevBotMessageDictionary {
 
 	var dictionary dto.DevBotMessageDictionary
 	if err := json.Unmarshal(bytes, &dictionary); err != nil {
-		panic("Can't unmarshal dictionary file. Error: "+err.Error())
+		panic("Can't unmarshal dictionary file. Error: " + err.Error())
 	}
 
 	return dictionary
