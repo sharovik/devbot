@@ -62,7 +62,7 @@ func processFile(channel string, file dto.File) (dto.File, error) {
 
 	//We run the command which compiles the template.
 	//This will create in src 2 directories: one is for template html preview and second one for template
-	cmd := exec.Command("./scripts/themer/app.phar", fmt.Sprintf("--path=%s", pathToFiles))
+	cmd := exec.Command("./scripts/themer/themer.phar", fmt.Sprintf("--path=%s", pathToFiles))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
@@ -77,7 +77,7 @@ func processFile(channel string, file dto.File) (dto.File, error) {
 		return file, err
 	}
 
-	resultFilePath := src+fmt.Sprintf("/%s", defaultResultFilename)
+	resultFilePath := src + fmt.Sprintf("/%s", defaultResultFilename)
 	if err := helper.Zip(src, resultFilePath); err != nil {
 		return file, err
 	}
