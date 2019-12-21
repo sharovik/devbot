@@ -39,11 +39,23 @@ const (
 
 	appEnv                   = "APP_ENV"
 	appDictionary            = "APP_DICTIONARY"
+
+	//SlackEnvUserID env variable for slack user ID
 	SlackEnvUserID           = "SLACK_USER_ID"
+
+	//SlackEnvMainChannelID env variable for slack main channel ID
 	SlackEnvMainChannelID    = "SLACK_MAIN_CHANNEL_ID"
+
+	//SlackEnvMainChannelAlias env variable for slack main channel alias
 	SlackEnvMainChannelAlias = "SLACK_MAIN_CHANNEL_ALIAS"
+
+	//SlackEnvBotName env variable for slack bot name
 	SlackEnvBotName          = "SLACK_BOT_NAME"
-	SlackEnvBaseUrl          = "SLACK_BASE_URL"
+
+	//SlackEnvBaseURL env variable for slack base url
+	SlackEnvBaseURL = "SLACK_BASE_URL"
+
+	//SlackEnvOAuthToken env variable for slack oauth token
 	SlackEnvOAuthToken       = "SLACK_OAUTH_TOKEN"
 
 	defaultMainChannelAlias = "general"
@@ -85,7 +97,7 @@ func Init() Config {
 			appEnv: os.Getenv(appEnv),
 			AppDictionary: AppDictionary,
 			SlackConfig: SlackConfig{
-				BaseURL:          os.Getenv(SlackEnvBaseUrl),
+				BaseURL:          os.Getenv(SlackEnvBaseURL),
 				OAuthToken:       os.Getenv(SlackEnvOAuthToken),
 				MainChannelAlias: mainChannelAlias,
 				MainChannelID:    os.Getenv(SlackEnvMainChannelID),
@@ -115,10 +127,7 @@ func (c Config) GetAppEnv() string {
 	return c.appEnv
 }
 
-func (c Config) GetSlackConfiguration() SlackConfig {
-	return c.SlackConfig
-}
-
+//SetToEnv method for saving env variable into memory + into .env file
 func (c Config) SetToEnv(field string, value string, writeToEnvFile bool) error {
 
 	if writeToEnvFile {

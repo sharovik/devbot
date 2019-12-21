@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/log"
-	"github.com/sharovik/devbot/internal/service"
+	"github.com/sharovik/devbot/internal/service/slack"
 )
 
 func init() {
@@ -13,7 +13,7 @@ func init() {
 func main() {
 	log.Logger().StartMessage("SlackBot")
 
-	if err := service.InitWebSocketReceiver(); err != nil {
+	if err := slack.InitWebSocketReceiver(); err != nil {
 		log.Logger().AddError(err).Msg("Error received")
 	}
 
