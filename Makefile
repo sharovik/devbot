@@ -10,7 +10,8 @@ vendor:
 	if [ ! -d "vendor" ] || [ -z "$(shell ls -A vendor)" ]; then go mod vendor; fi
 
 $(BIN_DIR)/%: cmd/%/main.go vendor
-	env GOOS=darwin go build -mod=vendor $(LDFLAGS) -o $@ $<
+	env GOOS=darwin go build -mod=vendor $(LDFLAGS) -o $@-mac $<
+	env GOOS=darwin GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-linux $<
 
 lint:
 	golint -set_exit_status ./cmd/...

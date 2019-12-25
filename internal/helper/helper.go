@@ -96,6 +96,7 @@ func Unzip(src string, dest string) ([]string, error) {
 	return filenames, nil
 }
 
+//Zip method for zip the selected src to specific destination
 func Zip(src string, dest string) error {
 	destinationFile, err := os.Create(dest)
 	if err != nil {
