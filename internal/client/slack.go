@@ -53,6 +53,7 @@ func (client SlackClient) generateAPIUrl(endpoint string) string {
 	return client.BaseURL + endpoint
 }
 
+//AttachFileTo method for attachment file send to specific channel
 func (client SlackClient) AttachFileTo(channel string, pathToFile string, filename string) ([]byte, int, error) {
 	log.Logger().StartMessage("Slack attachment request")
 

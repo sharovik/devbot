@@ -37,26 +37,26 @@ const (
 
 	environmentTesting = "testing"
 
-	appEnv                   = "APP_ENV"
-	appDictionary            = "APP_DICTIONARY"
+	appEnv        = "APP_ENV"
+	appDictionary = "APP_DICTIONARY"
 
 	//SlackEnvUserID env variable for slack user ID
-	SlackEnvUserID           = "SLACK_USER_ID"
+	SlackEnvUserID = "SLACK_USER_ID"
 
 	//SlackEnvMainChannelID env variable for slack main channel ID
-	SlackEnvMainChannelID    = "SLACK_MAIN_CHANNEL_ID"
+	SlackEnvMainChannelID = "SLACK_MAIN_CHANNEL_ID"
 
 	//SlackEnvMainChannelAlias env variable for slack main channel alias
 	SlackEnvMainChannelAlias = "SLACK_MAIN_CHANNEL_ALIAS"
 
 	//SlackEnvBotName env variable for slack bot name
-	SlackEnvBotName          = "SLACK_BOT_NAME"
+	SlackEnvBotName = "SLACK_BOT_NAME"
 
 	//SlackEnvBaseURL env variable for slack base url
 	SlackEnvBaseURL = "SLACK_BASE_URL"
 
 	//SlackEnvOAuthToken env variable for slack oauth token
-	SlackEnvOAuthToken       = "SLACK_OAUTH_TOKEN"
+	SlackEnvOAuthToken = "SLACK_OAUTH_TOKEN"
 
 	defaultMainChannelAlias = "general"
 	defaultBotName          = "devbot"
@@ -94,7 +94,7 @@ func Init() Config {
 		}
 
 		cfg = Config{
-			appEnv: os.Getenv(appEnv),
+			appEnv:        os.Getenv(appEnv),
 			AppDictionary: AppDictionary,
 			SlackConfig: SlackConfig{
 				BaseURL:          os.Getenv(SlackEnvBaseURL),
