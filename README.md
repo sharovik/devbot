@@ -20,7 +20,7 @@ Before the installation I would recommend to prepare the slack application for y
 
 ### Devbot installation
 
-1. Go to [bin folder of this project](https://github.com/sharovik/devbot/tree/master/bin) and download latest version of devbot application.
+1. Go to [this page](https://github.com/sharovik/devbot/releases) and download latest version of devbot application.
 2. Prepare the configuration file for our bot
 ```
 cp .env.example .env
