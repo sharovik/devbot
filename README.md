@@ -28,7 +28,7 @@ cp .env.example .env
 3. Set the value from `Bot User OAuth Access Token` into *SLACK_OAUTH_TOKEN* variable in .env file
 4. Run bot by using command `./bin/slack-bot-{YOUR_SYSTEM}` you should see in the logs `hello` message type. It means that the bot successfully connected to your account
 
-## How to
+## How to use
 
 ### Generate WordPress template
 ![Demo file processing](documentation/images/demo-file-processing.gif)
@@ -40,3 +40,10 @@ cp .env.example .env
  
  Up to 4 seconds will take to process the template
 5. After template was processed you will receive in answer new archive where you will find `html preview of your template` and WordPress template
+
+## Authors
+
+* **Pavel Simzicov** - *Initial work* - [sharovik](https://github.com/sharovik)
+
+License
+This project is licensed under the MIT License - see the LICENSE.md file for details
