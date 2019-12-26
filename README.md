@@ -32,7 +32,7 @@ cp .env.example .env
 
 ### Generate WordPress template
 ![Demo file processing](documentation/images/demo-file-processing.gif)
-1. Prepare a `*.twig` template and compress it in a `*.zip` file
+1. Prepare a `*.twig` template and compress it in a `*.zip` file ([here you can find the example of template](https://github.com/sharovik/themer)) 
 2. Open PM of the bot, channel where this bot was added or tag bot-user during the attachment send
 3. In attachment popup please write in comment field `process` word and send the attachment
 4. After bot received your attachment you will see the answer
@@ -45,5 +45,7 @@ cp .env.example .env
 
 * **Pavel Simzicov** - *Initial work* - [sharovik](https://github.com/sharovik)
 
+## 
+
 License
-This project is licensed under the MIT License - see the LICENSE.md file for details
+This project is licensed under the BSD License - see the LICENSE.md file for details
