@@ -134,6 +134,10 @@ func Zip(src string, dest string) error {
 			return err
 		}
 
+		if err := fsFile.Close(); err != nil {
+			return err
+		}
+
 		return nil
 	}); err != nil {
 		return err
