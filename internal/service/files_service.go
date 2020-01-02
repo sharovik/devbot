@@ -1,4 +1,4 @@
-package slack
+package service
 
 import (
 	"fmt"
@@ -124,7 +124,7 @@ func deleteSrc(src string) error {
 	return os.RemoveAll(src)
 }
 
-func processFiles(message *dto.SlackResponseEventMessage) (dto.File, error) {
+func ProcessFiles(message dto.SlackResponseEventMessage) (dto.File, error) {
 	log.Logger().Debug().
 		Interface("files", message.Files).
 		Msg("Files received")

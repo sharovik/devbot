@@ -1,0 +1,12 @@
+package events
+
+import "github.com/sharovik/devbot/events/base"
+
+var DefinedEvents = main.Events{}
+
+func init() {
+    DefinedEvents.Events = make(map[string]base.Event)
+
+    #Load your events
+    DefinedEvents.Events["CUSTOM_EVENT_NAME"] = your_package.Event
+}

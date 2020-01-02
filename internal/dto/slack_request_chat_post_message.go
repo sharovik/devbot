@@ -9,4 +9,5 @@ type SlackRequestChatPostMessage struct {
 	AsUser            bool   `json:"as_user"`
 	Ts                time.Time
 	DictionaryMessage DictionaryMessage
+	OriginalMessage SlackResponseEventMessage
 }
