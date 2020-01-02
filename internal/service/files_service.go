@@ -124,6 +124,7 @@ func deleteSrc(src string) error {
 	return os.RemoveAll(src)
 }
 
+//ProcessFiles method which processes the received files
 func ProcessFiles(message dto.SlackResponseEventMessage) (dto.File, error) {
 	log.Logger().Debug().
 		Interface("files", message.Files).

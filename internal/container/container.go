@@ -16,9 +16,9 @@ import (
 
 //Main container object
 type Main struct {
-	Config        config.Config
-	SlackClient   client.SlackClientInterface
-	Dictionary    dto.DevBotMessageDictionary
+	Config      config.Config
+	SlackClient client.SlackClientInterface
+	Dictionary  dto.DevBotMessageDictionary
 }
 
 //C container variable

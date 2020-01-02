@@ -1,5 +1,5 @@
 ##Events
-This feature will help you to improve the skills of your bot. By using this feature you can add multiple custom events.
+This feature will help you to improve the skills of your bot. Now you are able to create your own event for your custom message.
 
 ### How to create a new event
 As there is a million possible events which users can create, we introduced a file `defined-events.go` where you can initialise your custom events. 
@@ -14,4 +14,4 @@ As there is a million possible events which users can create, we introduced a fi
 * have fun
 
 ### Example of the event
-You can find it here ```events/themer```
+You can find it here ```events/themer-wordpress```

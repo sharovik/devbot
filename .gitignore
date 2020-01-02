@@ -8,4 +8,4 @@ events/*
 #Exclude from ignoring the example of event files
 !events/defined-events.go.dist
 !events/base
-!events/themer
+!events/themerwordpress

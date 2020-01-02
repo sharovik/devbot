@@ -1,4 +1,4 @@
-package themer
+package themerwordpress
 
 import (
 	"fmt"
@@ -7,16 +7,20 @@ import (
 	"github.com/sharovik/devbot/internal/service"
 )
 
-const EventName = "themer_event"
+//EventName the name of the event
+const EventName = "themer_wordpress_event"
 
+//ThemerEvent the struct for the event object
 type ThemerEvent struct {
 	EventName string
 }
 
+//Event - object which is ready to use
 var Event = ThemerEvent{
 	EventName: EventName,
 }
 
+//Execute method which is called by message processor
 func (e ThemerEvent) Execute(message dto.SlackRequestChatPostMessage) (dto.SlackRequestChatPostMessage, error) {
 	var answer = message
 	go func() {
@@ -37,7 +41,7 @@ func (e ThemerEvent) Execute(message dto.SlackRequestChatPostMessage) (dto.Slack
 }
 
 func prepareThemeInstructions() string {
-	return "In that archive you can find 2 directories - preview and wordpress(directory contains the wordpress template)\n\n Installation guide:\n - copy wordpress directory into wp-content/themes directory\n - go to admin dashboard of your wordpress site and install your theme"
+	return "In that archive you can find 2 directories - preview(which contains the html preview of your design) and wordpress(directory contains the wordpress template)\n\n Installation guide:\n - copy wordpress directory into wp-content/themes directory\n - go to admin dashboard of your wordpress site and install your theme"
 }
 
 func fileErrorMessage(channelID string, file dto.File, err error) dto.SlackRequestChatPostMessage {
