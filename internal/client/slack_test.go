@@ -2,6 +2,9 @@ package client_test
 
 import (
 	"net/http"
+	"os"
+	"path"
+	"runtime"
 	"testing"
 
 	mockhttp "github.com/karupanerura/go-mock-http-response"
@@ -16,6 +19,11 @@ var slackClient *client.SlackClient
 
 func init() {
 	container.C = container.C.Init()
+
+	//We switch pointer to the root directory for control the path from which we need to generate test-data file-paths
+	_, filename, _, _ := runtime.Caller(0)
+	dir := path.Join(path.Dir(filename), "../../")
+	_ = os.Chdir(dir)
 }
 
 func MockSlackResponse(statusCode int, headers map[string]string, body []byte) {
@@ -136,7 +144,7 @@ func TestSlackClient_GetConversationsList_Bad(t *testing.T) {
 }
 
 func TestSlackClient_GetConversationsList_Ok(t *testing.T) {
-	MockSlackResponse(http.StatusOK, map[string]string{}, test.FileToBytes(t, "../../test/testdata/slack/conversations.list.ok.json"))
+	MockSlackResponse(http.StatusOK, map[string]string{}, test.FileToBytes(t, "./test/testdata/slack/conversations.list.ok.json"))
 
 	response, statusCode, err := slackClient.GetConversationsList()
 	assert.NoError(t, err)
@@ -167,7 +175,7 @@ func TestSlackClient_GetUsersList_Bad(t *testing.T) {
 }
 
 func TestSlackClient_GetUsersList_Ok(t *testing.T) {
-	MockSlackResponse(http.StatusOK, map[string]string{}, test.FileToBytes(t, "../../test/testdata/slack/users.list.ok.json"))
+	MockSlackResponse(http.StatusOK, map[string]string{}, test.FileToBytes(t, "./test/testdata/slack/users.list.ok.json"))
 
 	response, statusCode, err := slackClient.GetUsersList()
 	assert.NoError(t, err)
@@ -198,7 +206,7 @@ func TestSlackClient_SendMessage_Bad(t *testing.T) {
 }
 
 func TestSlackClient_SendMessage_Ok(t *testing.T) {
-	MockSlackResponse(http.StatusOK, map[string]string{}, test.FileToBytes(t, "../../test/testdata/slack/users.list.ok.json"))
+	MockSlackResponse(http.StatusOK, map[string]string{}, test.FileToBytes(t, "./test/testdata/slack/users.list.ok.json"))
 
 	response, statusCode, err := slackClient.SendMessage(dto.SlackRequestChatPostMessage{})
 	assert.NoError(t, err)

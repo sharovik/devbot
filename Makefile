@@ -24,6 +24,9 @@ imports:
 format:
 	go fmt $(go list ./... | grep -v /vendor/)
 
+tests:
+	go test ./...
+
 build-dictionary-script:
 	go build -o $(DICTIONARY_SCRIPT_DIR)/dictionary-loader $(DICTIONARY_SCRIPT_DIR)/main.go
 

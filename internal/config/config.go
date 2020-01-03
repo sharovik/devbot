@@ -35,7 +35,8 @@ var (
 const (
 	envFilePath = "./../../.env"
 
-	environmentTesting = "testing"
+	//EnvironmentTesting constant for testing environment
+	EnvironmentTesting = "testing"
 
 	appEnv        = "APP_ENV"
 	appDictionary = "APP_DICTIONARY"
@@ -120,8 +121,8 @@ func (c Config) IsInitialised() bool {
 
 //GetAppEnv retrieve current environment
 func (c Config) GetAppEnv() string {
-	if c.appEnv == "" && (flag.Lookup("test.v") != nil) {
-		return environmentTesting
+	if flag.Lookup("test.v") != nil {
+		return EnvironmentTesting
 	}
 
 	return c.appEnv
