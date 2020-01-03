@@ -41,6 +41,9 @@ cp .env.example .env
  Up to 4 seconds will take to process the template
 5. After template was processed you will receive in answer new archive where you will find `html preview of your template` and WordPress template
 
+###Custom events
+Please read the [events documentation](documentation/events.md)
+
 ## Authors
 
 * **Pavel Simzicov** - *Initial work* - [sharovik](https://github.com/sharovik)

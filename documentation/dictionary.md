@@ -1,5 +1,5 @@
 ##Dictionary
-It is the functionality by which the DevBot understand what kind of event he need to trigger for your message.
+This is the functionality by which the DevBot understand what kind of the event he need to trigger for your message. Currently it is a simplified version, where we go through simple json file and search by regexp the matches and if match was found, bot run the logic for that message.
 
 ###The dictionary database
 Currently I used the simple way of storing data for dictionary messages - simple json file. You can find it here `internal/dictionary/slack_dictionary.json`.
