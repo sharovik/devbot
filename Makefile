@@ -14,6 +14,7 @@ $(BIN_DIR)/%: cmd/%/main.go vendor
 	env GOOS=darwin GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-linux $<
 
 lint:
+	golint -set_exit_status ./events/...
 	golint -set_exit_status ./cmd/...
 	golint -set_exit_status ./internal/...
 
@@ -22,6 +23,9 @@ imports:
 
 format:
 	go fmt $(go list ./... | grep -v /vendor/)
+
+tests:
+	go test ./...
 
 build-dictionary-script:
 	go build -o $(DICTIONARY_SCRIPT_DIR)/dictionary-loader $(DICTIONARY_SCRIPT_DIR)/main.go

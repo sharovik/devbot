@@ -7,6 +7,9 @@ import (
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/sharovik/devbot/internal/helper"
 	"net/http"
+	"os"
+	"path"
+	"runtime"
 	"time"
 
 	"github.com/sharovik/devbot/internal/client"
@@ -54,6 +57,14 @@ func (container Main) Init() Main {
 
 //@todo: start using sqlite database for that
 func (container Main) loadDictionary() dto.DevBotMessageDictionary {
+	if container.Config.GetAppEnv() == config.EnvironmentTesting {
+		_, filename, _, _ := runtime.Caller(0)
+		dir := path.Join(path.Dir(filename), "../../")
+		if err := os.Chdir(dir); err != nil {
+			log.Logger().AddError(err).Msg("Error during the root folder pointer creation")
+		}
+	}
+
 	pathToDictionary := fmt.Sprintf("./internal/dictionary/%s_dictionary.json", container.Config.AppDictionary)
 	bytes, err := helper.FileToBytes(pathToDictionary)
 	if err != nil {

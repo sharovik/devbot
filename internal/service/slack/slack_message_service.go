@@ -2,6 +2,7 @@ package slack
 
 import (
 	"fmt"
+	"github.com/sharovik/devbot/events"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/sharovik/devbot/internal/log"
@@ -28,8 +29,7 @@ var (
 
 func isValidMessage(message *dto.SlackResponseEventMessage) bool {
 	if message.Type == eventTypeDesktopNotification {
-		var emptyAnswer dto.SlackRequestChatPostMessage
-		if messagesReceived[message.Channel] == emptyAnswer {
+		if messagesReceived[message.Channel].Channel == "" {
 			log.Logger().Debug().Str("type", message.Type).Msg("We received desktop notification, but answer wasn't prepared before.")
 			return false
 		}
@@ -66,64 +66,26 @@ func processMessage(message *dto.SlackResponseEventMessage) error {
 		Str("channel", message.Channel).
 		Msg("Message received")
 
+	m, dmAnswer, err := analyseMessage(message)
+	if err != nil {
+		log.Logger().AddError(err).Msg("Failed to analyse received message")
+		return err
+	}
+
+	emptyDmMessage := dto.DictionaryMessage{}
+	if dmAnswer == emptyDmMessage {
+		log.Logger().Debug().Msg("No answer found for the received message")
+	}
+
+	//We put a dictionary message into our message object,
+	// so later we can identify what kind of reaction will be executed
+	m.DictionaryMessage = dmAnswer
+
+	//We need to put this message into our small queue,
+	//because we need to make sure if we received our notification.
+	readyToAnswer(m)
+
 	switch message.Type {
-	case eventTypeFileShared:
-		m, dmAnswer, err := analyseMessage(message)
-		if err != nil {
-			log.Logger().AddError(err).Msg("Failed to analyse received message")
-			return err
-		}
-
-		emptyDmMessage := dto.DictionaryMessage{}
-		if dmAnswer == emptyDmMessage {
-			log.Logger().Debug().Msg("No answer found for the received message")
-			return nil
-		}
-
-		//We put a dictionary message into our message object,
-		// so later we can identify what kind of reaction will be executed
-		m.DictionaryMessage = dmAnswer
-
-		m.Text = "Please, wait a bit. I have to process this file"
-
-		//We need to put this message into our small queue,
-		//because we need to make sure if we received our notification.
-		readyToAnswer(m)
-
-		go func() {
-			if message.Files != nil {
-				file, err := processFiles(message)
-				if err != nil {
-					log.Logger().AddError(err).
-						Msg("Failed to process file")
-					if err := fileErrorMessage(message.Channel, file, err); err != nil {
-						log.Logger().AddError(err).
-							Str("channel", message.Channel).
-							Interface("message_object", &message).
-							Msg("Failed to send answer for file-error")
-					}
-				}
-
-				message.Files = nil
-			}
-		}()
-
-		break
-	case eventTypeMessage:
-		m, dmAnswer, err := analyseMessage(message)
-		if err != nil {
-			log.Logger().AddError(err).Msg("Failed to analyse received message")
-			return err
-		}
-
-		//We put a dictionary message into our message object,
-		// so later we can identify what kind of reaction will be executed
-		m.DictionaryMessage = dmAnswer
-
-		//We need to put this message into our small queue,
-		//because we need to make sure if we received our notification.
-		readyToAnswer(m)
-		break
 	case eventTypeDesktopNotification:
 		if !isAnswerWasPrepared(message) {
 			log.Logger().Warn().
@@ -134,21 +96,33 @@ func processMessage(message *dto.SlackResponseEventMessage) error {
 
 		answerMessage := getPreparedAnswer(message)
 
-		if err := sendAnswersForReceivedMessages(answerMessage); err != nil {
+		if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
 			log.Logger().AddError(err).Msg("Failed to send prepared answers")
 			return err
 		}
 
-		if answerMessage.DictionaryMessage.ReactionType != "" {
-			//@todo: Add reaction action here
-			log.Logger().Debug().
-				Str("reaction_type", answerMessage.DictionaryMessage.ReactionType).
-				Msg("Reaction type executed")
+		if answerMessage.DictionaryMessage.ReactionType == "" || events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType] == nil {
+			log.Logger().Warn().
+				Interface("answer", answerMessage).
+				Msg("Reaction type wasn't found")
+			return nil
+		}
+
+		answer, err := events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType].Execute(answerMessage)
+		if err != nil {
+			log.Logger().AddError(err).Msg("Failed to execute the event")
+			return err
+		}
+
+		if answer.Text != "" {
+			if err := SendAnswerForReceivedMessage(answer); err != nil {
+				log.Logger().AddError(err).Msg("Failed to send post-answer for selected event")
+				return err
+			}
 		}
 	}
 
 	refreshPreparedMessages()
-
 	return nil
 }
 
@@ -192,19 +166,17 @@ func readyToAnswer(message dto.SlackRequestChatPostMessage) {
 }
 
 func isAnswerWasPrepared(message *dto.SlackResponseEventMessage) bool {
-	var emptyAnswer dto.SlackRequestChatPostMessage
-	return messagesReceived[message.Channel] != emptyAnswer
+	return messagesReceived[message.Channel].Channel != ""
 }
 
-func sendAnswersForReceivedMessages(message dto.SlackRequestChatPostMessage) error {
-
+//SendAnswerForReceivedMessage method which sends the answer by specific message
+func SendAnswerForReceivedMessage(message dto.SlackRequestChatPostMessage) error {
 	if err := answerToMessage(message); err != nil {
 		log.Logger().AddError(err).Msg("Failed to sent answer message")
 		return err
 	}
 
 	messageExpired(message)
-
 	return nil
 }
 
@@ -274,31 +246,13 @@ func prepareAnswer(message *dto.SlackResponseEventMessage, dm dto.DictionaryMess
 	}
 
 	responseMessage := dto.SlackRequestChatPostMessage{
-		Channel: message.Channel,
-		Text:    answer,
-		AsUser:  true,
-		Ts:      time.Now(),
+		Channel:         message.Channel,
+		Text:            answer,
+		AsUser:          true,
+		Ts:              time.Now(),
+		OriginalMessage: *message,
 	}
 
 	log.Logger().FinishMessage("Answer prepare")
 	return responseMessage, nil
-}
-
-func fileErrorMessage(channelID string, file dto.File, err error) error {
-	errorMessageAnswer := dto.SlackRequestChatPostMessage{
-		Text:    fmt.Sprintf("Can't process the file. \nReason: %s\nFile name: %s\nFile type: %s", err.Error(), file.Name, file.Filetype),
-		Channel: channelID,
-		AsUser:  true,
-	}
-
-	if err := sendAnswersForReceivedMessages(errorMessageAnswer); err != nil {
-		log.Logger().AddError(err).
-			Interface("file", file).
-			Interface("channelID", channelID).
-			Msg("Can't check or answer to the message")
-
-		return err
-	}
-
-	return nil
 }
