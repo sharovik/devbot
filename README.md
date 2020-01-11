@@ -2,14 +2,25 @@
 
 This bot can help to automate multiple processes of development and give the possibility to achieve more goals for less time.
 
-### What this bot can
-* create the WordPress template just by uploading the file to the specific channel or to the PM of the bot
+## Table of contents
+- [Available features](#generate-wordpress-template)
+- [Getting Started](#getting-started)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [How to use](#how-to-use)
+- [Custom events](#custom-events)
+- [Authors](#authors)
+- [License](#license)
+
+## Available features
+* [trigger custom events by personal message or triggering bot in the channel](documentation/events.md)
+* [create the WordPress template just by uploading the file to the specific channel or to the PM of the bot](#generate-wordpress-template)
 
 ## Getting Started
 
 These instructions will help you to install the bot to your server (local, development, production).
 
-### Prerequisites
+## Prerequisites
 
 Before the installation I would recommend to prepare the slack application for your account. 
 1. Go to [applications page](https://api.slack.com/apps?new_app=1) of slack and create new application there
@@ -18,7 +29,7 @@ Before the installation I would recommend to prepare the slack application for y
 4. After you created a bot user, please go back to the `Basic Information` page and install your app to your workspace. You can find the `Install your app to your workspace` button in the `Building Apps for Slack` section.
 5. Now you need to get the OAuth tokens for our bot user. For that please go to `OAuth & Permissions`, there you will find the `Bot User OAuth Access Token` which appears only after application installation to your slack account. This token you will need to specify in .env configuration file of your bot
 
-### Devbot installation
+## Installation
 
 1. Go to [this page](https://github.com/sharovik/devbot/releases) and download latest version of devbot application.
 2. Prepare the configuration file for our bot
@@ -48,7 +59,5 @@ Please read the [events documentation](documentation/events.md)
 
 * **Pavel Simzicov** - *Initial work* - [sharovik](https://github.com/sharovik)
 
-## 
-
-License
+## License
 This project is licensed under the BSD License - see the LICENSE.md file for details
