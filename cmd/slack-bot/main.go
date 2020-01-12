@@ -12,7 +12,10 @@ func init() {
 	container.C = container.C.Init()
 }
 
-const maximumRetries = 4
+const (
+	maximumRetries      = 4
+	delayBetweenRetries = time.Second * 1800 //30 minutes
+)
 
 var (
 	numberOfRetries = 0
@@ -26,6 +29,13 @@ func run() error {
 
 			if numberOfRetries >= maximumRetries {
 				return err
+			}
+
+			currentTime := time.Now()
+
+			//We set to 0 number of retries if there were no any retries since 30 minutes
+			if time.Duration(currentTime.Sub(lastRetry).Minutes()) > delayBetweenRetries {
+				numberOfRetries = 0
 			}
 
 			numberOfRetries++
