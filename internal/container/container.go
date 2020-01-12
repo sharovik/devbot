@@ -4,13 +4,14 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/sharovik/devbot/internal/dto"
-	"github.com/sharovik/devbot/internal/helper"
 	"net/http"
 	"os"
 	"path"
 	"runtime"
 	"time"
+
+	"github.com/sharovik/devbot/internal/dto"
+	"github.com/sharovik/devbot/internal/helper"
 
 	"github.com/sharovik/devbot/internal/client"
 	"github.com/sharovik/devbot/internal/config"
