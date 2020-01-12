@@ -11,7 +11,8 @@ vendor:
 
 $(BIN_DIR)/%: cmd/%/main.go vendor
 	env GOOS=darwin go build -mod=vendor $(LDFLAGS) -o $@-mac $<
-	env GOOS=darwin GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-linux $<
+	env GOOS=darwin GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-darwin-amd64 $<
+	env GOOS=linux GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-linux-amd64 $<
 
 lint:
 	golint -set_exit_status ./events/...
