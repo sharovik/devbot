@@ -3,8 +3,10 @@ package slack
 import (
 	"encoding/json"
 	"errors"
-	"github.com/sharovik/devbot/internal/config"
 	"strings"
+
+	"github.com/sharovik/devbot/internal/config"
+	"github.com/sharovik/devbot/internal/service/base"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
@@ -12,7 +14,14 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-func fetchMainChannelID() error {
+//Service struct of slack service
+type Service struct {
+}
+
+//S slack service object
+var S base.ServiceInterface = Service{}
+
+func (Service) fetchMainChannelID() error {
 	availableChannels, statusCode, err := container.C.SlackClient.GetConversationsList()
 	if err != nil {
 		log.Logger().AddError(err).Int("status_code", statusCode).Msg("Failed conversations list fetching")
@@ -39,7 +48,7 @@ func fetchMainChannelID() error {
 	return nil
 }
 
-func fetchBotUserID() error {
+func (Service) fetchBotUserID() error {
 	availableUsers, statusCode, err := container.C.SlackClient.GetUsersList()
 	if err != nil {
 		log.Logger().AddError(err).Int("status_code", statusCode).Msg("Failed conversations list fetching")
@@ -66,10 +75,10 @@ func fetchBotUserID() error {
 	return nil
 }
 
-func beforeWSConnectionStart() error {
+func (s Service) beforeWSConnectionStart() error {
 	if container.C.Config.SlackConfig.MainChannelID == "" {
 		log.Logger().Info().Msg("Main channel ID wasn't specified. Trying to fetch main channel from API")
-		if err := fetchMainChannelID(); err != nil {
+		if err := s.fetchMainChannelID(); err != nil {
 			log.Logger().AddError(err).Msg("Failed to fetch channels")
 			return err
 		}
@@ -77,7 +86,7 @@ func beforeWSConnectionStart() error {
 
 	if container.C.Config.SlackConfig.BotUserID == "" {
 		log.Logger().Info().Msg("Bot user ID wasn't specified. Trying to fetch user ID from API")
-		if err := fetchBotUserID(); err != nil {
+		if err := s.fetchBotUserID(); err != nil {
 			log.Logger().AddError(err).Msg("Failed to fetch user ID")
 			return err
 		}
@@ -94,15 +103,15 @@ func beforeWSConnectionStart() error {
 }
 
 //InitWebSocketReceiver method for initialization of websocket receiver
-func InitWebSocketReceiver() error {
-	if err := beforeWSConnectionStart(); err != nil {
+func (s Service) InitWebSocketReceiver() error {
+	if err := s.beforeWSConnectionStart(); err != nil {
 		log.Logger().AddError(err).Msg("Failed to prepare service for WS connection")
 		return err
 	}
 
-	ws, statusCode, err := wsConnect()
+	ws, statusCode, err := s.wsConnect()
 	if err != nil {
-		log.Logger().AddError(err).Int("status_code", statusCode).Msg("Failed send message")
+		log.Logger().AddError(err).Int("status_code", statusCode).Msg("Failed connect to the websocket")
 		return err
 	}
 
@@ -116,7 +125,7 @@ func InitWebSocketReceiver() error {
 		err = websocket.JSON.Receive(ws, &event)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Something went wrong with message receiving from EventsAPI")
-			panic(err)
+			return err
 		}
 
 		str, _ := json.Marshal(&event)
@@ -129,7 +138,7 @@ func InitWebSocketReceiver() error {
 			log.Logger().AddError(err).
 				RawJSON("message_body", str).
 				Msg("Something went wrong with message parsing")
-			panic(err)
+			return err
 		}
 
 		if !isValidMessage(&message) {
@@ -143,7 +152,7 @@ func InitWebSocketReceiver() error {
 }
 
 //wsConnect method for receiving of websocket URL which we will use for our connection
-func wsConnect() (*websocket.Conn, int, error) {
+func (Service) wsConnect() (*websocket.Conn, int, error) {
 	response, statusCode, err := container.C.SlackClient.Get("/rtm.connect")
 	if err != nil {
 		log.Logger().AddError(err).RawJSON("response", response).Int("status_code", statusCode).Msg("Failed send message")

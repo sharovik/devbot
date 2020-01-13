@@ -2,14 +2,15 @@ package themerwordpress
 
 import (
 	"fmt"
-	"github.com/sharovik/devbot/internal/container"
-	"github.com/sharovik/devbot/internal/dto"
-	"github.com/sharovik/devbot/internal/helper"
-	"github.com/sharovik/devbot/internal/log"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
+
+	"github.com/sharovik/devbot/internal/container"
+	"github.com/sharovik/devbot/internal/dto"
+	"github.com/sharovik/devbot/internal/helper"
+	"github.com/sharovik/devbot/internal/log"
 )
 
 const (

@@ -2,12 +2,13 @@ package slack
 
 import (
 	"fmt"
+	"regexp"
+	"time"
+
 	"github.com/sharovik/devbot/events"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/sharovik/devbot/internal/log"
-	"regexp"
-	"time"
 )
 
 const (
