@@ -45,6 +45,7 @@ func (e ThemerEvent) Execute(message dto.SlackRequestChatPostMessage) (dto.Slack
 			log.Logger().AddError(err).Msg("Failed to process file")
 
 			answer = fileErrorMessage(message.Channel, file, err)
+			return answer, nil
 		}
 
 		message.OriginalMessage.Files = nil
@@ -97,11 +98,20 @@ func processFile(channel string, file dto.File) (dto.File, error) {
 		return file, err
 	}
 
-	log.Logger().Debug().Str("template_dir", pathToFiles).Msg("Template dir generated")
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return file, err
+	}
+
+	log.Logger().Debug().
+		Str("template_dir", pathToFiles).
+		Str("current_dir", currentDir).
+		Msg("Template dir generated")
 
 	//We run the command which compiles the template.
 	//This will create in src 2 directories: one is for template html preview and second one for template
-	cmd := exec.Command("./scripts/themer/themer.phar", fmt.Sprintf("--path=%s", pathToFiles))
+
+	cmd := exec.Command(filepath.Join(currentDir,"./scripts/themer/themer.phar"), fmt.Sprintf("--path=%s", pathToFiles))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
