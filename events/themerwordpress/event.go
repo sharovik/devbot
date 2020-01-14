@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
@@ -82,11 +83,21 @@ func processFile(channel string, file dto.File) (dto.File, error) {
 		return file, err
 	}
 
+	log.Logger().Debug().
+		Str("url", file.URLPrivate).
+		Msg("File was downloaded")
+
 	//Now we need to unzip the file and save the destination folder path
 	var (
-		src         = os.TempDir() + file.ID
+		src         = filepath.Join(os.TempDir(), file.ID)
 		pathToFiles = src + "/downloaded_template"
 	)
+
+	log.Logger().Debug().
+		Str("src", src).
+		Str("path_to_files", pathToFiles).
+		Msg("Start unzip")
+
 	_, err = helper.Unzip(tmpFile.Name(), pathToFiles)
 	if err != nil {
 		return file, err
