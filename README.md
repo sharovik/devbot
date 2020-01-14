@@ -22,12 +22,17 @@ These instructions will help you to install the bot to your server (local, devel
 
 ## Prerequisites
 
+### Slack token generation
 Before the installation I would recommend to prepare the slack application for your account. 
 1. Go to [applications page](https://api.slack.com/apps?new_app=1) of slack and create new application there
 2. Once new application was created you will be redirected to the application `Basic Information` page, where you have to click in the `Building Apps for Slack` section to the `Add features and functionality` block. There you need to click to the `Bots` button.
 3. Add a Bot user. Specify the `Display name`, `Default username` and his `online status`
 4. After you created a bot user, please go back to the `Basic Information` page and install your app to your workspace. You can find the `Install your app to your workspace` button in the `Building Apps for Slack` section.
 5. Now you need to get the OAuth tokens for our bot user. For that please go to `OAuth & Permissions`, there you will find the `Bot User OAuth Access Token` which appears only after application installation to your slack account. This token you will need to specify in .env configuration file of your bot
+
+### PHP installation
+You server requires php version of 7.1+ with php-dom module
+`sudo apt install php php-dom`
 
 ## Installation
 
