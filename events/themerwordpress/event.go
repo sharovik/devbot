@@ -39,18 +39,16 @@ var Event = ThemerEvent{
 //Execute method which is called by message processor
 func (e ThemerEvent) Execute(message dto.SlackRequestChatPostMessage) (dto.SlackRequestChatPostMessage, error) {
 	var answer = message
-	go func() {
-		if message.OriginalMessage.Files != nil {
-			file, err := processFiles(message.OriginalMessage)
-			if err != nil {
-				log.Logger().AddError(err).Msg("Failed to process file")
+	if message.OriginalMessage.Files != nil {
+		file, err := processFiles(message.OriginalMessage)
+		if err != nil {
+			log.Logger().AddError(err).Msg("Failed to process file")
 
-				answer = fileErrorMessage(message.Channel, file, err)
-			}
-
-			message.OriginalMessage.Files = nil
+			answer = fileErrorMessage(message.Channel, file, err)
 		}
-	}()
+
+		message.OriginalMessage.Files = nil
+	}
 
 	answer.Text = prepareThemeInstructions()
 	return answer, nil
@@ -82,10 +80,6 @@ func processFile(channel string, file dto.File) (dto.File, error) {
 	if err != nil {
 		return file, err
 	}
-
-	log.Logger().Debug().
-		Str("url", file.URLPrivate).
-		Msg("File was downloaded")
 
 	//Now we need to unzip the file and save the destination folder path
 	var (
@@ -141,6 +135,7 @@ func processFile(channel string, file dto.File) (dto.File, error) {
 }
 
 func downloadFile(url string) (*os.File, error) {
+	log.Logger().StartMessage("Download file")
 	// Get the data
 	resp, _, err := container.C.SlackClient.Request(http.MethodGet, url, []byte(``))
 	if err != nil {
@@ -162,6 +157,7 @@ func downloadFile(url string) (*os.File, error) {
 		return nil, err
 	}
 
+	log.Logger().FinishMessage("Download file")
 	return tmpFile, nil
 }
 
