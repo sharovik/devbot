@@ -109,18 +109,18 @@ func processMessage(message *dto.SlackResponseEventMessage) error {
 			return nil
 		}
 
-		answer, err := events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType].Execute(answerMessage)
-		if err != nil {
-			log.Logger().AddError(err).Msg("Failed to execute the event")
-			return err
-		}
-
-		if answer.Text != "" {
-			if err := SendAnswerForReceivedMessage(answer); err != nil {
-				log.Logger().AddError(err).Msg("Failed to send post-answer for selected event")
-				return err
+		go func() {
+			answer, err := events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType].Execute(answerMessage)
+			if err != nil {
+				log.Logger().AddError(err).Msg("Failed to execute the event")
 			}
-		}
+
+			if answer.Text != "" {
+				if err := SendAnswerForReceivedMessage(answer); err != nil {
+					log.Logger().AddError(err).Msg("Failed to send post-answer for selected event")
+				}
+			}
+		}()
 	}
 
 	refreshPreparedMessages()
