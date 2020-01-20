@@ -31,7 +31,7 @@ Before the installation I would recommend to prepare the slack application for y
 5. Now you need to get the OAuth tokens for our bot user. For that please go to `OAuth & Permissions`, there you will find the `Bot User OAuth Access Token` which appears only after application installation to your slack account. This token you will need to specify in .env configuration file of your bot
 
 ### PHP installation
-You server requires php version of 7.1+ with php-dom module
+You server requires php version of 7.1+ with php-dom module. `It is only required if you will use the wordpress template generation event.`
 `sudo apt install php php-dom`
 
 ## Installation
