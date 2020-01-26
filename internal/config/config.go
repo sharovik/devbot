@@ -20,10 +20,14 @@ type SlackConfig struct {
 
 //Config configuration object
 type Config struct {
-	appEnv        string
-	AppDictionary string
-	SlackConfig   SlackConfig
-	initialised   bool
+	appEnv             string
+	AppDictionary      string
+	SlackConfig        SlackConfig
+	initialised        bool
+	DatabaseConnection string
+	DatabaseHost       string
+	DatabaseUsername   string
+	DatabasePassword   string
 }
 
 //cfg variable which contains initialised Config
@@ -58,6 +62,18 @@ const (
 
 	//SlackEnvOAuthToken env variable for slack oauth token
 	SlackEnvOAuthToken = "SLACK_OAUTH_TOKEN"
+
+	//DatabaseConnection env variable for database connection type
+	DatabaseConnection = "DATABASE_CONNECTION"
+
+	//DatabaseHost env variable for database host
+	DatabaseHost = "DATABASE_HOST"
+
+	//DatabaseHost env variable for database username
+	DatabaseUsername = "DATABASE_USERNAME"
+
+	//DatabaseHost env variable for database password
+	DatabasePassword = "DATABASE_PASSWORD"
 
 	defaultMainChannelAlias = "general"
 	defaultBotName          = "devbot"
@@ -105,7 +121,11 @@ func Init() Config {
 				BotUserID:        os.Getenv(SlackEnvUserID),
 				BotName:          BotName,
 			},
-			initialised: true,
+			initialised:        true,
+			DatabaseConnection: os.Getenv(DatabaseConnection),
+			DatabaseHost:       os.Getenv(DatabaseHost),
+			DatabaseUsername:   os.Getenv(DatabaseUsername),
+			DatabasePassword:   os.Getenv(DatabasePassword),
 		}
 
 		return cfg

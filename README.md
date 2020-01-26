@@ -22,6 +22,9 @@ These instructions will help you to install the bot to your server (local, devel
 
 ## Prerequisites
 
+# Enable CGO
+Because here we use the CGO package for *sqlite* driver, please enable the environment variable `CGO_ENABLED=1` and have a `gcc` compile present within your path.
+
 ### Slack token generation
 Before the installation I would recommend to prepare the slack application for your account. 
 1. Go to [applications page](https://api.slack.com/apps?new_app=1) of slack and create new application there
