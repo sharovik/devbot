@@ -47,6 +47,7 @@ func run() error {
 			})
 
 			log.Logger().Debug().Msg("Triggered retry")
+			time.Sleep(time.Duration(numberOfRetries) * time.Second)
 			continue
 		}
 	}
