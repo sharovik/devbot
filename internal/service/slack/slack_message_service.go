@@ -203,7 +203,7 @@ func refreshPreparedMessages() {
 
 func findDictionaryMessageType(message *dto.SlackResponseEventMessage) dto.DictionaryMessage {
 	var dmAnswer dto.DictionaryMessage
-	for index, dm := range getMessageDictionary(message) {
+	for index, dm := range container.C.Dictionary.Messages {
 		re := regexp.MustCompile(dm.Question)
 
 		matches := re.FindStringSubmatch(message.Text)
@@ -226,16 +226,6 @@ func findDictionaryMessageType(message *dto.SlackResponseEventMessage) dto.Dicti
 	}
 
 	return dmAnswer
-}
-
-func getMessageDictionary(message *dto.SlackResponseEventMessage) []dto.DictionaryMessage {
-	if len(message.Files) > 0 {
-		log.Logger().Debug().Str("dictionary", "file_message_dictionary").Msg("Selected dictionary")
-		return container.C.Dictionary.FileMessageDictionary
-	}
-
-	log.Logger().Debug().Str("dictionary", "text_message_dictionary").Msg("Selected dictionary")
-	return container.C.Dictionary.TextMessageDictionary
 }
 
 func prepareAnswer(message *dto.SlackResponseEventMessage, dm dto.DictionaryMessage) (dto.SlackRequestChatPostMessage, error) {
