@@ -67,25 +67,6 @@ func processMessage(message *dto.SlackResponseEventMessage) error {
 		Str("channel", message.Channel).
 		Msg("Message received")
 
-	m, dmAnswer, err := analyseMessage(message)
-	if err != nil {
-		log.Logger().AddError(err).Msg("Failed to analyse received message")
-		return err
-	}
-
-	emptyDmMessage := dto.DictionaryMessage{}
-	if dmAnswer == emptyDmMessage {
-		log.Logger().Debug().Msg("No answer found for the received message")
-	}
-
-	//We put a dictionary message into our message object,
-	// so later we can identify what kind of reaction will be executed
-	m.DictionaryMessage = dmAnswer
-
-	//We need to put this message into our small queue,
-	//because we need to make sure if we received our notification.
-	readyToAnswer(m)
-
 	switch message.Type {
 	case eventTypeDesktopNotification:
 		if !isAnswerWasPrepared(message) {
@@ -121,6 +102,33 @@ func processMessage(message *dto.SlackResponseEventMessage) error {
 				}
 			}
 		}()
+	default:
+		m, dmAnswer, err := analyseMessage(message)
+		if err != nil {
+			log.Logger().AddError(err).Msg("Failed to analyse received message")
+			return err
+		}
+
+		emptyDmMessage := dto.DictionaryMessage{}
+		if dmAnswer == emptyDmMessage {
+			log.Logger().Debug().
+				Str("type", message.Type).
+				Str("text", message.Text).
+				Str("team", message.Team).
+				Str("source_team", message.SourceTeam).
+				Str("ts", message.Ts).
+				Str("user", message.User).
+				Str("channel", message.Channel).
+				Msg("No answer found for the received message")
+		}
+
+		//We put a dictionary message into our message object,
+		// so later we can identify what kind of reaction will be executed
+		m.DictionaryMessage = dmAnswer
+
+		//We need to put this message into our small queue,
+		//because we need to make sure if we received our notification.
+		readyToAnswer(m)
 	}
 
 	refreshPreparedMessages()

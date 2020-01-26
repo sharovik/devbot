@@ -91,7 +91,7 @@ func Init() Config {
 
 		AppDictionary := defaultAppDictionary
 		if os.Getenv(appDictionary) != "" {
-			mainChannelAlias = os.Getenv(appDictionary)
+			AppDictionary = os.Getenv(appDictionary)
 		}
 
 		cfg = Config{
