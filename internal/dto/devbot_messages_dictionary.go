@@ -10,6 +10,5 @@ type DictionaryMessage struct {
 
 //DevBotMessageDictionary main dictionary of DevBot
 type DevBotMessageDictionary struct {
-	TextMessageDictionary []DictionaryMessage `json:"text_message_dictionary"`
-	FileMessageDictionary []DictionaryMessage `json:"file_message_dictionary"`
+	Messages []DictionaryMessage `json:"messages"`
 }
