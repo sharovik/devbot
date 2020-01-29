@@ -22,7 +22,7 @@ These instructions will help you to install the bot to your server (local, devel
 
 ## Prerequisites
 
-# Enable CGO
+### Enable CGO
 Because here we use the CGO package for *sqlite* driver, please enable the environment variable `CGO_ENABLED=1` and have a `gcc` compile present within your path.
 
 ### Slack token generation
@@ -33,10 +33,35 @@ Before the installation I would recommend to prepare the slack application for y
 4. After you created a bot user, please go back to the `Basic Information` page and install your app to your workspace. You can find the `Install your app to your workspace` button in the `Building Apps for Slack` section.
 5. Now you need to get the OAuth tokens for our bot user. For that please go to `OAuth & Permissions`, there you will find the `Bot User OAuth Access Token` which appears only after application installation to your slack account. This token you will need to specify in .env configuration file of your bot
 
+### Install sqlite3
+We are using the sqlite3 as main storage of our questions and answers data. To exclude errors related to unknown library sqlite3, please install it.
+You can use this command for ubuntu
+```
+sudo apt-get install sqlite3 libsqlite3-dev
+```
+Or by using brew
+```
+brew install sqlite
+```
+Or for centos
+```
+sudo yum install sqlite
+```
+
 ### PHP installation
 You server requires php version of 7.1+ with php-dom module. `It is only required if you will use the wordpress template generation event.`
-`sudo apt install php php-dom`
-
+For ubuntu
+```
+sudo apt install php php-dom
+```
+Or for brew
+```
+brew install php
+```
+Or for centos
+```
+yum install php php-xml
+```
 ## Installation
 
 1. Go to [this page](https://github.com/sharovik/devbot/releases) and download latest version of devbot application.

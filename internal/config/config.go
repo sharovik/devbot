@@ -69,15 +69,16 @@ const (
 	//DatabaseHost env variable for database host
 	DatabaseHost = "DATABASE_HOST"
 
-	//DatabaseHost env variable for database username
+	//DatabaseUsername env variable for database username
 	DatabaseUsername = "DATABASE_USERNAME"
 
-	//DatabaseHost env variable for database password
+	//DatabasePassword env variable for database password
 	DatabasePassword = "DATABASE_PASSWORD"
 
-	defaultMainChannelAlias = "general"
-	defaultBotName          = "devbot"
-	defaultAppDictionary    = "slack"
+	defaultMainChannelAlias   = "general"
+	defaultBotName            = "devbot"
+	defaultAppDictionary      = "slack"
+	defaultDatabaseConnection = "sqlite"
 )
 
 //Init initialise configuration for this project
@@ -110,6 +111,11 @@ func Init() Config {
 			AppDictionary = os.Getenv(appDictionary)
 		}
 
+		dbConnection := defaultDatabaseConnection
+		if os.Getenv(DatabaseConnection) != "" {
+			dbConnection = os.Getenv(DatabaseConnection)
+		}
+
 		cfg = Config{
 			appEnv:        os.Getenv(appEnv),
 			AppDictionary: AppDictionary,
@@ -122,7 +128,7 @@ func Init() Config {
 				BotName:          BotName,
 			},
 			initialised:        true,
-			DatabaseConnection: os.Getenv(DatabaseConnection),
+			DatabaseConnection: dbConnection,
 			DatabaseHost:       os.Getenv(DatabaseHost),
 			DatabaseUsername:   os.Getenv(DatabaseUsername),
 			DatabasePassword:   os.Getenv(DatabasePassword),

@@ -1,8 +1,6 @@
 package slack
 
 import (
-	"fmt"
-	"regexp"
 	"time"
 
 	"github.com/sharovik/devbot/events"
@@ -160,7 +158,10 @@ func analyseMessage(message *dto.SlackResponseEventMessage) (dto.SlackRequestCha
 		dmAnswer        dto.DictionaryMessage
 	)
 
-	dmAnswer = findDictionaryMessageType(message)
+	dmAnswer, err = container.C.Dictionary.FindAnswer(message)
+	if err != nil {
+		return dto.SlackRequestChatPostMessage{}, dto.DictionaryMessage{}, err
+	}
 
 	responseMessage, err = prepareAnswer(message, dmAnswer)
 	if err != nil {
@@ -207,33 +208,6 @@ func refreshPreparedMessages() {
 			delete(messagesReceived, channelID)
 		}
 	}
-}
-
-func findDictionaryMessageType(message *dto.SlackResponseEventMessage) dto.DictionaryMessage {
-	var dmAnswer dto.DictionaryMessage
-	for index, dm := range container.C.Dictionary.Messages {
-		re := regexp.MustCompile(dm.Question)
-
-		matches := re.FindStringSubmatch(message.Text)
-		if matches != nil {
-			log.Logger().Debug().
-				Int("index", index).
-				Str("found_matches", dm.Question).
-				Str("selected_answer", dm.Answer).
-				Str("selected_type_of_action", dm.ReactionType).
-				Interface("matches", matches).
-				Msg("Selected answer")
-
-			dmAnswer = dm
-			if dm.MainGroupIndexInRegex != 0 {
-				dmAnswer.Answer = fmt.Sprintf(dm.Answer, matches[dm.MainGroupIndexInRegex])
-			}
-
-			return dmAnswer
-		}
-	}
-
-	return dmAnswer
 }
 
 func prepareAnswer(message *dto.SlackResponseEventMessage, dm dto.DictionaryMessage) (dto.SlackRequestChatPostMessage, error) {

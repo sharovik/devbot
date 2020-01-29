@@ -64,5 +64,7 @@ func main() {
 	if err := run(); err != nil {
 		log.Logger().AddError(err).Msg("Application was interrupted by an error")
 	}
+
+	container.C.Terminate()
 	log.Logger().FinishMessage("SlackBot")
 }

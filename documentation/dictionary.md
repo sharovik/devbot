@@ -1,41 +1,37 @@
 ##Dictionary
-This is the functionality by which the DevBot understand what kind of the event he need to trigger for your message. Currently it is a simplified version, where we go through simple json file and search by regexp the matches and if match was found, bot run the logic for that message.
+This is the functionality by which the DevBot understand what kind of the event he need to trigger for your message.
 
 ## Table of contents
 - [The dictionary database](#the-dictionary-database)
-- [The dictionary object structure](#the-dictionary-object-structure)
-- [Dictionary object generator tool](#dictionary-object-generator-tool)
--- [Available options](#available-options)
+-- [The database structure](#the-database-structure)
+-- [The tables](#the-tables)
+- [Generator tool](#generator-tool)
+-- [Attributes](#attributes)
 -- [Example of generator tool execution](#example-of-generator-tool-execution)
 
 ## The dictionary database
-Currently I used the simple way of storing data for dictionary messages - simple json file. You can find it here `internal/dictionary/slack_dictionary.json`.
-There is 2 groups of messages `text_message_dictionary` and `file_message_dictionary`. Each of these groups contains the objects which have questions and answers.
-Below you can see the example of the structure of the object which have question and answer:
-```json
-{"question":"(?i)Hey","answer":"Yo","main_group_index_in_regex":1,"reaction_type":"help"}
-```
+The SQLite database used as a main storage for questions and answers. You can find it in the root directory of the project (`devbot.sqlite`).
 
-## The dictionary object structure
-Below you can see the description for each field of the question and answer object
-* **question** - regexp for question. Example: `Foo`
-* **answer** - regexp for answer. Example: `Bar`
-* **main_group_index_in_regex** - the number of the group in regexp which should be taken. Example: `(?:Foo (Bar))`, from that regexp we need to take the group which contains the `Bar`. In that regexp this group will be first, so we put in `main_group_index_in_regex` the `1` value 
-* **reaction_type** - the name of the event which should be triggered after the message answer prepare. Example: see [events documentation](events.md)
+### The database structure
+![The database structure](images/database-structure.png)
 
-## Dictionary object generator tool
+### The tables
+1. events - the table which contains the events which will be triggered after answer preparing. Ex. `themerwordpress` event
+2. questions - the table which contains the questions and answers
+3. scenarios - the table for different scenarios creation
+
+## Generator tool
 There is a tool which you can use for creation of new questions and answers for our dictionary. You can find this tool here `scripts/dictionary-loader/dictionary-loader`
 
-### Available options:
-* selectedDictionary - existing dictionary which you can find in internal/selectedDictionary folder
-* type - Type of selectedDictionary. By default will be `text_message_dictionary`
-* question - a question. It can be static or can be regex
-* answer - the answer
-* groupIndex - Group index in regex. This will get by selected index, group in your string regex and try to use it for answers and actions
-* reactionAction - Type of reaction, which should be used for this answer. If it's empty, then only text message reaction will be executed
+### Attributes
+Below you can see the description for each field of the question and answer object
+* **question** - the question text. Example: `Hello, my name is John`
+* **question_regex** - regexp for question. Please see [the GOLang regex syntax documentation](https://golang.org/pkg/regexp/syntax/)!. Example: `(?i)Hello, my name is (?<name>\w+)`
+* **question_regex_group** - the regexp group which will be used for identifying of the part of the question which we need to use for the answer. Example: Question received `Hello, my name is John`, we have regexp for it `(?i)Hello, my name is (?P<name>\w+)` and we have there group `<name>`. This group will be used during answer generation 
+* **answer** - answer text. Example: `Hello %s` or `Hello`, where `%s` we need to use only in case if we used `question_regex` and `question_regex_group` attributes
+* **event_alias** - the name of the event which should be triggered after the message answer prepare. Example: see [events documentation](events.md)
 
 ### Example of generator tool execution
 ``` 
-./scripts/dictionary-loader/dictionary-loader --question=Foo --answer=Bar --reactionAction=help
+./scripts/dictionary-loader/dictionary-loader --question="Hello, my name is John" --question_regex="(?i)Hello, my name is (?P<name>\w+)" --question_regex_group=name --answer="Hello %s" --event_alias="hello"
 ```
-This command will insert new question for `text_message_dictionary` in the file `internal/dictionary/slack_dictionary.json`

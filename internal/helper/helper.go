@@ -2,12 +2,12 @@ package helper
 
 import (
 	"archive/zip"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -19,20 +19,6 @@ func FileToBytes(filePath string) ([]byte, error) {
 	}
 
 	return bytes, nil
-}
-
-//ObjectToFile method save object in selected path
-func ObjectToFile(path string, object interface{}) error {
-	if err := ioutil.WriteFile(path, convertToByte(object), 0666); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func convertToByte(object interface{}) []byte {
-	str, _ := json.Marshal(object)
-	return str
 }
 
 // Unzip will decompress a zip archive, moving all files and folders
@@ -148,4 +134,27 @@ func Zip(src string, dest string) error {
 	}
 
 	return nil
+}
+
+//FindMatches method returns the matches map object which contains all matches which we can find in selected subject
+func FindMatches(regex string, subject string) map[string]string {
+	re := regexp.MustCompile(regex)
+	matches := re.FindStringSubmatch(subject)
+	result := make(map[string]string)
+
+	if len(matches) == 0 {
+		return result
+	}
+
+	for i, name := range re.SubexpNames() {
+		if i != 0 {
+			if name != "" {
+				result[name] = matches[i]
+			} else {
+				result[fmt.Sprintf("%d", i)] = matches[i]
+			}
+		}
+	}
+
+	return result
 }
