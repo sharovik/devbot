@@ -2,11 +2,12 @@ package dictionary
 
 import (
 	"fmt"
+	"html"
+	"strconv"
+
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/sharovik/devbot/internal/helper"
-	"html"
-	"strconv"
 )
 
 const (
@@ -14,7 +15,7 @@ const (
 	EventName = "dictionary"
 
 	//Regex for catching of the information from the received message
-	regexScenarioIdAttribute         = "(?im)((?:scenario id:) (?P<scenario_id>.+))"
+	regexScenarioIDAttribute         = "(?im)((?:scenario id:) (?P<scenario_id>.+))"
 	regexScenarioNameAttribute       = "(?im)((?:scenario name:) (?P<scenario_name>.+))"
 	regexQuestionAttribute           = "(?im)((?:question:) (?P<question>.+))"
 	regexQuestionRegexAttribute      = "(?im)((?:question regex:) (?P<question_regex>.+))"
@@ -24,7 +25,7 @@ const (
 )
 
 var (
-	scenarioId         int64
+	scenarioID         int64
 	scenarioName       string
 	question           string
 	questionRegex      string
@@ -52,58 +53,58 @@ func (e ThemerEvent) Execute(message dto.SlackRequestChatPostMessage) (dto.Slack
 		return answerMessage, err
 	}
 
-	//We get the event id for selected event alias. The eventId we will use for scenarioId and question inserting
-	eventId, err := container.C.Dictionary.FindEventByAlias(eventAlias)
+	//We get the event id for selected event alias. The eventID we will use for scenarioID and question inserting
+	eventID, err := container.C.Dictionary.FindEventByAlias(eventAlias)
 	if err != nil {
 		panic(err)
 	}
 
 	//If we received empty event id, it means that for that event-alias we don't have any row created. We need to create it now
-	if eventId == 0 {
-		eventId, err = container.C.Dictionary.InsertEvent(eventAlias)
+	if eventID == 0 {
+		eventID, err = container.C.Dictionary.InsertEvent(eventAlias)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	//Now we need to do the similar procedure for the scenarioId
-	scenarioId, err = container.C.Dictionary.FindScenarioByID(scenarioId)
+	//Now we need to do the similar procedure for the scenarioID
+	scenarioID, err = container.C.Dictionary.FindScenarioByID(scenarioID)
 	if err != nil {
 		panic(err)
 	}
 
-	//If the scenarioId is 0 it means that scenarioId is not created. We need to create it now
-	if scenarioId == 0 {
-		lastScenarioId, err := container.C.Dictionary.GetLastScenarioID()
+	//If the scenarioID is 0 it means that scenarioID is not created. We need to create it now
+	if scenarioID == 0 {
+		lastScenarioID, err := container.C.Dictionary.GetLastScenarioID()
 		if err != nil {
 			panic(err)
 		}
 
 		if scenarioName == "" {
-			scenarioName = fmt.Sprintf("Scenario #%d", lastScenarioId+1)
+			scenarioName = fmt.Sprintf("Scenario #%d", lastScenarioID+1)
 		}
 
-		scenarioId, err = container.C.Dictionary.InsertScenario(scenarioName, eventId)
+		scenarioID, err = container.C.Dictionary.InsertScenario(scenarioName, eventID)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	//In that step we have valid scenarioId and eventId. It means that we can proceed with question creation
-	var questionId int64
-	questionId, err = container.C.Dictionary.InsertQuestion(question, answer, scenarioId, questionRegex, questionRegexGroup)
+	//In that step we have valid scenarioID and eventID. It means that we can proceed with question creation
+	var questionID int64
+	questionID, err = container.C.Dictionary.InsertQuestion(question, answer, scenarioID, questionRegex, questionRegexGroup)
 	if err != nil {
 		panic(err)
 	}
 
-	answerMessage.Text = fmt.Sprintf("I added this information to the dictionary.\nQuestionID: %d\nQuestion: %s\nAnswer: %s\nScenarioID: %d\nRegex: %s\nRegex group: %s", questionId, question, answer, scenarioId, questionRegex, questionRegexGroup)
+	answerMessage.Text = fmt.Sprintf("I added this information to the dictionary.\nQuestionID: %d\nQuestion: %s\nAnswer: %s\nScenarioID: %d\nRegex: %s\nRegex group: %s", questionID, question, answer, scenarioID, questionRegex, questionRegexGroup)
 	return answerMessage, nil
 }
 
 func parseAttributes(text string) error {
 	var (
 		err                 error
-		_scenarioId         string
+		_scenarioID         string
 		_scenarioName       string
 		_question           string
 		_questionRegex      string
@@ -112,7 +113,7 @@ func parseAttributes(text string) error {
 		_eventAlias         string
 	)
 
-	_scenarioId = parseAttribute(text, regexScenarioIdAttribute, "scenario_id")
+	_scenarioID = parseAttribute(text, regexScenarioIDAttribute, "scenario_id")
 	_scenarioName = parseAttribute(text, regexScenarioNameAttribute, "scenario_name")
 	_question = parseAttribute(text, regexQuestionAttribute, "question")
 	_questionRegex = parseAttribute(text, regexQuestionRegexAttribute, "question_regex")
@@ -132,10 +133,10 @@ func parseAttributes(text string) error {
 		return fmt.Errorf("Question cannot be empty. ")
 	}
 
-	if _scenarioId == "" {
-		scenarioId = int64(0)
+	if _scenarioID == "" {
+		scenarioID = int64(0)
 	} else {
-		scenarioId, err = strconv.ParseInt(_scenarioId, 10, 64)
+		scenarioID, err = strconv.ParseInt(_scenarioID, 10, 64)
 		if err != nil {
 			return err
 		}
