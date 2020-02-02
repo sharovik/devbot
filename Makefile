@@ -11,7 +11,7 @@ vendor:
 
 $(BIN_DIR)/%: cmd/%/main.go vendor
 	env GOOS=darwin go build -mod=vendor $(LDFLAGS) -o $@-mac $<
-	env GOOS=linux GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-linux-amd64 $<
+	env GOOS=linux CGO_ENABLED=1 CC=x86_64-linux-musl-gcc GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-linux-amd64 $<
 	env GOOS=linux GOARCH=386 go build -mod=vendor $(LDFLAGS) -o $@-linux-386 $<
 	env GOOS=freebsd GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-freebsd-amd64 $<
 	env GOOS=freebsd GOARCH=386 go build -mod=vendor $(LDFLAGS) -o $@-freebsd-386 $<
