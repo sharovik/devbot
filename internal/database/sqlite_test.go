@@ -18,7 +18,6 @@ var (
 	cfg             config.Config
 	dictionary      SQLiteDictionary
 	availableTables = map[string]string{}
-	demoData        = map[string]string{}
 )
 
 func init() {
