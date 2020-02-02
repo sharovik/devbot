@@ -4,7 +4,7 @@ LDFLAGS=-ldflags="-s -w"
 
 DICTIONARY_SCRIPT_DIR=scripts/dictionary-loader
 
-build: $(addprefix $(BIN_DIR)/,$(CMD))
+build: $(addprefix $(BIN_DIR)/,$(CMD));
 
 vendor:
 	if [ ! -d "vendor" ] || [ -z "$(shell ls -A vendor)" ]; then go mod vendor; fi

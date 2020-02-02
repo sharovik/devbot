@@ -2,16 +2,11 @@ package container
 
 import (
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
-	"path"
-	"runtime"
 	"time"
 
-	"github.com/sharovik/devbot/internal/dto"
-	"github.com/sharovik/devbot/internal/helper"
+	"github.com/sharovik/devbot/internal/database"
 
 	"github.com/sharovik/devbot/internal/client"
 	"github.com/sharovik/devbot/internal/config"
@@ -22,7 +17,7 @@ import (
 type Main struct {
 	Config      config.Config
 	SlackClient client.SlackClientInterface
-	Dictionary  dto.DevBotMessageDictionary
+	Dictionary  database.BaseDatabaseInterface
 }
 
 //C container variable
@@ -51,31 +46,34 @@ func (container Main) Init() Main {
 	}
 
 	container.SlackClient = slackClient
-	container.Dictionary = container.loadDictionary()
+	if err := container.loadDictionary(); err != nil {
+		panic(err)
+	}
 
 	return container
 }
 
-//@todo: start using sqlite database for that
-func (container Main) loadDictionary() dto.DevBotMessageDictionary {
-	if container.Config.GetAppEnv() == config.EnvironmentTesting {
-		_, filename, _, _ := runtime.Caller(0)
-		dir := path.Join(path.Dir(filename), "../../")
-		if err := os.Chdir(dir); err != nil {
-			log.Logger().AddError(err).Msg("Error during the root folder pointer creation")
+//Terminate terminates the properly connections
+func (container *Main) Terminate() {
+	if err := container.Dictionary.CloseDatabaseConnection(); err != nil {
+		panic(err)
+	}
+}
+
+func (container *Main) loadDictionary() error {
+	switch container.Config.DatabaseConnection {
+	case database.ConnectionSQLite:
+		dictionary := database.SQLiteDictionary{
+			Cfg: container.Config,
 		}
-	}
 
-	pathToDictionary := fmt.Sprintf("./internal/dictionary/%s_dictionary.json", container.Config.AppDictionary)
-	bytes, err := helper.FileToBytes(pathToDictionary)
-	if err != nil {
-		panic("Can't load dictionary: " + pathToDictionary)
-	}
+		if err := dictionary.InitDatabaseConnection(); err != nil {
+			return err
+		}
 
-	var dictionary dto.DevBotMessageDictionary
-	if err := json.Unmarshal(bytes, &dictionary); err != nil {
-		panic("Can't unmarshal dictionary file. Error: " + err.Error())
+		container.Dictionary = &dictionary
+		return nil
+	default:
+		return fmt.Errorf("Unknown dictionary database used: %s ", container.Config.DatabaseConnection)
 	}
-
-	return dictionary
 }
