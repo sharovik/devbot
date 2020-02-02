@@ -18,12 +18,12 @@ import (
 var slackClient *client.SlackClient
 
 func init() {
-	container.C = container.C.Init()
-
 	//We switch pointer to the root directory for control the path from which we need to generate test-data file-paths
 	_, filename, _, _ := runtime.Caller(0)
 	dir := path.Join(path.Dir(filename), "../../")
 	_ = os.Chdir(dir)
+
+	container.C = container.C.Init()
 }
 
 func MockSlackResponse(statusCode int, headers map[string]string, body []byte) {

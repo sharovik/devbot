@@ -23,7 +23,18 @@ var (
 	eventAlias         string
 )
 
-const sqliteDatabaseHost = "./devbot.sqlite"
+const (
+	sqliteDatabaseHost = "./devbot.sqlite"
+
+	//Description constants
+	descriptionScenarioIdAttr         = "Scenario id, to which we need to attach this question. If 0 then new scenarioId will be created for this question"
+	descriptionScenarioNameAttr       = "Scenario name"
+	descriptionQuestionAttr           = "the question. It can be static or can be regex"
+	descriptionQuestionRegexAttr      = "Will be used for identifying of the specific information from the question. Ex: from string 'Release master branch', by regex we can take the branch name."
+	descriptionQuestionRegexGroupAttr = "Group which will be taken from selected regex"
+	descriptionAnswerAttr             = "The answer for selected question"
+	descriptionEventAliasAttr         = "The event alias. If alias doesn't exists in the database, then it will be created and used for this question"
+)
 
 func init() {
 	//We switch pointer to the root directory for control the path from which we need to generate test-data file-paths
@@ -123,13 +134,13 @@ func validateArgs() error {
 }
 
 func parseArgs() {
-	_scenarioId := flag.Int64("scenario_id", 0, "Scenario id, to which we need to attach this question. If 0 then new scenarioId will be created for this question")
-	_scenarioName := flag.String("scenario_name", "", "Scenario name")
-	_question := flag.String("question", "Hello world", "the question. It can be static or can be regex")
-	_questionRegex := flag.String("question_regex", "", "Will be used for identifying of the specific information from the question. Ex: from string 'Release master branch', by regex we can take the branch name.")
-	_questionRegexGroup := flag.String("question_regex_group", "", "Group which will be taken from selected regex")
-	_answer := flag.String("answer", "Hey mate", "the answer")
-	_eventAlias := flag.String("event_alias", "", "The event alias. If alias doesn't exists in the database, then it will be created and used for this question")
+	_scenarioId := flag.Int64("scenario_id", 0, descriptionScenarioIdAttr)
+	_scenarioName := flag.String("scenario_name", "", descriptionScenarioNameAttr)
+	_question := flag.String("question", "Hello world", descriptionQuestionAttr)
+	_questionRegex := flag.String("question_regex", "", descriptionQuestionRegexAttr)
+	_questionRegexGroup := flag.String("question_regex_group", "", descriptionQuestionRegexGroupAttr)
+	_answer := flag.String("answer", "Hey mate", descriptionAnswerAttr)
+	_eventAlias := flag.String("event_alias", "", descriptionEventAliasAttr)
 
 	flag.Parse()
 

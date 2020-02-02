@@ -2,7 +2,7 @@ package container
 
 import (
 	"crypto/tls"
-	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -74,6 +74,6 @@ func (container *Main) loadDictionary() error {
 		container.Dictionary = &dictionary
 		return nil
 	default:
-		return errors.New("Unknown dictionary database used. ")
+		return fmt.Errorf("Unknown dictionary database used: %s ", container.Config.DatabaseConnection)
 	}
 }

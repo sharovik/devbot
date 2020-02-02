@@ -46,6 +46,7 @@ func TestSQLiteDictionary_InitDatabaseConnection(t *testing.T) {
 	defer dictionary.client.Close()
 
 	checkIfDataCanBeReturned(t)
+	dropTestTables(t)
 }
 
 func TestSQLiteDictionary_CloseDatabaseConnection(t *testing.T) {
@@ -57,6 +58,7 @@ func TestSQLiteDictionary_CloseDatabaseConnection(t *testing.T) {
 
 	checkIfDataCanBeReturned(t)
 
+	dropTestTables(t)
 	err = dictionary.CloseDatabaseConnection()
 	assert.NoError(t, err)
 }
@@ -89,6 +91,10 @@ func checkIfDataCanBeReturned(t *testing.T) {
 
 	err = rows.Err()
 	assert.NoError(t, err)
+
+	sqlStmt = `drop table if exists foo;`
+	_, err = dictionary.client.Exec(sqlStmt)
+	assert.NoError(t, err)
 }
 
 func TestSQLiteDictionary_FindAnswer(t *testing.T) {
@@ -101,10 +107,10 @@ func TestSQLiteDictionary_FindAnswer(t *testing.T) {
 	insertTestData(t)
 
 	goodCases := map[string]string{
-		"Hello":             "Hello",
-		"Hello world":       "Hello",
-		"Say hello to John": "Hello John",
-		"Say hello to":      "Hello John", //Because in the database we found the Question "Say hello to John"(we do find this because of LIKE condition)
+		"Hello":              "Hello",
+		"Hello world":        "Hello",
+		"Say hello to John":  "Hello John",
+		"Say hello to Pavel": "Hello Pavel",
 	}
 
 	for question, answer := range goodCases {
@@ -132,7 +138,7 @@ func TestSQLiteDictionary_FindAnswer(t *testing.T) {
 
 		var dmAnswer dto.DictionaryMessage
 		dmAnswer, err = dictionary.FindAnswer(&msg)
-		assert.Empty(t, dmAnswer)
+		assert.Empty(t, dmAnswer, question)
 	}
 
 	dropTestTables(t)
@@ -195,7 +201,7 @@ func TestSQLiteDictionary_InsertScenario(t *testing.T) {
 	var scenarioID int64
 	scenarioID, err = dictionary.InsertScenario("test", int64(1))
 	assert.NoError(t, err)
-	assert.Equal(t, int64(3), scenarioID)
+	assert.Equal(t, int64(2), scenarioID)
 
 	scenarioID, err = dictionary.InsertScenario("test", int64(1))
 	assert.Error(t, err)
@@ -245,7 +251,7 @@ func TestSQLiteDictionary_InsertQuestion(t *testing.T) {
 		"",
 	)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(3), questionID)
+	assert.Equal(t, int64(4), questionID)
 
 	questionID, err = dictionary.InsertQuestion(
 		"Hello bot",
@@ -273,15 +279,115 @@ func TestSQLiteDictionary_GetLastScenarioID(t *testing.T) {
 	var scenarioID int64
 	scenarioID, err = dictionary.GetLastScenarioID()
 	assert.NoError(t, err)
-	assert.Equal(t, int64(2), scenarioID)
+	assert.Equal(t, int64(1), scenarioID)
 
 	scenarioID, err = dictionary.InsertScenario("test", int64(1))
 	assert.NoError(t, err)
-	assert.Equal(t, int64(3), scenarioID)
+	assert.Equal(t, int64(2), scenarioID)
 
 	scenarioID, err = dictionary.GetLastScenarioID()
 	assert.NoError(t, err)
-	assert.Equal(t, int64(3), scenarioID)
+	assert.Equal(t, int64(2), scenarioID)
+
+	dropTestTables(t)
+	dictionary.CloseDatabaseConnection()
+}
+
+func TestSQLiteDictionary_GetAllRegex(t *testing.T) {
+	cfg.DatabaseHost = testSQLiteDatabasePath
+	dictionary.Cfg = cfg
+
+	err := dictionary.InitDatabaseConnection()
+	assert.NoError(t, err)
+	upTestTables(t)
+
+	var result = map[int64]string{}
+	result, err = dictionary.GetAllRegex()
+	assert.NoError(t, err)
+	assert.Empty(t, result)
+
+	insertTestData(t)
+
+	result, err = dictionary.GetAllRegex()
+	assert.NoError(t, err)
+	assert.NotEmpty(t, result)
+
+	expected := map[int64]string{
+		int64(1): `(?i)hello`,
+		int64(2): `(?i)Say hello to (?P<name>\w+)`,
+	}
+
+	assert.Equal(t, expected, result)
+
+	dropTestTables(t)
+	dictionary.CloseDatabaseConnection()
+}
+
+func TestSQLiteDictionary_FindRegex(t *testing.T) {
+	cfg.DatabaseHost = testSQLiteDatabasePath
+	dictionary.Cfg = cfg
+
+	err := dictionary.InitDatabaseConnection()
+	assert.NoError(t, err)
+	upTestTables(t)
+	insertTestData(t)
+
+	var regexID int64
+	regexID, err = dictionary.FindRegex("test")
+	assert.NoError(t, err)
+	assert.Equal(t, int64(0), regexID)
+
+	regexID, err = dictionary.FindRegex("(?i)hello")
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), regexID)
+
+	dropTestTables(t)
+	dictionary.CloseDatabaseConnection()
+}
+
+func TestSQLiteDictionary_FindScenarioByID(t *testing.T) {
+	cfg.DatabaseHost = testSQLiteDatabasePath
+	dictionary.Cfg = cfg
+
+	err := dictionary.InitDatabaseConnection()
+	assert.NoError(t, err)
+	upTestTables(t)
+	insertTestData(t)
+
+	var scenarioID int64
+	scenarioID, err = dictionary.FindScenarioByID(int64(11))
+	assert.NoError(t, err)
+	assert.Equal(t, int64(0), scenarioID)
+
+	scenarioID, err = dictionary.FindScenarioByID(int64(1))
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), scenarioID)
+
+	dropTestTables(t)
+	dictionary.CloseDatabaseConnection()
+}
+
+func TestSQLiteDictionary_InsertQuestionRegex(t *testing.T) {
+	cfg.DatabaseHost = testSQLiteDatabasePath
+	dictionary.Cfg = cfg
+
+	err := dictionary.InitDatabaseConnection()
+	assert.NoError(t, err)
+	upTestTables(t)
+	insertTestData(t)
+
+	var insertedID int64
+	insertedID, err = dictionary.InsertQuestionRegex("test", "")
+	assert.NoError(t, err)
+	assert.NotEmpty(t, insertedID)
+
+	insertedID, err = dictionary.InsertQuestionRegex("test", "")
+	assert.Error(t, err)
+	assert.Equal(t, "UNIQUE constraint failed: questions_regex.regex", err.Error())
+
+	insertedID, err = dictionary.InsertQuestionRegex("test2", "test_group")
+	assert.NoError(t, err)
+	assert.NotEmpty(t, insertedID)
 
 	dropTestTables(t)
 	dictionary.CloseDatabaseConnection()
@@ -305,16 +411,17 @@ func upTestTables(t *testing.T) {
 	drop table if exists questions;
 	create table questions
 	(
-		id                   integer
+		id          integer
 			constraint questions_pk
 				primary key autoincrement,
-		question             varchar not null,
-		answer               varchar not null,
-		scenario_id          int     not null
+		question    varchar not null,
+		answer      varchar not null,
+		scenario_id int     not null
 			references scenarios
 				on delete cascade,
-		question_regex       varchar,
-		question_regex_group varchar
+		regex_id    integer
+							references questions_regex
+								on delete set null
 	);
 	
 	create unique index questions_question_uindex
@@ -336,6 +443,20 @@ func upTestTables(t *testing.T) {
 	create unique index scenarios_name_uindex
 		on scenarios (name);
 	`
+	availableTables["questions_regex"] = `
+	drop table if exists questions_regex;
+	create table questions_regex
+	(
+		id          integer not null
+			constraint question_regex_pk
+				primary key autoincrement,
+		regex       varchar not null,
+		regex_group varchar
+	);
+	
+	create unique index question_regex_regex_uindex
+		on questions_regex (regex);
+	`
 
 	for _, query := range availableTables {
 		_, err := dictionary.client.Exec(query)
@@ -348,10 +469,12 @@ func upTestTables(t *testing.T) {
 func insertTestData(t *testing.T) {
 	_, err := dictionary.client.Exec(`
 	INSERT INTO events (id, alias) VALUES (1, 'hello');
-	INSERT INTO questions (id, question, answer, scenario_id, question_regex, question_regex_group) VALUES (1, 'Hello world', 'Hello', 1, '', '');
-	INSERT INTO questions (id, question, answer, scenario_id, question_regex, question_regex_group) VALUES (2, 'Say hello to John', 'Hello %s', 2, '(?i)Say hello to (?P<name>\w+)', 'name');
+	INSERT INTO questions (id, question, answer, scenario_id, regex_id) VALUES (1, 'Hello', 'Hello', 1, 1);
+	INSERT INTO questions (id, question, answer, scenario_id, regex_id) VALUES (2, 'Say hello to John', 'Hello %s', 1, 2);
+	INSERT INTO questions (id, question, answer, scenario_id, regex_id) VALUES (3, 'Hello world', 'Hello', 1, 0);
+	INSERT INTO questions_regex (id, regex, regex_group) VALUES (1, '(?i)hello', '');
+	INSERT INTO questions_regex (id, regex, regex_group) VALUES (2, '(?i)Say hello to (?P<name>\w+)', 'name');
 	INSERT INTO scenarios (id, name, event_id) VALUES (1, 'Scenario #1', 1);
-	INSERT INTO scenarios (id, name, event_id) VALUES (2, 'Scenario #2', 1);
 	`)
 	if err != nil {
 		assert.NoError(t, err)

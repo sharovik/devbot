@@ -9,3 +9,4 @@ events/*
 !events/defined-events.go.dist
 !events/base
 !events/themerwordpress
+!events/dictionary
