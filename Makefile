@@ -4,21 +4,23 @@ LDFLAGS=-ldflags="-s -w"
 
 DICTIONARY_SCRIPT_DIR=scripts/dictionary-loader
 
-build: $(addprefix $(BIN_DIR)/,$(CMD));
+build-linux-64:
+	env GOOS=linux CGO_ENABLED=1 GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-linux-amd64 $<
+	env GOOS=freebsd CGO_ENABLED=1 GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-freebsd-amd64 $<
+
+build-windows:
+	env GOOS=windows CGO_ENABLED=1 GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-windows-amd64 $<
+	env GOOS=windows CGO_ENABLED=1 GOARCH=386 go build -mod=vendor $(LDFLAGS) -o $@-windows-386 $<
+
+build-linux-86:
+	env GOOS=linux CGO_ENABLED=1 GOARCH=386 go build -mod=vendor $(LDFLAGS) -o $@-linux-386 $<
+	env GOOS=freebsd CGO_ENABLED=1 GOARCH=386 go build -mod=vendor $(LDFLAGS) -o $@-freebsd-386 $<
 
 build-mac:
 	env GOOS=darwin go build -mod=vendor $(LDFLAGS) -o $@-mac $<
 
 vendor:
 	if [ ! -d "vendor" ] || [ -z "$(shell ls -A vendor)" ]; then go mod vendor; fi
-
-$(BIN_DIR)/%: cmd/%/main.go vendor
-	env GOOS=linux CGO_ENABLED=1 GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-linux-amd64 $<
-	env GOOS=linux CGO_ENABLED=1 GOARCH=386 go build -mod=vendor $(LDFLAGS) -o $@-linux-386 $<
-	env GOOS=freebsd CGO_ENABLED=1 GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-freebsd-amd64 $<
-	env GOOS=freebsd CGO_ENABLED=1 GOARCH=386 go build -mod=vendor $(LDFLAGS) -o $@-freebsd-386 $<
-	env GOOS=windows CGO_ENABLED=1 GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-windows-amd64 $<
-	env GOOS=windows CGO_ENABLED=1 GOARCH=386 go build -mod=vendor $(LDFLAGS) -o $@-windows-386 $<
 
 lint:
 	golint -set_exit_status ./events/...
