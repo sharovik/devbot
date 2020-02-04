@@ -18,9 +18,6 @@ $(BIN_DIR)/%: cmd/%/main.go vendor
 	env GOOS=windows CGO_ENABLED=1 GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-windows-amd64 $<
 	env GOOS=windows CGO_ENABLED=1 GOARCH=386 go build -mod=vendor $(LDFLAGS) -o $@-windows-386 $<
 
-vendor:
-	if [ ! -d "vendor" ] || [ -z "$(shell ls -A vendor)" ]; then go mod vendor; fi
-
 lint:
 	golint -set_exit_status ./events/...
 	golint -set_exit_status ./cmd/...
