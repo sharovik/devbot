@@ -48,6 +48,13 @@ Or for centos
 sudo yum install sqlite
 ```
 
+### Prepare project for compilation
+Every package should have a .go file inside of dir. As there is a possibility to create your own defined-events please do the following step
+```
+cp events/defined-events.go.dist events/defined-events.go
+```
+This will fix the issue which might happen during project compilation locally.
+
 ### PHP installation
 You server requires php version of 7.1+ with php-dom module. `It is only required if you will use the wordpress template generation event.`
 For ubuntu

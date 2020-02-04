@@ -1,12 +1,16 @@
 package events
 
-import "github.com/sharovik/devbot/events/base"
+import (
+	"github.com/sharovik/devbot/events/base"
+	"github.com/sharovik/devbot/events/dictionary"
+	"github.com/sharovik/devbot/events/themerwordpress"
+)
 
-var DefinedEvents = main.Events{}
+//DefinedEvents collects all the events which can be triggered by the messages
+var DefinedEvents = base.Events{}
 
 func init() {
-    DefinedEvents.Events = make(map[string]base.Event)
-
-    #Load your events
-    DefinedEvents.Events["CUSTOM_EVENT_NAME"] = your_package.Event
+	DefinedEvents.Events = make(map[string]base.Event)
+	DefinedEvents.Events[themerwordpress.EventName] = themerwordpress.Event
+	DefinedEvents.Events[dictionary.EventName] = dictionary.Event
 }
