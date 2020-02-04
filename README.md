@@ -9,6 +9,7 @@ This bot can help to automate multiple processes of development and give the pos
 - [Installation](#installation)
 - [How to use](#how-to-use)
 - [Custom events](#custom-events)
+- [Dictionary](#dictionary)
 - [Authors](#authors)
 - [License](#license)
 
@@ -53,7 +54,7 @@ Every package should have a .go file inside of dir. As there is a possibility to
 ```
 cp events/defined-events.go.dist events/defined-events.go
 ```
-This will fix the issue which might happen during project compilation locally.
+This will fix the issue wiith undefined `events` package, which might happen during project compilation locally.
 
 ### PHP installation
 You server requires php version of 7.1+ with php-dom module. `It is only required if you will use the wordpress template generation event.`
@@ -94,6 +95,9 @@ cp .env.example .env
 
 ## Custom events
 Please read the [events documentation](documentation/events.md)
+
+## Dictionary
+Please read the [dictionary documentation](documentation/dictionary.md)
 
 ## Authors
 
