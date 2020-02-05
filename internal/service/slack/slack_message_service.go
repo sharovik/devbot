@@ -1,6 +1,7 @@
 package slack
 
 import (
+	"strings"
 	"time"
 
 	"github.com/sharovik/devbot/events"
@@ -64,6 +65,9 @@ func processMessage(message *dto.SlackResponseEventMessage) error {
 		Str("user", message.User).
 		Str("channel", message.Channel).
 		Msg("Message received")
+
+	//We need to trim the message before all checks
+	message.Text = strings.TrimSpace(message.Text)
 
 	switch message.Type {
 	case eventTypeDesktopNotification:
