@@ -87,6 +87,7 @@ cp events/defined-events.go.dist events/defined-events.go
 4. Set the value from [`Bot User OAuth Access Token`](#slack-token-generation) into *SLACK_OAUTH_TOKEN* variable from the `.env` file
 5. Run bot by using command `./bin/slack-bot-{YOUR_SYSTEM}` you should see in the logs `hello` message type. It means that the bot successfully connected to your account
 
+![Demo start slack-bo](documentation/images/start-slack-bot.gif)
 ## How to use
 
 ### Generate WordPress template
