@@ -50,7 +50,7 @@ sudo yum install sqlite
 ```
 
 ### Prepare project for compilation
-Every package should have a .go file inside of dir. As there is a possibility to create your own defined-events please do the following step
+Every package should have a .go file inside of the dir. `events` folder it is a defined package. There you can configure the list of events which should have the bot. If you will skip this step, the error will appear because the events are not defined at all. Please do the following step:
 ```
 cp events/defined-events.go.dist events/defined-events.go
 ```
@@ -80,8 +80,12 @@ git clone git@github.com:sharovik/devbot.git
 ```
 cp .env.example .env
 ```
-3. Set the value from [`Bot User OAuth Access Token`](#slack-token-generation) into *SLACK_OAUTH_TOKEN* variable from the `.env` file
-4. Run bot by using command `./bin/slack-bot-{YOUR_SYSTEM}` you should see in the logs `hello` message type. It means that the bot successfully connected to your account
+3. Please create the Events configuration file. The reason why this step is required [you can find here](#prepare-project-for-compilation).
+``` 
+cp events/defined-events.go.dist events/defined-events.go
+```
+4. Set the value from [`Bot User OAuth Access Token`](#slack-token-generation) into *SLACK_OAUTH_TOKEN* variable from the `.env` file
+5. Run bot by using command `./bin/slack-bot-{YOUR_SYSTEM}` you should see in the logs `hello` message type. It means that the bot successfully connected to your account
 
 ## How to use
 
