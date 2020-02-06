@@ -10,6 +10,7 @@ This bot can help to automate multiple processes of development and give the pos
 - [How to use](#how-to-use)
 - [Custom events](#custom-events)
 - [Dictionary](#dictionary)
+- [Cross platform build](#cross-platform-build)
 - [Authors](#authors)
 - [License](#license)
 
@@ -86,8 +87,8 @@ cp events/defined-events.go.dist events/defined-events.go
 ```
 4. Set the value from [`Bot User OAuth Access Token`](#slack-token-generation) into *SLACK_OAUTH_TOKEN* variable from the `.env` file
 5. Run bot by using command `./bin/slack-bot-{YOUR_SYSTEM}` you should see in the logs `hello` message type. It means that the bot successfully connected to your account
-
 ![Demo start slack-bo](documentation/images/start-slack-bot.gif)
+
 ## How to use
 
 ### Generate WordPress template
@@ -107,9 +108,30 @@ Please read the [events documentation](documentation/events.md)
 ## Dictionary
 Please read the [dictionary documentation](documentation/dictionary.md)
 
-## Project build
-For project build please follow these steps:
-1. Your project should be in GOPATH folder or GOPATH should point to the directory where you clone this project 
+## Cross platform build
+
+### Before build
+For cross-platform build I use `karalabe/xgo-latest`. So please before project build do the following steps
+1. Install `docker` and `go` to your system
+2. Run this command `docker pull karalabe/xgo-latest`
+3. Go to project directory and run this command `go mod vendor`
+4. Your project should be in `GOPATH` folder or `GOPATH` should point to the directory where you clone this project
+
+### Build
+For build please run this command
+``` 
+make build
+```
+This command will build the following versions:
+#### MacOS
+- darwin-386
+- darwin-amd64
+#### Linux
+- linux-386
+- linux-amd64
+#### Windows
+- windows-386
+- windows-amd64
 
 ## Authors
 

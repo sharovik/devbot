@@ -7,7 +7,7 @@ DICTIONARY_SCRIPT_DIR=scripts/dictionary-loader
 vendor:
 	if [ ! -d "vendor" ] || [ -z "$(shell ls -A vendor)" ]; then go mod vendor; fi
 
-build-new-way:
+build:
 	env CGO_ENABLED=1 xgo --targets=darwin/*,linux/amd64,linux/386,windows/* --dest ./bin/ --out slack-bot ./cmd/slack-bot
 
 lint:
