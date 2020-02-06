@@ -9,6 +9,9 @@ build: $(addprefix $(BIN_DIR)/,$(CMD));
 vendor:
 	if [ ! -d "vendor" ] || [ -z "$(shell ls -A vendor)" ]; then go mod vendor; fi
 
+build-new-way:
+	env CGO_ENABLED=1 xgo --targets=darwin/*,linux/amd64,linux/386,windows/* --dest ./bin/ --out slack-bot-testing ./cmd/slack-bot
+
 $(BIN_DIR)/%: cmd/%/main.go vendor
 	env GOOS=darwin go build -mod=vendor $(LDFLAGS) -o $@-mac $<
 	env GOOS=linux CGO_ENABLED=1 GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-linux-amd64 $<
