@@ -72,12 +72,15 @@ yum install php php-xml
 ```
 ## Installation
 
-1. Go to [this page](https://github.com/sharovik/devbot/releases) and download latest version of devbot application.
-2. Prepare the configuration file for our bot
+1. Go to [this page](https://github.com/sharovik/devbot) and clone latest version of devbot. Or run this command:
+``` 
+git clone git@github.com:sharovik/devbot.git
+```
+2. Prepare the configuration file for our bot. Create `.env` file in the project directory and copy contents of the `.env.example` file there.
 ```
 cp .env.example .env
 ```
-3. Set the value from `Bot User OAuth Access Token` into *SLACK_OAUTH_TOKEN* variable in .env file
+3. Set the value from [`Bot User OAuth Access Token`](#slack-token-generation) into *SLACK_OAUTH_TOKEN* variable from the `.env` file
 4. Run bot by using command `./bin/slack-bot-{YOUR_SYSTEM}` you should see in the logs `hello` message type. It means that the bot successfully connected to your account
 
 ## How to use
@@ -98,6 +101,10 @@ Please read the [events documentation](documentation/events.md)
 
 ## Dictionary
 Please read the [dictionary documentation](documentation/dictionary.md)
+
+## Project build
+For project build please follow these steps:
+1. Your project should be in GOPATH folder or GOPATH should point to the directory where you clone this project 
 
 ## Authors
 
