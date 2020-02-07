@@ -1,4 +1,5 @@
 # devbot
+[![Gitter](https://badges.gitter.im/devbot-tool/community.svg)](https://gitter.im/devbot-tool/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 This bot can help to automate multiple processes of development and give the possibility to achieve more goals for less time.
 
