@@ -51,13 +51,6 @@ Or for centos
 sudo yum install sqlite
 ```
 
-### Prepare project for compilation
-Every package should have a .go file inside of the directory. `events` folder it is a defined package. There you can configure the list of events which should have the bot. If you will skip this step, the error will appear because the events package should have go files. Please do the following step:
-```
-cp events/defined-events.go.dist events/defined-events.go
-```
-This will fix the issue wiith undefined `events` package, which might happen during project compilation locally.
-
 ### PHP installation
 You server requires php version of 7.1+ with php-dom module. `It is only required if you will use the wordpress template generation event.`
 For ubuntu
@@ -74,7 +67,7 @@ yum install php php-xml
 ```
 ## Installation
 
-1. Go to [this page](https://github.com/sharovik/devbot) and clone latest version of devbot. Or run this command:
+1. Go to [this page](https://github.com/sharovik/devbot) and download the latest version of devbot. Or run this command locally:
 ``` 
 git clone git@github.com:sharovik/devbot.git
 ```
@@ -82,12 +75,8 @@ git clone git@github.com:sharovik/devbot.git
 ```
 cp .env.example .env
 ```
-3. Please create the Events configuration file. The reason why this step is required [you can find here](#prepare-project-for-compilation).
-``` 
-cp events/defined-events.go.dist events/defined-events.go
-```
-4. Set the value from [`Bot User OAuth Access Token`](#slack-token-generation) into *SLACK_OAUTH_TOKEN* variable from the `.env` file
-5. Run bot by using command `./bin/slack-bot-{YOUR_SYSTEM}` you should see in the logs `hello` message type. It means that the bot successfully connected to your account
+3. Set the value from [`Bot User OAuth Access Token`](#slack-token-generation) into *SLACK_OAUTH_TOKEN* variable from the `.env` file
+4. Run bot by using command `./bin/slack-bot-{YOUR_SYSTEM}` you should see in the logs `hello` message type. It means that the bot successfully connected to your account
 ![Demo start slack-bo](documentation/images/start-slack-bot.gif)
 
 ## How to use
@@ -115,7 +104,11 @@ Please read the [dictionary documentation](documentation/dictionary.md)
 For cross-platform build I use `karalabe/xgo-latest`. So please before project build do the following steps
 1. Install `docker` and `go` to your system
 2. Run this command `docker pull karalabe/xgo-latest`
-3. Go to project directory and run this command `go mod vendor`
+3. Every package should have a .go file inside of the directory. `events` folder it is a defined package. There you can configure the list of events which should have the bot. If you will skip this step, the error will appear because the events package should have go files. Please do the following step:
+```
+cp events/defined-events.go.dist events/defined-events.go
+```
+This will fix the issue with undefined `events` package, which might happen during project compilation locally.
 4. Your project should be in `GOPATH` folder or `GOPATH` should point to the directory where you clone this project
 
 ### Build
@@ -137,6 +130,16 @@ This command will build the following versions:
 ## Authors
 
 * **Pavel Simzicov** - *Initial work* - [sharovik](https://github.com/sharovik)
+
+### Vendors used
+* github.com/joho/godotenv - for env files loading
+* github.com/karalabe/xgo - for cross platform build
+* github.com/karupanerura/go-mock-http-response - for http responses mocking in tests
+* github.com/mattn/go-sqlite3 - for sqlite connection
+* github.com/pkg/errors - for errors wrapper and trace extracting in logger
+* github.com/rs/zerolog - for logger
+* github.com/stretchr/testify - for asserts in tests
+* golang.org/x/net - for websocket connection
 
 ## License
 This project is licensed under the BSD License - see the LICENSE.md file for details
