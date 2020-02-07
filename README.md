@@ -52,7 +52,7 @@ sudo yum install sqlite
 ```
 
 ### Prepare project for compilation
-Every package should have a .go file inside of the dir. `events` folder it is a defined package. There you can configure the list of events which should have the bot. If you will skip this step, the error will appear because the events are not defined at all. Please do the following step:
+Every package should have a .go file inside of the directory. `events` folder it is a defined package. There you can configure the list of events which should have the bot. If you will skip this step, the error will appear because the events package should have go files. Please do the following step:
 ```
 cp events/defined-events.go.dist events/defined-events.go
 ```
