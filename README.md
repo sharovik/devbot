@@ -1,4 +1,5 @@
 # devbot
+[![Gitter](https://badges.gitter.im/devbot-tool/community.svg)](https://gitter.im/devbot-tool/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 This bot can help to automate multiple processes of development and give the possibility to achieve more goals for less time.
 
@@ -10,6 +11,7 @@ This bot can help to automate multiple processes of development and give the pos
 - [How to use](#how-to-use)
 - [Custom events](#custom-events)
 - [Dictionary](#dictionary)
+- [Cross platform build](#cross-platform-build)
 - [Authors](#authors)
 - [License](#license)
 
@@ -49,13 +51,6 @@ Or for centos
 sudo yum install sqlite
 ```
 
-### Prepare project for compilation
-Every package should have a .go file inside of dir. As there is a possibility to create your own defined-events please do the following step
-```
-cp events/defined-events.go.dist events/defined-events.go
-```
-This will fix the issue wiith undefined `events` package, which might happen during project compilation locally.
-
 ### PHP installation
 You server requires php version of 7.1+ with php-dom module. `It is only required if you will use the wordpress template generation event.`
 For ubuntu
@@ -72,13 +67,17 @@ yum install php php-xml
 ```
 ## Installation
 
-1. Go to [this page](https://github.com/sharovik/devbot/releases) and download latest version of devbot application.
-2. Prepare the configuration file for our bot
+1. Go to [this page](https://github.com/sharovik/devbot) and download the latest version of devbot. Or run this command locally:
+``` 
+git clone git@github.com:sharovik/devbot.git
+```
+2. Prepare the configuration file for our bot. Create `.env` file in the project directory and copy contents of the `.env.example` file there.
 ```
 cp .env.example .env
 ```
-3. Set the value from `Bot User OAuth Access Token` into *SLACK_OAUTH_TOKEN* variable in .env file
+3. Set the value from [`Bot User OAuth Access Token`](#slack-token-generation) into *SLACK_OAUTH_TOKEN* variable from the `.env` file
 4. Run bot by using command `./bin/slack-bot-{YOUR_SYSTEM}` you should see in the logs `hello` message type. It means that the bot successfully connected to your account
+![Demo start slack-bo](documentation/images/start-slack-bot.gif)
 
 ## How to use
 
@@ -99,9 +98,48 @@ Please read the [events documentation](documentation/events.md)
 ## Dictionary
 Please read the [dictionary documentation](documentation/dictionary.md)
 
+## Cross platform build
+
+### Before build
+For cross-platform build I use `karalabe/xgo-latest`. So please before project build do the following steps
+1. Install `docker` and `go` to your system
+2. Run this command `docker pull karalabe/xgo-latest`
+3. Every package should have a .go file inside of the directory. `events` folder it is a defined package. There you can configure the list of events which should have the bot. If you will skip this step, the error will appear because the events package should have go files. Please do the following step:
+```
+cp events/defined-events.go.dist events/defined-events.go
+```
+This will fix the issue with undefined `events` package, which might happen during project compilation locally.
+4. Your project should be in `GOPATH` folder or `GOPATH` should point to the directory where you clone this project
+
+### Build
+For build please run this command
+``` 
+make build
+```
+This command will build the following versions:
+#### MacOS
+- darwin-386
+- darwin-amd64
+#### Linux
+- linux-386
+- linux-amd64
+#### Windows
+- windows-386
+- windows-amd64
+
 ## Authors
 
 * **Pavel Simzicov** - *Initial work* - [sharovik](https://github.com/sharovik)
+
+### Vendors used
+* github.com/joho/godotenv - for env files loading
+* github.com/karalabe/xgo - for cross platform build
+* github.com/karupanerura/go-mock-http-response - for http responses mocking in tests
+* github.com/mattn/go-sqlite3 - for sqlite connection
+* github.com/pkg/errors - for errors wrapper and trace extracting in logger
+* github.com/rs/zerolog - for logger
+* github.com/stretchr/testify - for asserts in tests
+* golang.org/x/net - for websocket connection
 
 ## License
 This project is licensed under the BSD License - see the LICENSE.md file for details

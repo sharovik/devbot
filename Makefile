@@ -4,19 +4,11 @@ LDFLAGS=-ldflags="-s -w"
 
 DICTIONARY_SCRIPT_DIR=scripts/dictionary-loader
 
-build: $(addprefix $(BIN_DIR)/,$(CMD));
-
 vendor:
 	if [ ! -d "vendor" ] || [ -z "$(shell ls -A vendor)" ]; then go mod vendor; fi
 
-$(BIN_DIR)/%: cmd/%/main.go vendor
-	env GOOS=darwin go build -mod=vendor $(LDFLAGS) -o $@-mac $<
-	env GOOS=linux CGO_ENABLED=1 GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-linux-amd64 $<
-	env GOOS=linux CGO_ENABLED=1 GOARCH=386 go build -mod=vendor $(LDFLAGS) -o $@-linux-386 $<
-	env GOOS=freebsd CGO_ENABLED=1 GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-freebsd-amd64 $<
-	env GOOS=freebsd CGO_ENABLED=1 GOARCH=386 go build -mod=vendor $(LDFLAGS) -o $@-freebsd-386 $<
-	env GOOS=windows CGO_ENABLED=1 GOARCH=amd64 go build -mod=vendor $(LDFLAGS) -o $@-windows-amd64 $<
-	env GOOS=windows CGO_ENABLED=1 GOARCH=386 go build -mod=vendor $(LDFLAGS) -o $@-windows-386 $<
+build:
+	env CGO_ENABLED=1 xgo --targets=darwin/*,linux/amd64,linux/386,windows/* --dest ./bin/ --out slack-bot ./cmd/slack-bot
 
 lint:
 	golint -set_exit_status ./events/...
@@ -35,4 +27,4 @@ tests:
 build-dictionary-script:
 	go build -o $(DICTIONARY_SCRIPT_DIR)/dictionary-loader $(DICTIONARY_SCRIPT_DIR)/main.go
 
-.PHONY: vendor build
+.PHONY: vendor
