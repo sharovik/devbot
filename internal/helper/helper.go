@@ -138,7 +138,12 @@ func Zip(src string, dest string) error {
 
 //FindMatches method returns the matches map object which contains all matches which we can find in selected subject
 func FindMatches(regex string, subject string) map[string]string {
-	re := regexp.MustCompile(regex)
+	re, err := regexp.Compile(regex)
+
+	if err != nil {
+	  log.Logger().AddError(err).Msg("Error during the Find Matches operation")
+	}
+
 	matches := re.FindStringSubmatch(subject)
 	result := make(map[string]string)
 
