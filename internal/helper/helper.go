@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/sharovik/devbot/internal/log"
 )
 
 //FileToBytes method gets the data from selected file and retrieve the byte value of it
