@@ -143,7 +143,7 @@ func FindMatches(regex string, subject string) map[string]string {
 	re, err := regexp.Compile(regex)
 
 	if err != nil {
-	  log.Logger().AddError(err).Msg("Error during the Find Matches operation")
+		log.Logger().AddError(err).Msg("Error during the Find Matches operation")
 	}
 
 	matches := re.FindStringSubmatch(subject)

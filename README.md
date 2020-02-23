@@ -67,6 +67,9 @@ yum install php php-xml
 ```
 ## Installation
 
+There is two ways of the DevBot setup
+
+### Running application from cloned repository folder
 1. Go to [this page](https://github.com/sharovik/devbot) and download the latest version of devbot. Or run this command locally:
 ``` 
 git clone git@github.com:sharovik/devbot.git
@@ -77,6 +80,21 @@ cp .env.example .env
 ```
 3. Set the value from [`Bot User OAuth Access Token`](#slack-token-generation) into *SLACK_OAUTH_TOKEN* variable from the `.env` file
 4. Run bot by using command `./bin/slack-bot-{YOUR_SYSTEM}` you should see in the logs `hello` message type. It means that the bot successfully connected to your account
+![Demo start slack-bo](documentation/images/start-slack-bot.gif)
+
+### Running application by using downloadable binaries
+1. Create the folder from where you will run this application and step inside of this folder
+```
+mkdir ~/my-devbot && cd ~/my-devbot
+```
+2. Create `.env` file and put there contents from the [`.env.example`](https://github.com/sharovik/devbot/blob/master/.env.example) file which you can find in our repository. Please make sure that you're update all env variables to use the correct values
+3. Download the [`devbot.sqlite`](https://github.com/sharovik/devbot/blob/master/devbot.sqlite) database from our repository and put it into your `~/my-devbot` directory
+4. Please download your version of DevBot from [the latest release](https://github.com/sharovik/devbot/releases) and put it inside of your `~/my-devbot` directory
+5. Run the bot by using this command 
+``` 
+./slack-bot-{YOUR_SYSTEM}
+```
+you should see in the logs `hello` message type. It means that the bot successfully connected to your account
 ![Demo start slack-bo](documentation/images/start-slack-bot.gif)
 
 ## How to use

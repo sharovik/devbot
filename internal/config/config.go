@@ -37,8 +37,6 @@ var (
 )
 
 const (
-	envFilePath = "./../../.env"
-
 	//EnvironmentTesting constant for testing environment
 	EnvironmentTesting = "testing"
 
@@ -75,21 +73,21 @@ const (
 	//DatabasePassword env variable for database password
 	DatabasePassword = "DATABASE_PASSWORD"
 
-	defaultMainChannelAlias   = "general"
-	defaultBotName            = "devbot"
-	defaultAppDictionary      = "slack"
-	defaultDatabaseConnection = "sqlite"
+	defaultMainChannelAlias       = "general"
+	defaultBotName                = "devbot"
+	defaultAppDictionary          = "slack"
+	defaultDatabaseConnection     = "sqlite"
+	defaultEnvFilePath            = "./.env"
+	defaultEnvFileRootProjectPath = "./../../.env"
 )
 
 //Init initialise configuration for this project
 func Init() Config {
 	if !cfg.IsInitialised() {
 
-		envPath = envFilePath
+		envPath = defaultEnvFilePath
 		if _, err := os.Stat(envPath); err != nil {
-			//In tests directory cursor is equal to config dir path.
-			//When in main package directory cursor is always in root dir of project
-			envPath = "./.env"
+			envPath = defaultEnvFileRootProjectPath
 		}
 
 		if err := godotenv.Load(envPath); err != nil {
