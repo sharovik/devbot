@@ -77,7 +77,7 @@ const (
 	defaultBotName                = "devbot"
 	defaultAppDictionary          = "slack"
 	defaultDatabaseConnection     = "sqlite"
-	defaultEnvFilePath = "./.env"
+	defaultEnvFilePath            = "./.env"
 	defaultEnvFileRootProjectPath = "./../../.env"
 )
 
