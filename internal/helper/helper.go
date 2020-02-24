@@ -144,6 +144,7 @@ func FindMatches(regex string, subject string) map[string]string {
 
 	if err != nil {
 		log.Logger().AddError(err).Msg("Error during the Find Matches operation")
+		return map[string]string{}
 	}
 
 	matches := re.FindStringSubmatch(subject)
