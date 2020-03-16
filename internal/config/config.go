@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -18,11 +19,25 @@ type SlackConfig struct {
 	MainChannelID    string
 }
 
+//BitBucketConfig struct for bitbucket config
+type BitBucketConfig struct {
+	ClientID          string
+	ClientSecret      string
+	RequiredReviewers []BitBucketReviewer
+}
+
+//BitBucketReviewer is used for identifying of the reviewer user
+type BitBucketReviewer struct {
+	UUID string
+	SlackUID string
+}
+
 //Config configuration object
 type Config struct {
 	appEnv             string
 	AppDictionary      string
 	SlackConfig        SlackConfig
+	BitBucketConfig    BitBucketConfig
 	initialised        bool
 	DatabaseConnection string
 	DatabaseHost       string
@@ -72,6 +87,15 @@ const (
 
 	//DatabasePassword env variable for database password
 	DatabasePassword = "DATABASE_PASSWORD"
+
+	//BitBucketClientID the client id which is used fo oauth token generation
+	BitBucketClientID = "BITBUCKET_CLIENT_ID"
+
+	//BitBucketClientSecret the client secret which is used fo oauth token generation
+	BitBucketClientSecret = "BITBUCKET_CLIENT_SECRET"
+
+	//BitBucketRequiredReviewers the required reviewers list separated by comma
+	BitBucketRequiredReviewers = "BITBUCKET_REQUIRED_REVIEWERS"
 
 	defaultMainChannelAlias       = "general"
 	defaultBotName                = "devbot"
@@ -125,6 +149,11 @@ func Init() Config {
 				BotUserID:        os.Getenv(SlackEnvUserID),
 				BotName:          BotName,
 			},
+			BitBucketConfig: BitBucketConfig{
+				ClientID:          os.Getenv(BitBucketClientID),
+				ClientSecret:      os.Getenv(BitBucketClientSecret),
+				RequiredReviewers: prepareBitBucketReviewers(os.Getenv(BitBucketRequiredReviewers)),
+			},
 			initialised:        true,
 			DatabaseConnection: dbConnection,
 			DatabaseHost:       os.Getenv(DatabaseHost),
@@ -173,4 +202,22 @@ func (c Config) SetToEnv(field string, value string, writeToEnvFile bool) error 
 	}
 
 	return nil
+}
+
+func prepareBitBucketReviewers(reviewers string) []BitBucketReviewer {
+	entries := strings.Split(reviewers, ",")
+
+	var result []BitBucketReviewer
+	for _, value := range entries {
+		userInfo := strings.Split(value, ":")
+
+		if len(userInfo) != 0 {
+			result = append(result, BitBucketReviewer{
+				SlackUID: userInfo[0],
+				UUID: userInfo[1],
+			})
+		}
+	}
+
+	return result
 }

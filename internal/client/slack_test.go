@@ -42,7 +42,7 @@ func TestSlackClient_Post(t *testing.T) {
 		response, statusCode, err := slackClient.Post("some-endpoint", []byte{})
 		assert.Empty(t, response, "Response should be nil")
 		assert.Error(t, err, "We should receive error")
-		assert.Equal(t, 404, statusCode, "Status code should be equal 404")
+		assert.Equal(t, 404, statusCode, "Info code should be equal 404")
 	})
 
 	t.Run("Simulate the 399 status code", func(t *testing.T) {
@@ -51,7 +51,7 @@ func TestSlackClient_Post(t *testing.T) {
 		response, statusCode, err := slackClient.Post("some-endpoint", []byte{})
 		assert.Empty(t, response, "Response should be nil")
 		assert.NoError(t, err, "There should be no error in response")
-		assert.Equal(t, 399, statusCode, "Status code should be equal 399")
+		assert.Equal(t, 399, statusCode, "Info code should be equal 399")
 	})
 
 	t.Run("Simulate the 200 status code", func(t *testing.T) {
@@ -60,7 +60,7 @@ func TestSlackClient_Post(t *testing.T) {
 		response, statusCode, err := slackClient.Post("some-endpoint", []byte{})
 		assert.Equal(t, []byte(`{status: true"}`), response, "Response should be equal expectation")
 		assert.NoError(t, err, "There should be no error in response")
-		assert.Equal(t, 200, statusCode, "Status code should be equal 200")
+		assert.Equal(t, 200, statusCode, "Info code should be equal 200")
 	})
 }
 
@@ -72,7 +72,7 @@ func TestSlackClient_Put(t *testing.T) {
 		response, statusCode, err := slackClient.Put("some-endpoint", []byte{})
 		assert.Empty(t, response, "Response should be nil")
 		assert.Error(t, err, "We should receive error")
-		assert.Equal(t, 404, statusCode, "Status code should be equal 404")
+		assert.Equal(t, 404, statusCode, "Info code should be equal 404")
 	})
 
 	t.Run("Simulate the 399 status code", func(t *testing.T) {
@@ -81,7 +81,7 @@ func TestSlackClient_Put(t *testing.T) {
 		response, statusCode, err := slackClient.Put("some-endpoint", []byte{})
 		assert.Empty(t, response, "Response should be nil")
 		assert.NoError(t, err, "There should be no error in response")
-		assert.Equal(t, 399, statusCode, "Status code should be equal 399")
+		assert.Equal(t, 399, statusCode, "Info code should be equal 399")
 	})
 
 	t.Run("Simulate the 200 status code", func(t *testing.T) {
@@ -90,7 +90,7 @@ func TestSlackClient_Put(t *testing.T) {
 		response, statusCode, err := slackClient.Put("some-endpoint", []byte{})
 		assert.Equal(t, []byte(`{status: true"}`), response, "Response should be equal expectation")
 		assert.NoError(t, err, "There should be no error in response")
-		assert.Equal(t, 200, statusCode, "Status code should be equal 200")
+		assert.Equal(t, 200, statusCode, "Info code should be equal 200")
 	})
 }
 
@@ -102,7 +102,7 @@ func TestSlackClient_Get(t *testing.T) {
 		response, statusCode, err := slackClient.Get("some-endpoint")
 		assert.Empty(t, response, "Response should be nil")
 		assert.Error(t, err, "We should receive error")
-		assert.Equal(t, 404, statusCode, "Status code should be equal 404")
+		assert.Equal(t, 404, statusCode, "Info code should be equal 404")
 	})
 
 	t.Run("Simulate the 399 status code", func(t *testing.T) {
@@ -111,7 +111,7 @@ func TestSlackClient_Get(t *testing.T) {
 		response, statusCode, err := slackClient.Get("some-endpoint")
 		assert.Empty(t, response, "Response should be nil")
 		assert.NoError(t, err, "There should be no error in response")
-		assert.Equal(t, 399, statusCode, "Status code should be equal 399")
+		assert.Equal(t, 399, statusCode, "Info code should be equal 399")
 	})
 
 	t.Run("Simulate the 200 status code", func(t *testing.T) {
@@ -120,7 +120,7 @@ func TestSlackClient_Get(t *testing.T) {
 		response, statusCode, err := slackClient.Get("some-endpoint")
 		assert.Equal(t, []byte(`{status: true"}`), response, "Response should be equal expectation")
 		assert.NoError(t, err, "There should be no error in response")
-		assert.Equal(t, 200, statusCode, "Status code should be equal 200")
+		assert.Equal(t, 200, statusCode, "Info code should be equal 200")
 	})
 }
 

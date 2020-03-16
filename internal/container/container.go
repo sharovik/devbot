@@ -15,9 +15,10 @@ import (
 
 //Main container object
 type Main struct {
-	Config      config.Config
-	SlackClient client.SlackClientInterface
-	Dictionary  database.BaseDatabaseInterface
+	Config          config.Config
+	SlackClient     client.SlackClientInterface
+	BibBucketClient client.GitClientInterface
+	Dictionary      database.BaseDatabaseInterface
 }
 
 //C container variable
@@ -36,11 +37,22 @@ func (container Main) Init() Main {
 		},
 	}
 
+	httpClient := http.Client{
+		Timeout:   time.Duration(15) * time.Second,
+		Transport: netTransport,
+	}
+
+	bitBucketClient := client.BitBucketClient{}
+	bitBucketClient.Init(&client.HttpClient{
+		Client: &httpClient,
+		BaseURL: client.DefaultBitBucketBaseAPIUrl,
+		ClientID: container.Config.BitBucketConfig.ClientID,
+		ClientSecret: container.Config.BitBucketConfig.ClientSecret,
+	})
+	container.BibBucketClient = &bitBucketClient
+
 	slackClient := client.SlackClient{
-		Client: &http.Client{
-			Timeout:   time.Duration(15) * time.Second,
-			Transport: netTransport,
-		},
+		Client:     &httpClient,
 		BaseURL:    container.Config.SlackConfig.BaseURL,
 		OAuthToken: container.Config.SlackConfig.OAuthToken,
 	}
