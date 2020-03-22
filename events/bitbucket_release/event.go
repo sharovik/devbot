@@ -65,37 +65,40 @@ func (BitBucketReleaseEvent) Execute(message dto.SlackRequestChatPostMessage) (d
 	answer.Text += fmt.Sprintf("\n%s", failedPullRequestsText(failedPullRequests))
 	answer.Text += fmt.Sprintf("\n%s", canBeMergedPullRequestsText(canBeMergedPullRequestsList))
 
-	if len(canBeMergedByRepository) > 0 {
-		resultText, err := releaseThePullRequests(canBeMergedPullRequestsList, canBeMergedByRepository)
+	if len(canBeMergedByRepository) == 0 {
+		answer.Text += fmt.Sprintf("\nNothing to release")
+		return answer, nil
+	}
+
+	resultText, err := releaseThePullRequests(canBeMergedPullRequestsList, canBeMergedByRepository)
+	if err != nil {
+		answer.Text += fmt.Sprintf("I tried to release and I failed. Here why: %s", err.Error())
+		return answer, err
+	}
+
+	answer.Text += fmt.Sprintf("\n%s", resultText)
+
+	if container.C.Config.BitBucketConfig.ReleaseChannelMessageEnabled && container.C.Config.BitBucketConfig.ReleaseChannel != "" {
+		log.Logger().Debug().
+			Str("channel", container.C.Config.BitBucketConfig.ReleaseChannel).
+			Msg("Send release-confirmation message")
+
+		response, statusCode, err := container.C.SlackClient.SendMessage(dto.SlackRequestChatPostMessage{
+			Channel:           container.C.Config.BitBucketConfig.ReleaseChannel,
+			Text:              fmt.Sprintf("The user <@%s> asked me to start the release and here is the result:%s", answer.OriginalMessage.User, resultText),
+			AsUser:            false,
+			Ts:                time.Time{},
+			DictionaryMessage: dto.DictionaryMessage{},
+			OriginalMessage:   dto.SlackResponseEventMessage{},
+		})
+
 		if err != nil {
-			answer.Text += fmt.Sprintf("I tried to release and I failed. Here why: %s", err.Error())
-			return answer, err
-		}
+			log.Logger().AddError(err).
+				Interface("response", response).
+				Interface("status", statusCode).
+				Msg("Failed to sent answer message")
 
-		answer.Text += fmt.Sprintf("\n%s", resultText)
-
-		if container.C.Config.BitBucketConfig.ReleaseChannelMessageEnabled && container.C.Config.BitBucketConfig.ReleaseChannel != "" {
-			log.Logger().Debug().
-				Str("channel", container.C.Config.BitBucketConfig.ReleaseChannel).
-				Msg("Send release-confirmation message")
-
-			response, statusCode, err := container.C.SlackClient.SendMessage(dto.SlackRequestChatPostMessage{
-				Channel:           container.C.Config.BitBucketConfig.ReleaseChannel,
-				Text:              fmt.Sprintf("The user <@%s> asked me to start the release and here is the result:%s", answer.OriginalMessage.User, resultText),
-				AsUser:            false,
-				Ts:                time.Time{},
-				DictionaryMessage: dto.DictionaryMessage{},
-				OriginalMessage:   dto.SlackResponseEventMessage{},
-			})
-
-			if err != nil {
-				log.Logger().AddError(err).
-					Interface("response", response).
-					Interface("status", statusCode).
-					Msg("Failed to sent answer message")
-
-				answer.Text += fmt.Sprintf("\nI tried to notify the release channel and I failed. Reason: `%s`", err)
-			}
+			answer.Text += fmt.Sprintf("\nI tried to notify the release channel and I failed. Reason: `%s`", err)
 		}
 	}
 
