@@ -70,15 +70,27 @@ BITBUCKET_RELEASE_CHANNEL=CHANNEL-ID
 ```
 
 ## How it works
+You send the message to the PM of bot with the next text: 
+```
+bb release
+https://bitbucket.org/{your-workspace}/{your-first-repository}/pull-requests/1/readmemd-edited-online-with-bitbucket/diff
+https://bitbucket.org/{your-workspace}/{your-second-repository}/pull-requests/20
+https://bitbucket.org/{your-workspace}/{your-second-repository}/pull-requests/36/release-pull-request/diff
+https://bitbucket.org/your-workspace}/{your-first-repository/pull-requests/35/release-pull-request/diff
+```
+In the answer you will receive the status update of the merge process.
 
 ### The main diagram
 Here you can see the main flow how this event works
+
 ![The main flow](images/bitbucket-release-event.png)
 
 ### The pull-request checks
 In this diagram you can see how the current pull-request check works
+
 ![The pull-request check](images/the-pull-request-check.png)
 
 ### The release process
 In this diagram you can see the flow of the release
+
 ![The flow of the release](images/release-process.png)
