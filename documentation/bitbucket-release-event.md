@@ -3,6 +3,10 @@
 You can use this event for release optimisation of your project/projects. In the message text be specified 1 or multiple pull-requests for multiple repositories, if they are good for merge, then event will try to merge all of them into main branch of repository.
 The event accepts multiple pull-requests for multiple repositories. If there is more than one pull-request per repository, then event will create a **release pull-request**, which should be approved by on of required reviewers and will send this pull-request link in the answer of the message.
 
+## Table of contents
+- [Prerequisites](#prerequisites)
+- [How it works](#how-it-works)
+
 ## Prerequisites
 Before you will start use this event please be aware of these steps
 

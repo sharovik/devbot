@@ -8,7 +8,7 @@ This bot can help to automate multiple processes of development and give the pos
 - [Getting Started](#getting-started)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [How to use](#how-to-use)
+- [Available events](#available-events)
 - [Custom events](#custom-events)
 - [Dictionary](#dictionary)
 - [Cross platform build](#cross-platform-build)
@@ -97,7 +97,10 @@ mkdir ~/my-devbot && cd ~/my-devbot
 you should see in the logs `hello` message type. It means that the bot successfully connected to your account
 ![Demo start slack-bo](documentation/images/start-slack-bot.gif)
 
-## How to use
+## Available events
+
+### BitBucket release event
+Please read the [bitBucket release event documentation](documentation/bitbucket-release-event.md)
 
 ### Generate WordPress template
 ![Demo file processing](documentation/images/demo-file-processing.gif)
