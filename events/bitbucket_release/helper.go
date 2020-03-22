@@ -1,18 +1,20 @@
 package bitbucket_release
 
 import (
+	"errors"
 	"fmt"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/sharovik/devbot/internal/log"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
 func failedPullRequestsText(failedPullRequests map[string]failedToMerge) string {
 	if len(failedPullRequests) == 0 {
-		return "There is no pull-requests, which cannot be merged! This is good."
+		return "There is no pull-requests, which *cannot* be merged! This is awesome!"
 	}
 
 	var text = "Next pull-requests cannot be merged yet:\n"
@@ -29,7 +31,7 @@ func canBeMergedPullRequestsText(canBeMerged map[string]PullRequest) string {
 		return "There is no pull-requests, which can be merged."
 	}
 
-	var text = "Next pull-requests is about to release:\n"
+	var text = "Next pull-requests is will be released or prepared for release:\n"
 
 	for pullRequestURL, pullRequest := range canBeMerged {
 		text += fmt.Sprintf("[#%d] %s \n", pullRequest.ID, pullRequestURL)
@@ -38,15 +40,16 @@ func canBeMergedPullRequestsText(canBeMerged map[string]PullRequest) string {
 	return text
 }
 
-func checkPullRequests(items []PullRequest) (map[string]PullRequest, map[string][]PullRequest, map[string]failedToMerge) {
+func checkPullRequests(items []PullRequest) (map[string]PullRequest, map[string]map[string]PullRequest, map[string]failedToMerge) {
 	var (
-		failedPullRequests         = map[string]failedToMerge{}
-		canBeMergedPullRequestList = map[string]PullRequest{}
-		canBeMergedByRepository    = map[string][]PullRequest{}
+		failedPullRequests         = make(map[string]failedToMerge)
+		canBeMergedPullRequestList = make(map[string]PullRequest)
+		canBeMergedByRepository    = make(map[string]map[string]PullRequest)
 	)
 	for _, pullRequest := range items {
 		cleanPullRequestURL := fmt.Sprintf("https://bitbucket.org/%s/%s/%d", pullRequest.Workspace, pullRequest.RepositorySlug, pullRequest.ID)
 		info, err := container.C.BibBucketClient.PullRequestInfo(pullRequest.Workspace, pullRequest.RepositorySlug, pullRequest.ID)
+		pullRequest.Title = info.Title
 		pullRequest.Description = info.Description
 
 		if err != nil {
@@ -86,15 +89,24 @@ func checkPullRequests(items []PullRequest) (map[string]PullRequest, map[string]
 			continue
 		}
 
+		log.Logger().Debug().
+			Interface("pull_request", pullRequest).
+			Msg("The pull-request can be merged.")
 		canBeMergedPullRequestList[cleanPullRequestURL] = pullRequest
-		canBeMergedByRepository[pullRequest.RepositorySlug] = append(canBeMergedByRepository[pullRequest.RepositorySlug], pullRequest)
+
+		if canBeMergedByRepository[pullRequest.RepositorySlug] == nil {
+			canBeMergedByRepository[pullRequest.RepositorySlug] = make(map[string]PullRequest)
+		}
+
+		canBeMergedByRepository[pullRequest.RepositorySlug][pullRequest.Title] = pullRequest
 	}
 
 	return canBeMergedPullRequestList, canBeMergedByRepository, failedPullRequests
 }
 
-func startRelease(canBeMergedPullRequestList map[string]PullRequest, canBeMergedByRepository map[string][]PullRequest) (string, error) {
+func releaseThePullRequests(canBeMergedPullRequestList map[string]PullRequest, canBeMergedByRepository map[string]map[string]PullRequest) (string, error) {
 	log.Logger().StartMessage("Release of received pull-requests")
+
 	releaseText := ""
 	//In case when we have only one pull-request we will merge it straight to the main branch
 	if len(canBeMergedPullRequestList) == 1 {
@@ -122,7 +134,7 @@ func startRelease(canBeMergedPullRequestList map[string]PullRequest, canBeMerged
 			log.Logger().Debug().Str("repository", repository).Msg("Only one pull-request received for selected repository")
 
 			releaseText = fmt.Sprintf("There is only one pull-request for selected repository `%s`.", repository)
-			newText, err := mergePullRequests(canBeMergedPullRequestList)
+			newText, err := mergePullRequests(pullRequests)
 			releaseText += fmt.Sprintf("\n%s", newText)
 			if err != nil {
 				log.Logger().AddError(err).Msg("Received error during pull-request merge")
@@ -133,30 +145,100 @@ func startRelease(canBeMergedPullRequestList map[string]PullRequest, canBeMerged
 
 		//This is for multiple pull-requests links
 		var (
-			repositories        = map[string]string{}
-			releaseBranchName = fmt.Sprintf("release/%s", time.Now().Format("2006.01.02"))
+			repositories                  = map[string]dto.BitBucketResponseBranchCreate{}
+			workspace                     = ""
+			releasePullRequestDescription = ""
+			releaseBranchName             = fmt.Sprintf("release/%s", time.Now().Format("2006.01.02"))
 		)
 
 		//In that case we have multiple pull-requests for that repository, so we have to create a release branch
 		for _, pullRequest := range pullRequests {
-			//If we don't have any created release branch for this repository the we need to create it
-			if repositories[repository] == "" {
-				_, err := container.C.BibBucketClient.FindOrCreateBranch(pullRequest.Workspace, pullRequest.RepositorySlug, releaseBranchName)
-				if err != nil {
-					releaseText += fmt.Sprintf("The release-branch for repository %s cannot be created, because of `%s`", repository, err)
-					log.Logger().AddError(err).Msg("Received an error during the release branch creation")
-					break
-				}
-
-				repositories[repository] = releaseBranchName
+			if workspace == "" {
+				workspace = pullRequest.Workspace
 			}
 
-			//@todo: need to switch the direction of selected pull-request to release branch and merge it.
+			releasePullRequestDescription += fmt.Sprintf("%s\n", pullRequest.Description)
+
+			//If we don't have any created release branch for this repository the we need to create it
+			if repositories[repository].Name == "" {
+				branchResponse, err := container.C.BibBucketClient.CreateBranch(pullRequest.Workspace, pullRequest.RepositorySlug, releaseBranchName)
+				if err != nil {
+					releaseText += fmt.Sprintf("\nThe release-branch for repository %s cannot be created, because of `%s`", repository, err)
+					log.Logger().AddError(err).Msg("Received an error during the release branch creation")
+					return releaseText, err
+				}
+
+				repositories[repository] = branchResponse
+			}
+
+			//We switch the destination of the pull-request to the release branch
+			_, err := container.C.BibBucketClient.ChangePullRequestDestination(
+				pullRequest.Workspace,
+				pullRequest.RepositorySlug,
+				pullRequest.ID,
+				fmt.Sprintf("[PREPARED-FOR-RELEASE] %s", pullRequest.Title),
+				releaseBranchName)
+			if err != nil {
+				releaseText += fmt.Sprintf("I've tried to switch the destination for pull-request #%d and I failed. Reason: `%s`", pullRequest.ID, err)
+				log.Logger().AddError(err).Msg("Received an error during the branch destination switch")
+				break
+			}
 		}
+
+		releaseText += fmt.Sprintf("\nTrying to merge the %d pull-requests to the `%s` branch  of `%s` repository", len(pullRequests), releaseBranchName, repository)
+		newText, err := mergePullRequests(pullRequests)
+		releaseText += fmt.Sprintf("\n%s", newText)
+		if err != nil {
+			log.Logger().AddError(err).Msg("Received error during pull-request merge")
+			log.Logger().FinishMessage("Release of received pull-requests")
+			return releaseText, err
+		}
+
+		//Now we need to create the pull-request
+		pullRequestLink, err := createReleasePullRequest(workspace, repository, repositories[repository], releasePullRequestDescription)
+		if err != nil {
+			releaseText += fmt.Sprintf("\nI tried to create the release pull-request and I failed. Reason: %s", err)
+			return releaseText, err
+		}
+
+		releaseText += fmt.Sprintf("\nThe pull-request: %s", pullRequestLink)
 	}
 
 	log.Logger().FinishMessage("Release of received pull-requests")
 	return releaseText, nil
+}
+
+func createReleasePullRequest(workspace string, repository string, releaseBranch dto.BitBucketResponseBranchCreate, description string) (string, error) {
+	bitBucketPullRequestCreate := dto.BitBucketRequestPullRequestCreate{
+		Title: "Release pull-request",
+		Description: description,
+		Source: dto.BitBucketPullRequestDestination{
+			Branch: dto.BitBucketPullRequestDestinationBranch{
+				Name: releaseBranch.Name,
+			},
+		},
+	}
+
+	//Append reviewers to this pull-request except the author of the branch(which is current user)
+	for _, reviewerUuID := range container.C.Config.BitBucketConfig.RequiredReviewers {
+		if reviewerUuID.UUID != container.C.Config.BitBucketConfig.CurrentUserUUID {
+			bitBucketPullRequestCreate.Reviewers = append(bitBucketPullRequestCreate.Reviewers, dto.BitBucketReviewer{UUID: reviewerUuID.UUID})
+		}
+	}
+
+	fmt.Println(bitBucketPullRequestCreate.Reviewers)
+
+	response, err := container.C.BibBucketClient.CreatePullRequest(workspace, repository, bitBucketPullRequestCreate)
+	if err != nil {
+		return "", err
+	}
+
+	if response.Links.HTML.Href == "" {
+		log.Logger().Warn().Interface("response", response).Msg("There is no pull-request link in response.")
+		return "", errors.New("The pull-request link was not found in the response. ")
+	}
+
+	return response.Links.HTML.Href, nil
 }
 
 func mergePullRequests(pullRequests map[string]PullRequest) (string, error) {
@@ -177,7 +259,7 @@ func mergePullRequests(pullRequests map[string]PullRequest) (string, error) {
 		}
 	}
 
-	releaseText += fmt.Sprintf("\nI merged all pull-requests for repository %s :)", repository)
+	releaseText += fmt.Sprintf("\nI merged all pull-requests for repository `%s` into destination branch :)", repository)
 
 	return releaseText, nil
 }
@@ -200,17 +282,19 @@ func checkIfRequiredReviewersExists(info dto.BitBucketPullRequestInfoResponse) (
 				existsInReviewers = true
 			}
 		}
-
-		if existsInReviewers == false {
-			result = failedToMerge{
-				Reason: fmt.Sprintf("One of the required reviewers (<@%s>) was not found in the reviewers list.", reviewerUuID.SlackUID),
-				Info:   info,
-				Error:  nil,
-			}
-		}
 	}
 
-	if existsInReviewers != true {
+	if existsInReviewers == false {
+		var reviewersSlackUsers = make([]string, len(requiredReviewers))
+		for i, reviewerUuID := range requiredReviewers {
+			reviewersSlackUsers[i] = fmt.Sprintf("<@%s>", reviewerUuID.SlackUID)
+		}
+
+		result = failedToMerge{
+			Reason: fmt.Sprintf("One of the required reviewers (%s) was not found in the reviewers list.", strings.Join(reviewersSlackUsers, ", ")),
+			Info:   info,
+			Error:  nil,
+		}
 		return false, result
 	}
 

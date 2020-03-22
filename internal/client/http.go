@@ -79,14 +79,13 @@ func (client HttpClient) Request(method string, url string, body interface{}, he
 		err error
 	)
 
-	log.Logger().Debug().
-		Str("url", url).
-		Str("method", method).
-		Interface("body", body).
-		Msg("Endpoint call")
-
 	switch body.(type) {
 	case string:
+		log.Logger().Debug().
+			Str("url", url).
+			Str("method", method).
+			Str("body", body.(string)).
+			Msg("Endpoint call")
 		request, err = http.NewRequest(method, url, strings.NewReader(fmt.Sprintf("%s", body)))
 		if err != nil {
 			log.Logger().AddError(err).Msg("Error during the request generation")
@@ -94,6 +93,11 @@ func (client HttpClient) Request(method string, url string, body interface{}, he
 			return nil, 0, err
 		}
 	default:
+		log.Logger().Debug().
+			Str("url", url).
+			Str("method", method).
+			Str("body", string(body.([]byte))).
+			Msg("Endpoint call")
 		request, err = http.NewRequest(method, url, bytes.NewReader(body.([]byte)))
 		if err != nil {
 			log.Logger().AddError(err).Msg("Error during the request generation")

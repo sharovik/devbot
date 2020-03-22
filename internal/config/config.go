@@ -21,14 +21,17 @@ type SlackConfig struct {
 
 //BitBucketConfig struct for bitbucket config
 type BitBucketConfig struct {
-	ClientID          string
-	ClientSecret      string
-	RequiredReviewers []BitBucketReviewer
+	ClientID                     string
+	ClientSecret                 string
+	ReleaseChannelMessageEnabled bool
+	ReleaseChannel               string
+	CurrentUserUUID              string
+	RequiredReviewers            []BitBucketReviewer
 }
 
 //BitBucketReviewer is used for identifying of the reviewer user
 type BitBucketReviewer struct {
-	UUID string
+	UUID     string
 	SlackUID string
 }
 
@@ -97,6 +100,15 @@ const (
 	//BitBucketRequiredReviewers the required reviewers list separated by comma
 	BitBucketRequiredReviewers = "BITBUCKET_REQUIRED_REVIEWERS"
 
+	//BitBucketReleaseChannel the release channel ID. To that channel bot will publish the result of the release
+	BitBucketReleaseChannel = "BITBUCKET_RELEASE_CHANNEL"
+
+	//BitBucketReleaseChannelMessageEnabled the release channel ID. To that channel bot will publish the result of the release
+	BitBucketReleaseChannelMessageEnabled = "BITBUCKET_RELEASE_CHANNEL_MESSAGE_ENABLE"
+
+	//BitBucketCurrentUserUUID the current BitBucket user UUID the client credentials of which we are using in BITBUCKET_CLIENT_ID and BITBUCKET_CLIENT_SECRET
+	BitBucketCurrentUserUUID = "BITBUCKET_USER_UUID"
+
 	defaultMainChannelAlias       = "general"
 	defaultBotName                = "devbot"
 	defaultAppDictionary          = "slack"
@@ -138,6 +150,12 @@ func Init() Config {
 			dbConnection = os.Getenv(DatabaseConnection)
 		}
 
+		bitBucketReleaseChannelMessageEnabled := false
+		bitBucketReleaseChannelMessageEnabledValue := os.Getenv(BitBucketReleaseChannelMessageEnabled)
+		if bitBucketReleaseChannelMessageEnabledValue == "true" || bitBucketReleaseChannelMessageEnabledValue == "1" {
+			bitBucketReleaseChannelMessageEnabled = true
+		}
+
 		cfg = Config{
 			appEnv:        os.Getenv(appEnv),
 			AppDictionary: AppDictionary,
@@ -150,9 +168,12 @@ func Init() Config {
 				BotName:          BotName,
 			},
 			BitBucketConfig: BitBucketConfig{
-				ClientID:          os.Getenv(BitBucketClientID),
-				ClientSecret:      os.Getenv(BitBucketClientSecret),
-				RequiredReviewers: prepareBitBucketReviewers(os.Getenv(BitBucketRequiredReviewers)),
+				ClientID:                     os.Getenv(BitBucketClientID),
+				ClientSecret:                 os.Getenv(BitBucketClientSecret),
+				ReleaseChannel:               os.Getenv(BitBucketReleaseChannel),
+				CurrentUserUUID:              os.Getenv(BitBucketCurrentUserUUID),
+				ReleaseChannelMessageEnabled: bitBucketReleaseChannelMessageEnabled,
+				RequiredReviewers:            prepareBitBucketReviewers(os.Getenv(BitBucketRequiredReviewers)),
 			},
 			initialised:        true,
 			DatabaseConnection: dbConnection,
@@ -214,7 +235,7 @@ func prepareBitBucketReviewers(reviewers string) []BitBucketReviewer {
 		if len(userInfo) != 0 {
 			result = append(result, BitBucketReviewer{
 				SlackUID: userInfo[0],
-				UUID: userInfo[1],
+				UUID:     userInfo[1],
 			})
 		}
 	}
