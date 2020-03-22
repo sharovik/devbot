@@ -201,7 +201,7 @@ func releaseThePullRequests(canBeMergedPullRequestList map[string]PullRequest, c
 			return releaseText, err
 		}
 
-		releaseText += fmt.Sprintf("\nThe pull-request: %s", pullRequestLink)
+		releaseText += fmt.Sprintf("\nPlease approve release pull-request: %s", pullRequestLink)
 	}
 
 	log.Logger().FinishMessage("Release of received pull-requests")
