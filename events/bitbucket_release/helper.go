@@ -14,10 +14,10 @@ import (
 
 func failedPullRequestsText(failedPullRequests map[string]failedToMerge) string {
 	if len(failedPullRequests) == 0 {
-		return "There is no pull-requests, which *cannot* be merged! This is awesome!"
+		return "All pull-requests are ready for merge! This is awesome!"
 	}
 
-	var text = "Next pull-requests cannot be merged yet:\n"
+	var text = "These pull-requests cannot be merged:\n"
 
 	for pullRequest, reason := range failedPullRequests {
 		text += fmt.Sprintf("%s - %s \n", pullRequest, reason.Reason)
@@ -31,7 +31,7 @@ func canBeMergedPullRequestsText(canBeMerged map[string]PullRequest) string {
 		return "There is no pull-requests, which can be merged."
 	}
 
-	var text = "Next pull-requests is will be released or prepared for release:\n"
+	var text = "Next pull-requests is will be merged:\n"
 
 	for pullRequestURL, pullRequest := range canBeMerged {
 		text += fmt.Sprintf("[#%d] %s \n", pullRequest.ID, pullRequestURL)
@@ -47,11 +47,8 @@ func checkPullRequests(items []PullRequest) (map[string]PullRequest, map[string]
 		canBeMergedByRepository    = make(map[string]map[string]PullRequest)
 	)
 	for _, pullRequest := range items {
-		cleanPullRequestURL := fmt.Sprintf("https://bitbucket.org/%s/%s/%d", pullRequest.Workspace, pullRequest.RepositorySlug, pullRequest.ID)
+		cleanPullRequestURL := fmt.Sprintf("https://bitbucket.org/%s/%s/pull-requests/%d", pullRequest.Workspace, pullRequest.RepositorySlug, pullRequest.ID)
 		info, err := container.C.BibBucketClient.PullRequestInfo(pullRequest.Workspace, pullRequest.RepositorySlug, pullRequest.ID)
-		pullRequest.Title = info.Title
-		pullRequest.Description = info.Description
-
 		if err != nil {
 			failedPullRequests[cleanPullRequestURL] = failedToMerge{
 				Reason: err.Error(),
@@ -61,6 +58,10 @@ func checkPullRequests(items []PullRequest) (map[string]PullRequest, map[string]
 
 			continue
 		}
+
+		replacer := strings.NewReplacer("\\", "")
+		pullRequest.Title = info.Title
+		pullRequest.Description = replacer.Replace(info.Description)
 
 		if !isPullRequestAlreadyMerged(info) {
 			failedPullRequests[cleanPullRequestURL] = failedToMerge{
@@ -105,7 +106,7 @@ func checkPullRequests(items []PullRequest) (map[string]PullRequest, map[string]
 }
 
 func releaseThePullRequests(canBeMergedPullRequestList map[string]PullRequest, canBeMergedByRepository map[string]map[string]PullRequest) (string, error) {
-	log.Logger().StartMessage("Release of received pull-requests")
+	log.Logger().StartMessage("Merge of received pull-requests")
 
 	releaseText := ""
 	//In case when we have only one pull-request we will merge it straight to the main branch
@@ -116,11 +117,11 @@ func releaseThePullRequests(canBeMergedPullRequestList map[string]PullRequest, c
 		releaseText += fmt.Sprintf("\n%s", newText)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Failed to merge the pull-request")
-			log.Logger().FinishMessage("Release of received pull-requests")
+			log.Logger().FinishMessage("Merge of received pull-requests")
 			return releaseText, err
 		}
 
-		log.Logger().FinishMessage("Release of received pull-requests")
+		log.Logger().FinishMessage("Merge of received pull-requests")
 		return releaseText, nil
 	}
 
@@ -190,7 +191,7 @@ func releaseThePullRequests(canBeMergedPullRequestList map[string]PullRequest, c
 		releaseText += fmt.Sprintf("\n%s", newText)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Received error during pull-request merge")
-			log.Logger().FinishMessage("Release of received pull-requests")
+			log.Logger().FinishMessage("Merge of received pull-requests")
 			return releaseText, err
 		}
 
@@ -204,7 +205,7 @@ func releaseThePullRequests(canBeMergedPullRequestList map[string]PullRequest, c
 		releaseText += fmt.Sprintf("\nPlease approve release pull-request: %s", pullRequestLink)
 	}
 
-	log.Logger().FinishMessage("Release of received pull-requests")
+	log.Logger().FinishMessage("Merge of received pull-requests")
 	return releaseText, nil
 }
 
