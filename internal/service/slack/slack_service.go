@@ -129,7 +129,7 @@ func (s Service) InitWebSocketReceiver() error {
 		}
 
 		str, _ := json.Marshal(&event)
-		if strings.Contains(string(str), `"channel":{"created"`) {
+		if strings.Contains(string(str), `"channel":{"created"`) || strings.Contains(string(str), `"type":"user_change"`) {
 			log.Logger().Warn().RawJSON("message_body", str).Msg("Received unsupported type of message")
 			continue
 		}

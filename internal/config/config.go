@@ -137,7 +137,7 @@ func Init() Config {
 
 		BotName := defaultBotName
 		if os.Getenv(SlackEnvBotName) != "" {
-			mainChannelAlias = os.Getenv(SlackEnvBotName)
+			BotName = os.Getenv(SlackEnvBotName)
 		}
 
 		AppDictionary := defaultAppDictionary
