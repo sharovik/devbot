@@ -155,30 +155,33 @@ type Source struct {
 	} `json:"branch"`
 }
 
+//ParticipantUser the user of participant object
+type ParticipantUser struct {
+	DisplayName string `json:"display_name"`
+	UUID        string `json:"uuid"`
+	Links       struct {
+		Self struct {
+			Href string `json:"href"`
+		} `json:"self"`
+		HTML struct {
+			Href string `json:"href"`
+		} `json:"html"`
+		Avatar struct {
+			Href string `json:"href"`
+		} `json:"avatar"`
+	} `json:"links"`
+	Nickname  string `json:"nickname"`
+	Type      string `json:"type"`
+	AccountID string `json:"account_id"`
+}
+
 //Participant the participant object
 type Participant struct {
 	Role           string    `json:"role"`
 	ParticipatedOn time.Time `json:"participated_on"`
 	Type           string    `json:"type"`
 	Approved       bool      `json:"approved"`
-	User           struct {
-		DisplayName string `json:"display_name"`
-		UUID        string `json:"uuid"`
-		Links       struct {
-			Self struct {
-				Href string `json:"href"`
-			} `json:"self"`
-			HTML struct {
-				Href string `json:"href"`
-			} `json:"html"`
-			Avatar struct {
-				Href string `json:"href"`
-			} `json:"avatar"`
-		} `json:"links"`
-		Nickname  string `json:"nickname"`
-		Type      string `json:"type"`
-		AccountID string `json:"account_id"`
-	} `json:"user"`
+	User           ParticipantUser `json:"user"`
 }
 
 //Author the author object

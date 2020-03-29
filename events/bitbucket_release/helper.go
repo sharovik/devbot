@@ -112,9 +112,9 @@ func releaseThePullRequests(canBeMergedPullRequestList map[string]PullRequest, c
 	//In case when we have only one pull-request we will merge it straight to the main branch
 	if len(canBeMergedPullRequestList) == 1 {
 		log.Logger().Debug().Msg("There is only 1 received pull-request. Trying to merge it.")
-		releaseText = fmt.Sprintf("We have only one pull-request, so I will try to merge it stright to the main branch.")
+		releaseText = fmt.Sprintf("We have only one pull-request, so I will try to merge it directly to the main branch.\n")
 		newText, err := mergePullRequests(canBeMergedPullRequestList)
-		releaseText += fmt.Sprintf("\n%s", newText)
+		releaseText += fmt.Sprintf("%s\n", newText)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Failed to merge the pull-request")
 			log.Logger().FinishMessage("Merge of received pull-requests")
@@ -136,7 +136,7 @@ func releaseThePullRequests(canBeMergedPullRequestList map[string]PullRequest, c
 
 			releaseText = fmt.Sprintf("There is only one pull-request for selected repository `%s`.", repository)
 			newText, err := mergePullRequests(pullRequests)
-			releaseText += fmt.Sprintf("\n%s", newText)
+			releaseText += fmt.Sprintf("%s\n", newText)
 			if err != nil {
 				log.Logger().AddError(err).Msg("Received error during pull-request merge")
 			}
@@ -177,7 +177,7 @@ func releaseThePullRequests(canBeMergedPullRequestList map[string]PullRequest, c
 				pullRequest.Workspace,
 				pullRequest.RepositorySlug,
 				pullRequest.ID,
-				fmt.Sprintf("[PREPARED-FOR-RELEASE] %s", pullRequest.Title),
+				prepareReleaseTitle(pullRequest.Title),
 				releaseBranchName)
 			if err != nil {
 				releaseText += fmt.Sprintf("I've tried to switch the destination for pull-request #%d and I failed. Reason: `%s`", pullRequest.ID, err)
@@ -246,18 +246,37 @@ func mergePullRequests(pullRequests map[string]PullRequest) (string, error) {
 	var (
 		releaseText string
 		repository = ""
+		lastPullRequest = PullRequest{}
 	)
 
 	for _, pullRequest := range pullRequests {
+		lastPullRequest = pullRequest
+
 		if repository == "" {
 			repository = pullRequest.RepositorySlug
 		}
 
-		_, err := container.C.BibBucketClient.MergePullRequest(pullRequest.Workspace, pullRequest.RepositorySlug, pullRequest.ID, pullRequest.Description)
+		response, err := container.C.BibBucketClient.MergePullRequest(pullRequest.Workspace, pullRequest.RepositorySlug, pullRequest.ID, pullRequest.Description)
 		if err != nil {
 			releaseText += fmt.Sprintf("I cannot merge the pull-request #%d because of error `%s`", pullRequest.ID, err.Error())
+			log.Logger().Info().
+				Interface("response", response).
+				Str("repository", repository).
+				Err(err).
+				Int64("pull_request_id", pullRequest.ID).
+				Msg("Failed to merge pull-request")
 			return releaseText, err
 		}
+
+		log.Logger().Info().
+			Interface("response", response).
+			Int64("pull_request_id", pullRequest.ID).
+			Msg("Merged pull-request")
+	}
+
+	if len(pullRequests) == 1 {
+		releaseText += fmt.Sprintf("\nI merged pull-request #`%d` into destination branch of repository `%s` :)", lastPullRequest.ID, repository)
+		return releaseText, nil
 	}
 
 	releaseText += fmt.Sprintf("\nI merged all pull-requests for repository `%s` into destination branch :)", repository)
@@ -373,4 +392,12 @@ func findAllPullRequestsInText(regex string, subject string) ReceivedPullRequest
 	}
 
 	return result
+}
+
+func prepareReleaseTitle(currentTitle string) string {
+	if !strings.Contains(currentTitle, "[PREPARED-FOR-RELEASE]") {
+		return fmt.Sprintf("[PREPARED-FOR-RELEASE] %s", currentTitle)
+	}
+
+	return currentTitle
 }

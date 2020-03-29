@@ -17,6 +17,7 @@ const (
 	noPullRequestStringAnswer = `I can't find any pull-request in your message`
 
 	pullRequestStateOpen = "OPEN"
+	pullRequestStateMerged = "MERGED"
 )
 
 //ReceivedPullRequests struct for pull-requests list
@@ -72,7 +73,7 @@ func (BitBucketReleaseEvent) Execute(message dto.SlackRequestChatPostMessage) (d
 
 	resultText, err := releaseThePullRequests(canBeMergedPullRequestsList, canBeMergedByRepository)
 	if err != nil {
-		answer.Text += fmt.Sprintf("I tried to release and I failed. Here why: %s", err.Error())
+		answer.Text += resultText
 		return answer, err
 	}
 
