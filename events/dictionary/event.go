@@ -126,11 +126,11 @@ func parseAttributes(text string) error {
 	}
 
 	if _answer == "" {
-		return fmt.Errorf("Question cannot be empty. ")
+		return fmt.Errorf("Answer cannot be empty. ")
 	}
 
 	if _eventAlias == "" {
-		return fmt.Errorf("Question cannot be empty. ")
+		return fmt.Errorf("Event alias cannot be empty. ")
 	}
 
 	if _scenarioID == "" {
