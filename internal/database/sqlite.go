@@ -189,6 +189,23 @@ func (d SQLiteDictionary) FindEventByAlias(eventAlias string) (int64, error) {
 	return eventID, nil
 }
 
+//FindEventByAlias search event by alias
+func (d SQLiteDictionary) FindEventBy(eventAlias string, version string) (int64, error) {
+	var (
+		eventID int64
+		err     error
+	)
+
+	err = d.client.QueryRow("select id from events where (alias = $1 OR installed_version = $2)", eventAlias, version).Scan(&eventID)
+	if err == sql.ErrNoRows {
+		return 0, nil
+	} else if err != nil {
+		return 0, err
+	}
+
+	return eventID, nil
+}
+
 //InsertEvent used for event creation
 func (d SQLiteDictionary) InsertEvent(alias string) (int64, error) {
 	result, err := d.client.Exec(`insert into events (alias) values ($1)`, alias)
