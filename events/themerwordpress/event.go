@@ -16,7 +16,8 @@ import (
 
 const (
 	//EventName the name of the event
-	EventName = "themer_wordpress_event"
+	EventName    = "themer_wordpress_event"
+	EventVersion = "1.0.0"
 
 	zipFileType           = "zip"
 	defaultResultFilename = "result.zip"
@@ -53,6 +54,43 @@ func (e ThemerEvent) Execute(message dto.SlackRequestChatPostMessage) (dto.Slack
 
 	answer.Text = prepareThemeInstructions()
 	return answer, nil
+}
+
+func (e ThemerEvent) Install() error {
+	log.Logger().Debug().
+		Str("event_name", EventName).
+		Str("event_version", EventVersion).
+		Msg("Start event Install")
+	eventId, err := container.C.Dictionary.FindEventByAlias(EventName)
+	if err != nil {
+		log.Logger().AddError(err).Msg("Error during FindEventBy method execution")
+		return err
+	}
+
+	if eventId == 0 {
+		log.Logger().Info().
+			Str("event_name", EventName).
+			Str("event_version", EventVersion).
+			Msg("Event wasn't installed. Trying to install it")
+
+		eventId, err := container.C.Dictionary.InsertEvent(EventName)
+		if err != nil {
+			log.Logger().AddError(err).Msg("Error during FindEventBy method execution")
+			return err
+		}
+
+		log.Logger().Debug().
+			Str("event_name", EventName).
+			Str("event_version", EventVersion).
+			Int64("event_id", eventId).
+			Msg("Event installed")
+	}
+
+	return nil
+}
+
+func (e ThemerEvent) Update() error {
+	return nil
 }
 
 func isValidFile(fileType string) bool {
