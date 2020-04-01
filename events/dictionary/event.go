@@ -2,6 +2,7 @@ package dictionary
 
 import (
 	"fmt"
+	"github.com/sharovik/devbot/internal/log"
 	"html"
 	"strconv"
 
@@ -13,6 +14,7 @@ import (
 const (
 	//EventName the name of the event
 	EventName = "dictionary"
+	EventVersion = "1.0.0"
 
 	//Regex for catching of the information from the received message
 	regexScenarioIDAttribute         = "(?im)((?:scenario id:) (?P<scenario_id>.+))"
@@ -34,18 +36,18 @@ var (
 	eventAlias         string
 )
 
-//ThemerEvent the struct for the event object
-type ThemerEvent struct {
+//DctnrEvent the struct for the event object
+type DctnrEvent struct {
 	EventName string
 }
 
 //Event - object which is ready to use
-var Event = ThemerEvent{
+var Event = DctnrEvent{
 	EventName: EventName,
 }
 
 //Execute method which is called by message processor
-func (e ThemerEvent) Execute(message dto.SlackRequestChatPostMessage) (dto.SlackRequestChatPostMessage, error) {
+func (e DctnrEvent) Execute(message dto.SlackRequestChatPostMessage) (dto.SlackRequestChatPostMessage, error) {
 	var answerMessage = message
 
 	if err := parseAttributes(html.UnescapeString(message.OriginalMessage.Text)); err != nil {
@@ -99,6 +101,43 @@ func (e ThemerEvent) Execute(message dto.SlackRequestChatPostMessage) (dto.Slack
 
 	answerMessage.Text = fmt.Sprintf("I added this information to the dictionary.\nQuestionID: %d\nQuestion: %s\nAnswer: %s\nScenarioID: %d\nRegex: %s\nRegex group: %s", questionID, question, answer, scenarioID, questionRegex, questionRegexGroup)
 	return answerMessage, nil
+}
+
+func (e DctnrEvent) Install() error {
+	log.Logger().Debug().
+		Str("event_name", EventName).
+		Str("event_version", EventVersion).
+		Msg("Start event Install")
+	eventId, err := container.C.Dictionary.FindEventByAlias(EventName)
+	if err != nil {
+		log.Logger().AddError(err).Msg("Error during FindEventBy method execution")
+		return err
+	}
+
+	if eventId == 0 {
+		log.Logger().Info().
+			Str("event_name", EventName).
+			Str("event_version", EventVersion).
+			Msg("Event wasn't installed. Trying to install it")
+
+		eventId, err := container.C.Dictionary.InsertEvent(EventName)
+		if err != nil {
+			log.Logger().AddError(err).Msg("Error during FindEventBy method execution")
+			return err
+		}
+
+		log.Logger().Debug().
+			Str("event_name", EventName).
+			Str("event_version", EventVersion).
+			Int64("event_id", eventId).
+			Msg("Event installed")
+	}
+
+	return nil
+}
+
+func (e DctnrEvent) Update() error {
+	return nil
 }
 
 func parseAttributes(text string) error {

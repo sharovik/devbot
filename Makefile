@@ -3,6 +3,8 @@ CMD:=$(patsubst cmd/%/main.go,%,$(shell find cmd -type f -name 'main.go'))
 LDFLAGS=-ldflags="-s -w"
 
 DICTIONARY_SCRIPT_DIR=scripts/dictionary-loader
+INSTALL_SCRIPT_DIR=scripts/install
+UPDATE_SCRIPT_DIR=scripts/update
 
 vendor:
 	if [ ! -d "vendor" ] || [ -z "$(shell ls -A vendor)" ]; then go mod vendor; fi
@@ -26,5 +28,11 @@ tests:
 
 build-dictionary-script:
 	go build -o $(DICTIONARY_SCRIPT_DIR)/dictionary-loader $(DICTIONARY_SCRIPT_DIR)/main.go
+
+build-installation-script:
+	go build -o $(INSTALL_SCRIPT_DIR)/run $(INSTALL_SCRIPT_DIR)/main.go
+
+build-update-script:
+	go build -o $(UPDATE_SCRIPT_DIR)/run $(UPDATE_SCRIPT_DIR)/main.go
 
 .PHONY: vendor
