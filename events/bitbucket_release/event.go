@@ -10,7 +10,8 @@ import (
 
 //EventName the name of the event
 const (
-	EventName         = "bitbucket_release"
+	EventName            = "bitbucket_release"
+	EventVersion         = "1.0.0"
 	pullRequestsRegex = `(?m)https:\/\/bitbucket.org\/(?P<workspace>.+)\/(?P<repository_slug>.+)\/pull-requests\/(?P<pull_request_id>\d+)`
 
 	pullRequestStringAnswer   = "I found the next pull-requests:\n"
@@ -48,6 +49,43 @@ type failedToMerge struct {
 	Reason string
 	Info   dto.BitBucketPullRequestInfoResponse
 	Error  error
+}
+
+func (e BitBucketReleaseEvent) Install() error {
+	log.Logger().Debug().
+		Str("event_name", EventName).
+		Str("event_version", EventVersion).
+		Msg("Start event Install")
+	eventId, err := container.C.Dictionary.FindEventByAlias(EventName)
+	if err != nil {
+		log.Logger().AddError(err).Msg("Error during FindEventBy method execution")
+		return err
+	}
+
+	if eventId == 0 {
+		log.Logger().Info().
+			Str("event_name", EventName).
+			Str("event_version", EventVersion).
+			Msg("Event wasn't installed. Trying to install it")
+
+		eventId, err := container.C.Dictionary.InsertEvent(EventName)
+		if err != nil {
+			log.Logger().AddError(err).Msg("Error during FindEventBy method execution")
+			return err
+		}
+
+		log.Logger().Debug().
+			Str("event_name", EventName).
+			Str("event_version", EventVersion).
+			Int64("event_id", eventId).
+			Msg("Event installed")
+	}
+
+	return nil
+}
+
+func (e BitBucketReleaseEvent) Update() error {
+	return nil
 }
 
 func (BitBucketReleaseEvent) Execute(message dto.SlackRequestChatPostMessage) (dto.SlackRequestChatPostMessage, error) {
