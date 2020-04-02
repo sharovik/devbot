@@ -73,7 +73,7 @@ func (e ThemerEvent) Install() error {
 			Str("event_version", EventVersion).
 			Msg("Event wasn't installed. Trying to install it")
 
-		eventId, err := container.C.Dictionary.InsertEvent(EventName)
+		eventId, err := container.C.Dictionary.InsertEvent(EventName, EventVersion)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Error during FindEventBy method execution")
 			return err

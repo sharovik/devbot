@@ -10,3 +10,4 @@ events/*
 !events/base
 !events/themerwordpress
 !events/dictionary
+devbot.sqlite

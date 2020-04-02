@@ -24,6 +24,7 @@ func (d *SQLiteDictionary) InitDatabaseConnection() error {
 	if _, err := os.Stat(d.Cfg.DatabaseHost); err != nil {
 		return err
 	}
+
 	db, err := sql.Open("sqlite3", d.Cfg.DatabaseHost)
 	if err != nil {
 		return err
@@ -207,8 +208,8 @@ func (d SQLiteDictionary) FindEventBy(eventAlias string, version string) (int64,
 }
 
 //InsertEvent used for event creation
-func (d SQLiteDictionary) InsertEvent(alias string) (int64, error) {
-	result, err := d.client.Exec(`insert into events (alias) values ($1)`, alias)
+func (d SQLiteDictionary) InsertEvent(alias string, version string) (int64, error) {
+	result, err := d.client.Exec(`insert into events (alias, installed_version) values ($1, $2)`, alias, version)
 	if err != nil {
 		return 0, err
 	}
