@@ -54,6 +54,17 @@ create unique index questions_question_uindex
 create unique index scenarios_name_uindex
 	on scenarios (name);
 
+create table migration
+(
+	id integer
+		constraint migration_pk
+			primary key autoincrement,
+	version varchar not null
+);
+
+create unique index migration_version_uindex
+	on migration (version);
+
 
 insert into main.events (id, alias, installed_version) values (1, 'help', null);
 insert into main.events (id, alias, installed_version) values (2, 'dictionary', null);

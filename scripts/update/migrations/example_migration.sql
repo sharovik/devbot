@@ -1,0 +1,1 @@
+select * from migration where 1=1
