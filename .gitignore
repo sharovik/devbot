@@ -11,3 +11,6 @@ events/*
 !events/themerwordpress
 !events/dictionary
 devbot.sqlite
+
+scripts/install/run
+scripts/update/run

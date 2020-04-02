@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"flag"
-	"fmt"
 	"github.com/sharovik/devbot/events"
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/container"
@@ -42,7 +41,6 @@ func main()  {
 		log.Logger().AddError(err).Msg("Database check error")
 		return
 	}
-
 
 	eventAlias := parseEventAlias()
 	container.C = container.C.Init()
@@ -151,6 +149,5 @@ func parseEventAlias() string {
 	eventAlias := flag.String("event_alias", "", descriptionEventAlias)
 	flag.Parse()
 
-	fmt.Println("eventAlias:" + fmt.Sprintf("%s", *eventAlias))
 	return *eventAlias
 }
