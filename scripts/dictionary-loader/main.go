@@ -25,6 +25,7 @@ var (
 
 const (
 	sqliteDatabaseHost = "./devbot.sqlite"
+	defaultVersion = "1.0.0"
 
 	//Description constants
 	descriptionScenarioIdAttr         = "Scenario id, to which we need to attach this question. If 0 then new scenarioId will be created for this question"
@@ -77,7 +78,7 @@ func main() {
 
 	//If we received empty event id, it means that for that event-alias we don't have any row created. We need to create it now
 	if eventId == 0 {
-		eventId, err = dictionary.InsertEvent(eventAlias)
+		eventId, err = dictionary.InsertEvent(eventAlias, defaultVersion)
 		if err != nil {
 			panic(err)
 		}

@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"runtime"
@@ -28,6 +29,7 @@ func init() {
 }
 
 func TestSQLiteDictionary_InitDatabaseConnection(t *testing.T) {
+	initDatabase()
 	cfg.DatabaseHost = "./wrong_path"
 	dictionary.Cfg = cfg
 
@@ -46,9 +48,11 @@ func TestSQLiteDictionary_InitDatabaseConnection(t *testing.T) {
 
 	checkIfDataCanBeReturned(t)
 	dropTestTables(t)
+	removeDatabase()
 }
 
 func TestSQLiteDictionary_CloseDatabaseConnection(t *testing.T) {
+	initDatabase()
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
@@ -60,9 +64,11 @@ func TestSQLiteDictionary_CloseDatabaseConnection(t *testing.T) {
 	dropTestTables(t)
 	err = dictionary.CloseDatabaseConnection()
 	assert.NoError(t, err)
+	removeDatabase()
 }
 
 func checkIfDataCanBeReturned(t *testing.T) {
+	initDatabase()
 	sqlStmt := `
 	drop table if exists foo;
 	create table foo (id integer not null primary key, name text);
@@ -94,9 +100,11 @@ func checkIfDataCanBeReturned(t *testing.T) {
 	sqlStmt = `drop table if exists foo;`
 	_, err = dictionary.client.Exec(sqlStmt)
 	assert.NoError(t, err)
+	removeDatabase()
 }
 
 func TestSQLiteDictionary_FindAnswer(t *testing.T) {
+	initDatabase()
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
@@ -142,9 +150,11 @@ func TestSQLiteDictionary_FindAnswer(t *testing.T) {
 
 	dropTestTables(t)
 	dictionary.CloseDatabaseConnection()
+	removeDatabase()
 }
 
 func TestSQLiteDictionary_FindEventByAlias(t *testing.T) {
+	initDatabase()
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
@@ -164,9 +174,11 @@ func TestSQLiteDictionary_FindEventByAlias(t *testing.T) {
 
 	dropTestTables(t)
 	dictionary.CloseDatabaseConnection()
+	removeDatabase()
 }
 
 func TestSQLiteDictionary_FindScenarioById(t *testing.T) {
+	initDatabase()
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
@@ -186,9 +198,11 @@ func TestSQLiteDictionary_FindScenarioById(t *testing.T) {
 
 	dropTestTables(t)
 	dictionary.CloseDatabaseConnection()
+	removeDatabase()
 }
 
 func TestSQLiteDictionary_InsertScenario(t *testing.T) {
+	initDatabase()
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
@@ -208,9 +222,11 @@ func TestSQLiteDictionary_InsertScenario(t *testing.T) {
 
 	dropTestTables(t)
 	dictionary.CloseDatabaseConnection()
+	removeDatabase()
 }
 
 func TestSQLiteDictionary_InsertEvent(t *testing.T) {
+	initDatabase()
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
@@ -220,19 +236,21 @@ func TestSQLiteDictionary_InsertEvent(t *testing.T) {
 	insertTestData(t)
 
 	var eventID int64
-	eventID, err = dictionary.InsertEvent("test")
+	eventID, err = dictionary.InsertEvent("test", "1.0.0")
 	assert.NoError(t, err)
 	assert.Equal(t, int64(2), eventID)
 
-	eventID, err = dictionary.InsertEvent("test")
+	eventID, err = dictionary.InsertEvent("test", "1.0.0")
 	assert.Error(t, err)
 	assert.Equal(t, "UNIQUE constraint failed: events.alias", err.Error())
 
 	dropTestTables(t)
 	dictionary.CloseDatabaseConnection()
+	removeDatabase()
 }
 
 func TestSQLiteDictionary_InsertQuestion(t *testing.T) {
+	initDatabase()
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
@@ -264,9 +282,11 @@ func TestSQLiteDictionary_InsertQuestion(t *testing.T) {
 
 	dropTestTables(t)
 	dictionary.CloseDatabaseConnection()
+	removeDatabase()
 }
 
 func TestSQLiteDictionary_GetLastScenarioID(t *testing.T) {
+	initDatabase()
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
@@ -290,9 +310,11 @@ func TestSQLiteDictionary_GetLastScenarioID(t *testing.T) {
 
 	dropTestTables(t)
 	dictionary.CloseDatabaseConnection()
+	removeDatabase()
 }
 
 func TestSQLiteDictionary_GetAllRegex(t *testing.T) {
+	initDatabase()
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
@@ -320,9 +342,11 @@ func TestSQLiteDictionary_GetAllRegex(t *testing.T) {
 
 	dropTestTables(t)
 	dictionary.CloseDatabaseConnection()
+	removeDatabase()
 }
 
 func TestSQLiteDictionary_FindRegex(t *testing.T) {
+	initDatabase()
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
@@ -342,9 +366,11 @@ func TestSQLiteDictionary_FindRegex(t *testing.T) {
 
 	dropTestTables(t)
 	dictionary.CloseDatabaseConnection()
+	removeDatabase()
 }
 
 func TestSQLiteDictionary_FindScenarioByID(t *testing.T) {
+	initDatabase()
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
@@ -364,9 +390,11 @@ func TestSQLiteDictionary_FindScenarioByID(t *testing.T) {
 
 	dropTestTables(t)
 	dictionary.CloseDatabaseConnection()
+	removeDatabase()
 }
 
 func TestSQLiteDictionary_InsertQuestionRegex(t *testing.T) {
+	initDatabase()
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
@@ -390,6 +418,7 @@ func TestSQLiteDictionary_InsertQuestionRegex(t *testing.T) {
 
 	dropTestTables(t)
 	dictionary.CloseDatabaseConnection()
+	removeDatabase()
 }
 
 func upTestTables(t *testing.T) {
@@ -397,10 +426,11 @@ func upTestTables(t *testing.T) {
 	drop table if exists events;
 	create table events
 	(
-		id    integer
+		id integer
 			constraint events_pk
 				primary key autoincrement,
-		alias varchar not null
+		alias varchar not null,
+		installed_version varchar
 	);
 	
 	create unique index events_name_uindex
@@ -486,5 +516,19 @@ func dropTestTables(t *testing.T) {
 		if err != nil {
 			assert.NoError(t, err)
 		}
+	}
+}
+
+func initDatabase() {
+	_, err := os.Create(testSQLiteDatabasePath)
+	if err != nil {
+		fmt.Println("Failed to create database file: " + err.Error())
+	}
+}
+
+func removeDatabase() {
+	err := os.Remove(testSQLiteDatabasePath)
+	if err != nil {
+		fmt.Println("Failed to remove database file: " + err.Error())
 	}
 }
