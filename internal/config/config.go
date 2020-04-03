@@ -185,7 +185,7 @@ func Init() Config {
 		return cfg
 	}
 
-	return Config{}
+	return cfg
 }
 
 //IsInitialised method which retrieves current status of object

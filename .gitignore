@@ -10,4 +10,8 @@ events/*
 !events/base
 !events/themerwordpress
 !events/dictionary
-!events/bitbucket_release
+devbot.sqlite
+
+scripts/install/run
+scripts/update/run
+test/testdata/database
