@@ -114,6 +114,6 @@ func parseEventAlias() string {
 	eventAlias := flag.String("event_alias", "", descriptionEventAlias)
 	flag.Parse()
 
-	fmt.Println("eventAlias:" + fmt.Sprintf("%s", *eventAlias))
+	log.Logger().Info().Str("event_alias", *eventAlias).Msg("Parsed event alias")
 	return *eventAlias
 }
