@@ -66,38 +66,19 @@ Or for centos
 yum install php php-xml
 ```
 ## Installation
+You can easily install the devbot application by using the installation script.
 
-There is two ways of the DevBot setup
-
-### Running application from cloned repository folder
-1. Go to [this page](https://github.com/sharovik/devbot) and download the latest version of devbot. Or run this command locally:
+1. Go to [this page](https://github.com/sharovik/devbot) and download/clone the latest version of devbot. Or run this command locally:
+2. Run this command to install everything related to the database and configuration
 ``` 
-git clone git@github.com:sharovik/devbot.git
-```
-2. Prepare the configuration file for our bot. Create `.env` file in the project directory and copy contents of the `.env.example` file there.
-```
-cp .env.example .env
+make build-installation-script && scripts/install/run
 ```
 3. Set the value from [`Bot User OAuth Access Token`](#slack-token-generation) into *SLACK_OAUTH_TOKEN* variable from the `.env` file
 4. Run bot by using command `./bin/slack-bot-{YOUR_SYSTEM}` you should see in the logs `hello` message type. It means that the bot successfully connected to your account
 ![Demo start slack-bo](documentation/images/start-slack-bot.gif)
 
-### Running application by using downloadable binaries
-1. Create the folder from where you will run this application and step inside of this folder
-```
-mkdir ~/my-devbot && cd ~/my-devbot
-```
-2. Create `.env` file and put there contents from the [`.env.example`](https://github.com/sharovik/devbot/blob/master/.env.example) file which you can find in our repository. Please make sure that you're update all env variables to use the correct values
-3. Download the [`devbot.sqlite`](https://github.com/sharovik/devbot/blob/master/devbot.sqlite) database from our repository and put it into your `~/my-devbot` directory
-4. Please download your version of DevBot from [the latest release](https://github.com/sharovik/devbot/releases) and put it inside of your `~/my-devbot` directory
-5. Run the bot by using this command 
-``` 
-./slack-bot-{YOUR_SYSTEM}
-```
-you should see in the logs `hello` message type. It means that the bot successfully connected to your account
-![Demo start slack-bo](documentation/images/start-slack-bot.gif)
-
 ## How to use
+Basically you can do whatever you want with the chat-events. All depends on your imagination. Here the example of event:
 
 ### Generate WordPress template
 ![Demo file processing](documentation/images/demo-file-processing.gif)

@@ -16,7 +16,7 @@ type BaseDatabaseInterface interface {
 	GetLastScenarioID() (int64, error)
 	FindEventByAlias(eventAlias string) (int64, error)
 	FindEventBy(eventAlias string, version string) (int64, error)
-	InsertEvent(alias string) (int64, error)
+	InsertEvent(alias string, version string) (int64, error)
 	FindRegex(regex string) (int64, error)
 	InsertQuestionRegex(questionRegex string, questionRegexGroup string) (int64, error)
 	GetAllRegex() (map[int64]string, error)

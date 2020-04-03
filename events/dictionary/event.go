@@ -2,9 +2,10 @@ package dictionary
 
 import (
 	"fmt"
-	"github.com/sharovik/devbot/internal/log"
 	"html"
 	"strconv"
+
+	"github.com/sharovik/devbot/internal/log"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
@@ -14,6 +15,8 @@ import (
 const (
 	//EventName the name of the event
 	EventName = "dictionary"
+
+	//EventVersion the version of the event
 	EventVersion = "1.0.0"
 
 	//Regex for catching of the information from the received message
@@ -63,7 +66,7 @@ func (e DctnrEvent) Execute(message dto.SlackRequestChatPostMessage) (dto.SlackR
 
 	//If we received empty event id, it means that for that event-alias we don't have any row created. We need to create it now
 	if eventID == 0 {
-		eventID, err = container.C.Dictionary.InsertEvent(eventAlias)
+		eventID, err = container.C.Dictionary.InsertEvent(eventAlias, EventVersion)
 		if err != nil {
 			panic(err)
 		}
@@ -103,24 +106,25 @@ func (e DctnrEvent) Execute(message dto.SlackRequestChatPostMessage) (dto.SlackR
 	return answerMessage, nil
 }
 
+//Install method for installation of event
 func (e DctnrEvent) Install() error {
 	log.Logger().Debug().
 		Str("event_name", EventName).
 		Str("event_version", EventVersion).
 		Msg("Start event Install")
-	eventId, err := container.C.Dictionary.FindEventByAlias(EventName)
+	eventID, err := container.C.Dictionary.FindEventByAlias(EventName)
 	if err != nil {
 		log.Logger().AddError(err).Msg("Error during FindEventBy method execution")
 		return err
 	}
 
-	if eventId == 0 {
+	if eventID == 0 {
 		log.Logger().Info().
 			Str("event_name", EventName).
 			Str("event_version", EventVersion).
 			Msg("Event wasn't installed. Trying to install it")
 
-		eventId, err := container.C.Dictionary.InsertEvent(EventName)
+		eventID, err := container.C.Dictionary.InsertEvent(EventName, EventVersion)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Error during FindEventBy method execution")
 			return err
@@ -129,13 +133,14 @@ func (e DctnrEvent) Install() error {
 		log.Logger().Debug().
 			Str("event_name", EventName).
 			Str("event_version", EventVersion).
-			Int64("event_id", eventId).
+			Int64("event_id", eventID).
 			Msg("Event installed")
 	}
 
 	return nil
 }
 
+//Update for event update actions
 func (e DctnrEvent) Update() error {
 	return nil
 }
