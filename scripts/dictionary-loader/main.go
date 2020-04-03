@@ -25,7 +25,7 @@ var (
 
 const (
 	sqliteDatabaseHost = "./devbot.sqlite"
-	defaultVersion = "1.0.0"
+	defaultVersion     = "1.0.0"
 
 	//Description constants
 	descriptionScenarioIdAttr         = "Scenario id, to which we need to attach this question. If 0 then new scenarioId will be created for this question"

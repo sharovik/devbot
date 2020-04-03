@@ -3,15 +3,16 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"io/ioutil"
+	"os"
+	"path"
+	"runtime"
+
 	"github.com/sharovik/devbot/events"
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/log"
-	"io/ioutil"
-	"os"
-	"path"
-	"runtime"
 )
 
 const descriptionEventAlias = "The event alias for which Install method will be called"
@@ -30,7 +31,7 @@ func init() {
 	_ = log.Init(cfg)
 }
 
-func main()  {
+func main() {
 	if err := checkIfEnvFilesExists(); err != nil {
 		log.Logger().AddError(err).Msg("Failed to check the .env file")
 		return

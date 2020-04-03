@@ -190,7 +190,7 @@ func (d SQLiteDictionary) FindEventByAlias(eventAlias string) (int64, error) {
 	return eventID, nil
 }
 
-//FindEventByAlias search event by alias
+//FindEventBy search event by alias and version
 func (d SQLiteDictionary) FindEventBy(eventAlias string, version string) (int64, error) {
 	var (
 		eventID int64

@@ -4,15 +4,16 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"github.com/sharovik/devbot/events"
-	"github.com/sharovik/devbot/internal/config"
-	"github.com/sharovik/devbot/internal/container"
-	"github.com/sharovik/devbot/internal/log"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
+
+	"github.com/sharovik/devbot/events"
+	"github.com/sharovik/devbot/internal/config"
+	"github.com/sharovik/devbot/internal/container"
+	"github.com/sharovik/devbot/internal/log"
 )
 
 const descriptionEventAlias = "The event alias for which Update method will be called"
@@ -29,7 +30,7 @@ func init() {
 	_ = log.Init(cfg)
 }
 
-func main()  {
+func main() {
 	if err := runMigrations(); err != nil {
 		log.Logger().AddError(err).Msg("Failed to run migrations")
 		return
