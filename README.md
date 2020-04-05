@@ -68,7 +68,7 @@ yum install php php-xml
 ## Installation
 You can easily install the devbot application by using the installation script.
 
-1. Go to [this page](https://github.com/sharovik/devbot) and download/clone the latest version of devbot. Or run this command locally:
+1. Go to [this page](https://github.com/sharovik/devbot) and download/clone the latest version of devbot
 2. Run this command to install everything related to the database and configuration
 ``` 
 make build-installation-script && scripts/install/run
