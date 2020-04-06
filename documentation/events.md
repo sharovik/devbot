@@ -23,4 +23,4 @@ This feature will help you to improve the skills of your bot. With it you are ab
 * add to the dictionary, message regex by which your event will be triggered
 
 ## Example
-You can find it here [events/themerwordpress](https://github.com/sharovik/devbot/tree/master/events/themerwordpress)
+You can find it here [events/example](https://github.com/sharovik/devbot/tree/master/events/example)

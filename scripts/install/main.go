@@ -62,6 +62,7 @@ func main() {
 		return
 	}
 
+	log.Logger().Debug().Msg("Trying to install all defined events if it's possible")
 	for eventAlias, event := range events.DefinedEvents.Events {
 		if err := event.Install(); err != nil {
 			log.Logger().AddError(err).Str("event_alias", eventAlias).Msg("Failed to install the event.")
