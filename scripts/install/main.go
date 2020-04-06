@@ -76,7 +76,8 @@ func checkIfDatabaseExists() error {
 	log.Logger().Info().Msg("Check if the database exists")
 	switch cfg.DatabaseConnection {
 	case database.ConnectionSQLite:
-		if _, err := os.Stat(cfg.DatabaseHost); err != nil {
+		_, err := os.Stat(cfg.DatabaseHost)
+		if err != nil {
 			log.Logger().Info().Msg("We will try to create the database file")
 
 			_, err := os.Stat(databaseInstallationDataSQLitePath)
