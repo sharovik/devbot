@@ -62,6 +62,7 @@ func main() {
 		return
 	}
 
+	log.Logger().Debug().Msg("Trying to install all defined events if it's possible")
 	for eventAlias, event := range events.DefinedEvents.Events {
 		if err := event.Install(); err != nil {
 			log.Logger().AddError(err).Str("event_alias", eventAlias).Msg("Failed to install the event.")
@@ -75,7 +76,8 @@ func checkIfDatabaseExists() error {
 	log.Logger().Info().Msg("Check if the database exists")
 	switch cfg.DatabaseConnection {
 	case database.ConnectionSQLite:
-		if _, err := os.Stat(cfg.DatabaseHost); err != nil {
+		_, err := os.Stat(cfg.DatabaseHost)
+		if err != nil {
 			log.Logger().Info().Msg("We will try to create the database file")
 
 			_, err := os.Stat(databaseInstallationDataSQLitePath)

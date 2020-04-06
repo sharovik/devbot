@@ -3,7 +3,7 @@ package events
 import (
 	"github.com/sharovik/devbot/events/base"
 	"github.com/sharovik/devbot/events/dictionary"
-	"github.com/sharovik/devbot/events/themerwordpress"
+	"github.com/sharovik/devbot/events/example"
 )
 
 //DefinedEvents collects all the events which can be triggered by the messages
@@ -11,6 +11,6 @@ var DefinedEvents = base.Events{}
 
 func init() {
 	DefinedEvents.Events = make(map[string]base.Event)
-	DefinedEvents.Events[themerwordpress.EventName] = themerwordpress.Event
 	DefinedEvents.Events[dictionary.EventName] = dictionary.Event
+	DefinedEvents.Events[example.EventName] = example.Event
 }

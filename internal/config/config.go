@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -18,11 +19,28 @@ type SlackConfig struct {
 	MainChannelID    string
 }
 
+//BitBucketConfig struct for bitbucket config
+type BitBucketConfig struct {
+	ClientID                     string
+	ClientSecret                 string
+	ReleaseChannelMessageEnabled bool
+	ReleaseChannel               string
+	CurrentUserUUID              string
+	RequiredReviewers            []BitBucketReviewer
+}
+
+//BitBucketReviewer is used for identifying of the reviewer user
+type BitBucketReviewer struct {
+	UUID     string
+	SlackUID string
+}
+
 //Config configuration object
 type Config struct {
 	appEnv             string
 	AppDictionary      string
 	SlackConfig        SlackConfig
+	BitBucketConfig    BitBucketConfig
 	initialised        bool
 	DatabaseConnection string
 	DatabaseHost       string
@@ -73,6 +91,24 @@ const (
 	//DatabasePassword env variable for database password
 	DatabasePassword = "DATABASE_PASSWORD"
 
+	//BitBucketClientID the client id which is used fo oauth token generation
+	BitBucketClientID = "BITBUCKET_CLIENT_ID"
+
+	//BitBucketClientSecret the client secret which is used fo oauth token generation
+	BitBucketClientSecret = "BITBUCKET_CLIENT_SECRET"
+
+	//BitBucketRequiredReviewers the required reviewers list separated by comma
+	BitBucketRequiredReviewers = "BITBUCKET_REQUIRED_REVIEWERS"
+
+	//BitBucketReleaseChannel the release channel ID. To that channel bot will publish the result of the release
+	BitBucketReleaseChannel = "BITBUCKET_RELEASE_CHANNEL"
+
+	//BitBucketReleaseChannelMessageEnabled the release channel ID. To that channel bot will publish the result of the release
+	BitBucketReleaseChannelMessageEnabled = "BITBUCKET_RELEASE_CHANNEL_MESSAGE_ENABLE"
+
+	//BitBucketCurrentUserUUID the current BitBucket user UUID the client credentials of which we are using in BITBUCKET_CLIENT_ID and BITBUCKET_CLIENT_SECRET
+	BitBucketCurrentUserUUID = "BITBUCKET_USER_UUID"
+
 	defaultMainChannelAlias       = "general"
 	defaultBotName                = "devbot"
 	defaultAppDictionary          = "slack"
@@ -101,7 +137,7 @@ func Init() Config {
 
 		BotName := defaultBotName
 		if os.Getenv(SlackEnvBotName) != "" {
-			mainChannelAlias = os.Getenv(SlackEnvBotName)
+			BotName = os.Getenv(SlackEnvBotName)
 		}
 
 		AppDictionary := defaultAppDictionary
@@ -114,6 +150,12 @@ func Init() Config {
 			dbConnection = os.Getenv(DatabaseConnection)
 		}
 
+		bitBucketReleaseChannelMessageEnabled := false
+		bitBucketReleaseChannelMessageEnabledValue := os.Getenv(BitBucketReleaseChannelMessageEnabled)
+		if bitBucketReleaseChannelMessageEnabledValue == "true" || bitBucketReleaseChannelMessageEnabledValue == "1" {
+			bitBucketReleaseChannelMessageEnabled = true
+		}
+
 		cfg = Config{
 			appEnv:        os.Getenv(appEnv),
 			AppDictionary: AppDictionary,
@@ -124,6 +166,14 @@ func Init() Config {
 				MainChannelID:    os.Getenv(SlackEnvMainChannelID),
 				BotUserID:        os.Getenv(SlackEnvUserID),
 				BotName:          BotName,
+			},
+			BitBucketConfig: BitBucketConfig{
+				ClientID:                     os.Getenv(BitBucketClientID),
+				ClientSecret:                 os.Getenv(BitBucketClientSecret),
+				ReleaseChannel:               os.Getenv(BitBucketReleaseChannel),
+				CurrentUserUUID:              os.Getenv(BitBucketCurrentUserUUID),
+				ReleaseChannelMessageEnabled: bitBucketReleaseChannelMessageEnabled,
+				RequiredReviewers:            prepareBitBucketReviewers(os.Getenv(BitBucketRequiredReviewers)),
 			},
 			initialised:        true,
 			DatabaseConnection: dbConnection,
@@ -173,4 +223,22 @@ func (c Config) SetToEnv(field string, value string, writeToEnvFile bool) error 
 	}
 
 	return nil
+}
+
+func prepareBitBucketReviewers(reviewers string) []BitBucketReviewer {
+	entries := strings.Split(reviewers, ",")
+
+	var result []BitBucketReviewer
+	for _, value := range entries {
+		userInfo := strings.Split(value, ":")
+
+		if len(userInfo) != 0 && userInfo[0] != "" {
+			result = append(result, BitBucketReviewer{
+				SlackUID: userInfo[0],
+				UUID:     userInfo[1],
+			})
+		}
+	}
+
+	return result
 }

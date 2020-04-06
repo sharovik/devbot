@@ -8,7 +8,7 @@ This bot can help to automate multiple processes of development and give the pos
 - [Getting Started](#getting-started)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [How to use](#how-to-use)
+- [Available events](#available-events)
 - [Custom events](#custom-events)
 - [Dictionary](#dictionary)
 - [Cross platform build](#cross-platform-build)
@@ -24,6 +24,12 @@ This bot can help to automate multiple processes of development and give the pos
 These instructions will help you to install the bot to your server (local, development, production).
 
 ## Prerequisites
+
+### Run installation script
+You need to run this script to install everything related to the devbot. So please run the following command:
+``` 
+make install
+```
 
 ### Enable CGO
 Because here we use the CGO package for *sqlite* driver, please enable the environment variable `CGO_ENABLED=1` and have a `gcc` compile present within your path.
@@ -51,20 +57,6 @@ Or for centos
 sudo yum install sqlite
 ```
 
-### PHP installation
-You server requires php version of 7.1+ with php-dom module. `It is only required if you will use the wordpress template generation event.`
-For ubuntu
-```
-sudo apt install php php-dom
-```
-Or for brew
-```
-brew install php
-```
-Or for centos
-```
-yum install php php-xml
-```
 ## Installation
 You can easily install the devbot application by using the installation script.
 
@@ -78,18 +70,9 @@ make build-installation-script && scripts/install/run
 ![Demo start slack-bo](documentation/images/start-slack-bot.gif)
 
 ## How to use
-Basically you can do whatever you want with the chat-events. All depends on your imagination. Here the example of event:
+Basically you can do whatever you want with the chat-events. All depends on your imagination and on your daily basis workflow.
 
-### Generate WordPress template
-![Demo file processing](documentation/images/demo-file-processing.gif)
-1. Prepare a `*.twig` template and compress it in a `*.zip` file ([here you can find the example of template](https://github.com/sharovik/themer)) 
-2. Open PM of the bot, channel where this bot was added or tag bot-user during the attachment send
-3. In attachment popup please write in comment field `process` word and send the attachment
-4. After bot received your attachment you will see the answer
- >Please, wait a bit. I have to process this file
- 
- Up to 4 seconds will take to process the template
-5. After template was processed you will receive in answer new archive where you will find `html preview of your template` and WordPress template
+[You can find an example of the event here](events/example/README.md).
 
 ## Custom events
 Please read the [events documentation](documentation/events.md)
