@@ -232,7 +232,7 @@ func prepareBitBucketReviewers(reviewers string) []BitBucketReviewer {
 	for _, value := range entries {
 		userInfo := strings.Split(value, ":")
 
-		if len(userInfo) != 0 {
+		if len(userInfo) != 0 && userInfo[0] != "" {
 			result = append(result, BitBucketReviewer{
 				SlackUID: userInfo[0],
 				UUID:     userInfo[1],

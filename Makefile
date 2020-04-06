@@ -26,6 +26,10 @@ format:
 tests:
 	go test ./...
 
+install:
+	if [ ! -f events/defined-events.go ]; then cp events/defined-events.go.dist events/defined-events.go; fi
+	make build-installation-script && ./scripts/install/run
+
 build-dictionary-script:
 	go build -o $(DICTIONARY_SCRIPT_DIR)/dictionary-loader $(DICTIONARY_SCRIPT_DIR)/main.go
 

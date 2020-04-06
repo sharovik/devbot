@@ -25,6 +25,12 @@ These instructions will help you to install the bot to your server (local, devel
 
 ## Prerequisites
 
+### Run installation script
+You need to run this script to install everything related to the devbot. So please run the following command:
+``` 
+make install
+```
+
 ### Enable CGO
 Because here we use the CGO package for *sqlite* driver, please enable the environment variable `CGO_ENABLED=1` and have a `gcc` compile present within your path.
 
@@ -51,20 +57,6 @@ Or for centos
 sudo yum install sqlite
 ```
 
-### PHP installation
-You server requires php version of 7.1+ with php-dom module. `It is only required if you will use the wordpress template generation event.`
-For ubuntu
-```
-sudo apt install php php-dom
-```
-Or for brew
-```
-brew install php
-```
-Or for centos
-```
-yum install php php-xml
-```
 ## Installation
 You can easily install the devbot application by using the installation script.
 
