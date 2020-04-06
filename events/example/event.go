@@ -2,6 +2,7 @@ package example
 
 import (
 	"fmt"
+
 	"github.com/sharovik/devbot/internal/log"
 
 	"github.com/sharovik/devbot/internal/container"
@@ -14,7 +15,6 @@ const (
 
 	//EventVersion the version of the event
 	EventVersion = "1.0.0"
-
 )
 
 //ExmplEvent the struct for the event object
@@ -74,7 +74,7 @@ func (e ExmplEvent) Install() error {
 			Int64("scenario_id", scenarioID).
 			Msg("Scenario installed")
 
-		questionID, err :=container.C.Dictionary.InsertQuestion("who are you?", fmt.Sprintf("Hello, my name is %s", container.C.Config.SlackConfig.BotName), scenarioID, "", "")
+		questionID, err := container.C.Dictionary.InsertQuestion("who are you?", fmt.Sprintf("Hello, my name is %s", container.C.Config.SlackConfig.BotName), scenarioID, "", "")
 		if err != nil {
 			return err
 		}

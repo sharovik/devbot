@@ -44,9 +44,9 @@ func (container Main) Init() Main {
 
 	bitBucketClient := client.BitBucketClient{}
 	bitBucketClient.Init(&client.HttpClient{
-		Client: &httpClient,
-		BaseURL: client.DefaultBitBucketBaseAPIUrl,
-		ClientID: container.Config.BitBucketConfig.ClientID,
+		Client:       &httpClient,
+		BaseURL:      client.DefaultBitBucketBaseAPIUrl,
+		ClientID:     container.Config.BitBucketConfig.ClientID,
 		ClientSecret: container.Config.BitBucketConfig.ClientSecret,
 	})
 	container.BibBucketClient = &bitBucketClient

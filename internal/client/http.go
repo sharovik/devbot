@@ -5,10 +5,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/sharovik/devbot/internal/log"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/sharovik/devbot/internal/log"
 )
 
 //BaseHttpClientInterface base interface for all http clients
@@ -30,12 +31,12 @@ type BaseHttpClientInterface interface {
 
 //HttpClient main http client
 type HttpClient struct {
-	Client     *http.Client
+	Client *http.Client
 
 	//Configuration of client
-	OAuthToken string
-	BaseURL string
-	ClientID string
+	OAuthToken   string
+	BaseURL      string
+	ClientID     string
 	ClientSecret string
 }
 
@@ -65,7 +66,7 @@ func (client *HttpClient) SetBaseUrl(baseUrl string) {
 }
 
 func (client HttpClient) BasicAuth(username string, password string) string {
-	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s",username, password)))
+	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password)))
 }
 
 //Request method for API requests
@@ -76,7 +77,7 @@ func (client HttpClient) Request(method string, url string, body interface{}, he
 	var (
 		resp    *http.Response
 		request *http.Request
-		err error
+		err     error
 	)
 
 	switch body.(type) {
@@ -179,7 +180,7 @@ func (client *HttpClient) Get(endpoint string, query map[string]string) ([]byte,
 		queryString += fmt.Sprintf("%s=%s", fieldName, value)
 	}
 
-	return client.Request(http.MethodGet, client.generateAPIUrl(endpoint) + fmt.Sprintf("%s", queryString), []byte(``), map[string]string{})
+	return client.Request(http.MethodGet, client.generateAPIUrl(endpoint)+fmt.Sprintf("%s", queryString), []byte(``), map[string]string{})
 }
 
 func (client HttpClient) generateAPIUrl(endpoint string) string {

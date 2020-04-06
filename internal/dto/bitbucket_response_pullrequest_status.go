@@ -177,10 +177,10 @@ type ParticipantUser struct {
 
 //Participant the participant object
 type Participant struct {
-	Role           string    `json:"role"`
-	ParticipatedOn time.Time `json:"participated_on"`
-	Type           string    `json:"type"`
-	Approved       bool      `json:"approved"`
+	Role           string          `json:"role"`
+	ParticipatedOn time.Time       `json:"participated_on"`
+	Type           string          `json:"type"`
+	Approved       bool            `json:"approved"`
 	User           ParticipantUser `json:"user"`
 }
 
@@ -227,7 +227,7 @@ type BitBucketPullRequestInfoResponse struct {
 	Author            Author        `json:"author"`
 	MergeCommit       interface{}   `json:"merge_commit"`
 	ClosedBy          interface{}   `json:"closed_by"`
-	Error struct {
+	Error             struct {
 		Fields struct {
 			Newstatus []string `json:"newstatus"`
 		} `json:"fields"`

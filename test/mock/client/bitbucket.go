@@ -7,26 +7,26 @@ import (
 
 type MockedBitBucketClient struct {
 	IsTokenInvalid bool
-	BeforeRequest error
-	LoadAuthToken error
+	BeforeRequest  error
+	LoadAuthToken  error
 
 	PullRequestInfoResponse dto.BitBucketPullRequestInfoResponse
-	PullRequestInfoError error
+	PullRequestInfoError    error
 
 	MergePullRequestResponse dto.BitBucketPullRequestInfoResponse
-	MergePullRequestError error
+	MergePullRequestError    error
 
 	CreateBranchResponse dto.BitBucketResponseBranchCreate
-	CreateBranchError error
+	CreateBranchError    error
 
 	ChangePullRequestDestinationResponse dto.BitBucketPullRequestInfoResponse
-	ChangePullRequestDestinationError error
+	ChangePullRequestDestinationError    error
 
 	CreatePullRequestResponse dto.BitBucketPullRequestInfoResponse
 	CreatePullRequestError    error
 }
 
-func (b *MockedBitBucketClient) Init(client client.BaseHttpClientInterface)  {
+func (b *MockedBitBucketClient) Init(client client.BaseHttpClientInterface) {
 
 }
 

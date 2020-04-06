@@ -2,7 +2,7 @@ package dto
 
 //BitBucketPullRequestDestinationUpdateRequest request struct for pull-request destination update
 type BitBucketPullRequestDestinationUpdateRequest struct {
-	Title string `json:"title"`
+	Title       string                          `json:"title"`
 	Destination BitBucketPullRequestDestination `json:"destination"`
 }
 

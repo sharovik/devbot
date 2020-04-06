@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/sharovik/devbot/internal/dto"
-	"github.com/sharovik/devbot/internal/log"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/sharovik/devbot/internal/dto"
+	"github.com/sharovik/devbot/internal/log"
 )
 
 type BitBucketClient struct {

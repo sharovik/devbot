@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/sharovik/devbot/internal/service/slack"
-	"github.com/sharovik/devbot/test/mock/service"
+	mock "github.com/sharovik/devbot/test/mock/service"
 	"github.com/stretchr/testify/assert"
 )
 
