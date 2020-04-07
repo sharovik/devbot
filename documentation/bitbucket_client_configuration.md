@@ -8,7 +8,7 @@ For this you need to do the following steps:
 - Pipelines: Read
 And also please mark this consumer as "Private".
 See example of the filled form:
-![Add consumer form](documentation/images/bitbucket-consumer-add-form.png)
+![Add consumer form](images/bitbucket-consumer-add-form.png)
 
 4. After form submit you will receive the client credentials, please use them to fill these attributes in your `.env` file:
 ```
@@ -22,7 +22,7 @@ This will be used in the pull-request checks and for release pull-request creati
 `https://bitbucket.org/%7Bsome-bitbucket-uuid-is-here%7D/`. From that string you take the UUID and put it in curly brace `{some-bitbucket-uuid-is-here}`
 2. In the slack, please find the related member and get his member ID. Just view the profile, click to the options button and you will find the member id there.
 See example:
-![View profile](documentation/images/slack-profile-copy-member-id.png)
+![View profile](images/slack-profile-copy-member-id.png)
 Click to copy this member ID 
 3. Add the reviewers into `BITBUCKET_REQUIRED_REVIEWERS` attribute in the `.env` with the following structure:
 ```
@@ -48,7 +48,7 @@ BITBUCKET_RELEASE_CHANNEL_MESSAGE_ENABLE=true
 2. Set the slack channel ID. Go to selected channel in slack, select the message from this channel and try to share it. In the popup you will see `Copy link` button. Copy the link and extract from this link the `CHANNEL-ID` part
 Example: `https://you-team.slack.com/archives/CHANNEL-ID/p1574500945000200`. Usually the channel ID starts from `C`.
 
-![The popup example:](documentation/images/slack-channel-id-popup.png)
+![The popup example:](images/slack-channel-id-popup.png)
 3. Put the channel ID into `BITBUCKET_RELEASE_CHANNEL` variable in your `.env` file
 ``` 
 BITBUCKET_RELEASE_CHANNEL=CHANNEL-ID
