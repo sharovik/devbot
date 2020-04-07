@@ -24,6 +24,9 @@ type MockedBitBucketClient struct {
 
 	CreatePullRequestResponse dto.BitBucketPullRequestInfoResponse
 	CreatePullRequestError    error
+
+	RunPipelineResponse dto.BitBucketResponseRunPipeline
+	RunPipelineError    error
 }
 
 func (b *MockedBitBucketClient) Init(client client.BaseHttpClientInterface) {
@@ -60,4 +63,8 @@ func (b *MockedBitBucketClient) ChangePullRequestDestination(workspace string, r
 
 func (b *MockedBitBucketClient) CreatePullRequest(workspace string, repositorySlug string, request dto.BitBucketRequestPullRequestCreate) (dto.BitBucketPullRequestInfoResponse, error) {
 	return b.CreatePullRequestResponse, b.CreatePullRequestError
+}
+
+func (b *MockedBitBucketClient) RunPipeline(workspace string, repositorySlug string, request dto.BitBucketRequestRunPipeline) (dto.BitBucketResponseRunPipeline, error) {
+	return b.RunPipelineResponse, b.RunPipelineError
 }

@@ -15,21 +15,11 @@ This bot can help to automate multiple processes of development and give the pos
 - [Authors](#authors)
 - [License](#license)
 
-## Available features
-* [trigger custom events by personal message or triggering bot in the channel](documentation/events.md)
-* [create the WordPress template just by uploading the file to the specific channel or to the PM of the bot](#generate-wordpress-template)
-
 ## Getting Started
 
 These instructions will help you to install the bot to your server (local, development, production).
 
 ## Prerequisites
-
-### Run installation script
-You need to run this script to install everything related to the devbot. So please run the following command:
-``` 
-make install
-```
 
 ### Enable CGO
 Because here we use the CGO package for *sqlite* driver, please enable the environment variable `CGO_ENABLED=1` and have a `gcc` compile present within your path.
@@ -63,7 +53,7 @@ You can easily install the devbot application by using the installation script.
 1. Go to [this page](https://github.com/sharovik/devbot) and download/clone the latest version of devbot
 2. Run this command to install everything related to the database and configuration
 ``` 
-make build-installation-script && scripts/install/run
+make install
 ```
 3. Set the value from [`Bot User OAuth Access Token`](#slack-token-generation) into *SLACK_OAUTH_TOKEN* variable from the `.env` file
 4. Run bot by using command `./bin/slack-bot-{YOUR_SYSTEM}` you should see in the logs `hello` message type. It means that the bot successfully connected to your account
