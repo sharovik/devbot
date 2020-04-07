@@ -38,15 +38,6 @@ const (
 	ErrorMsgNoAccess = "I received unauthorized response. Looks like I'm not permitted to do any actions to that repository."
 )
 
-type GitClientInterface interface {
-	Init(client BaseHttpClientInterface)
-	PullRequestInfo(workspace string, repositorySlug string, pullRequestID int64) (dto.BitBucketPullRequestInfoResponse, error)
-	MergePullRequest(workspace string, repositorySlug string, pullRequestID int64, description string) (dto.BitBucketPullRequestInfoResponse, error)
-	CreateBranch(workspace string, repositorySlug string, branchName string) (dto.BitBucketResponseBranchCreate, error)
-	ChangePullRequestDestination(workspace string, repositorySlug string, pullRequestID int64, title string, branchName string) (dto.BitBucketPullRequestInfoResponse, error)
-	CreatePullRequest(workspace string, repositorySlug string, request dto.BitBucketRequestPullRequestCreate) (dto.BitBucketPullRequestInfoResponse, error)
-}
-
 func (b *BitBucketClient) Init(client BaseHttpClientInterface) {
 	b.client = client
 }
@@ -399,4 +390,55 @@ func (b *BitBucketClient) CreatePullRequest(workspace string, repositorySlug str
 
 	log.Logger().FinishMessage("Create pull-request")
 	return dtoResponse, nil
+}
+
+func (b *BitBucketClient) RunPipeline(workspace string, repositorySlug string, request dto.BitBucketRequestRunPipeline) (dto.BitBucketResponseRunPipeline, error) {
+	log.Logger().StartMessage("Run pipeline")
+	if err := b.beforeRequest(); err != nil {
+		log.Logger().FinishMessage("Run pipeline")
+		return dto.BitBucketResponseRunPipeline{}, err
+	}
+
+	byteString, err := json.Marshal(request)
+	if err != nil {
+		log.Logger().FinishMessage("Run pipeline")
+		return dto.BitBucketResponseRunPipeline{}, err
+	}
+
+	b.client.SetBaseUrl(DefaultBitBucketBaseAPIUrl)
+	endpoint := fmt.Sprintf("/repositories/%s/%s/pipelines/", workspace, repositorySlug)
+	response, statusCode, err := b.client.Post(endpoint, byteString, map[string]string{})
+	if err != nil {
+		log.Logger().FinishMessage("Run pipeline")
+		return dto.BitBucketResponseRunPipeline{}, err
+	}
+
+	fmt.Println(string(response))
+	var responseObject dto.BitBucketResponseRunPipeline
+	err = json.Unmarshal(response, &responseObject)
+	if err != nil {
+		log.Logger().FinishMessage("Run pipeline")
+		return dto.BitBucketResponseRunPipeline{}, err
+	}
+
+	if statusCode == http.StatusBadRequest {
+		log.Logger().Warn().Int("status_code", statusCode).Str("response", string(response)).Msg("Bad request status code")
+		log.Logger().FinishMessage("Run pipeline")
+		return dto.BitBucketResponseRunPipeline{}, fmt.Errorf("%s. (%s)", responseObject.Error.Message, responseObject.Error.Detail)
+	}
+
+	if statusCode == http.StatusUnauthorized {
+		log.Logger().Warn().Int("status_code", statusCode).Str("response", string(response)).Msg("Unauthorized status code")
+		log.Logger().FinishMessage("Run pipeline")
+		return dto.BitBucketResponseRunPipeline{}, errors.New(ErrorMsgNoAccess)
+	}
+
+	if statusCode == http.StatusNotFound {
+		log.Logger().Warn().Int("status_code", statusCode).Str("response", string(response)).Msg("Not found status code")
+		log.Logger().FinishMessage("Run pipeline")
+		return dto.BitBucketResponseRunPipeline{}, errors.New("Endpoint or selected branch was not found :( ")
+	}
+
+	log.Logger().FinishMessage("Run pipeline")
+	return responseObject, nil
 }
