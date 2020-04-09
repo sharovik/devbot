@@ -65,13 +65,17 @@ build-update-script:
 build-update-script-for-current-system:
 	go build -o $(UPDATE_SCRIPT_DIR)/run $(UPDATE_SCRIPT_DIR)/main.go
 
+build-project-archive:
+	tar -czvf $(PROJECT_BUILD_DIR)/devbot.tar.gz $(PROJECT_BUILD_DIR)
+
 prepare-release:
 	make build-project-cross-platform
 	cp -R $(INSTALL_SCRIPT_DIR)/database $(PROJECT_BUILD_SCRIPTS_INSTALL_DIR)/database
 	cp -R $(UPDATE_SCRIPT_DIR)/migrations $(PROJECT_BUILD_SCRIPTS_UPDATE_DIR)/migrations
+	cp .env.example $(PROJECT_BUILD_DIR)/.env
 	cp .env.example $(PROJECT_BUILD_DIR)/.env.example
 	cp devbot.sqlite $(PROJECT_BUILD_DIR)/devbot.sqlite
-	tar -czvf $(PROJECT_BUILD_DIR)/devbot.tar.gz $(PROJECT_BUILD_DIR)
+	make build-project-archive
 
 build-project-for-current-system:
 	make create-if-not-exists-defined-events
