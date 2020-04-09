@@ -13,6 +13,7 @@ events/*
 devbot.sqlite
 
 bin
+project-build
 
 scripts/install/run
 scripts/update/run
