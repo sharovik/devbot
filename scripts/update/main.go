@@ -4,16 +4,13 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
-	"path/filepath"
-	"runtime"
-
 	"github.com/sharovik/devbot/events"
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/log"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 const descriptionEventAlias = "The event alias for which Update method will be called"
@@ -22,11 +19,6 @@ const migrationDirectoryPath = "./scripts/update/migrations"
 var cfg = config.Config{}
 
 func init() {
-	//We switch pointer to the root directory for control the path from which we need to generate test-data file-paths
-	_, filename, _, _ := runtime.Caller(0)
-	dir := path.Join(path.Dir(filename), "../../")
-	_ = os.Chdir(dir)
-
 	_ = log.Init(cfg)
 }
 

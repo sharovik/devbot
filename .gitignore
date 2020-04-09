@@ -12,6 +12,9 @@ events/*
 !events/example
 devbot.sqlite
 
+bin
+project-build
+
 scripts/install/run
 scripts/update/run
 test/testdata/database
