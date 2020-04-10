@@ -1,0 +1,17 @@
+# Ignore files which may accidentally be added into git
+.idea
+.DS_store
+
+vendor
+
+devbot.sqlite
+.env
+
+project-build
+
+Dockerfile
+
+# Git is not needed after deploy
+.git
+.gitignore
+.gitkeep
