@@ -14,7 +14,7 @@ git clone git@github.com:sharovik/devbot.git
 make build-project-for-current-system
 ```
 3. If there is no errors, you will see the next binary files
--- `./bin/current-system` - the slack-bot binary file which is ready for run
+-- `./bin/slack-bot-current-system` - the slack-bot binary file which is ready for run
 -- `./scripts/install/run` - installation script
 -- `./scripts/update/run` - update script
 

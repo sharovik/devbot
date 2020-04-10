@@ -20,4 +20,4 @@ RUN make build-project-for-current-system
 RUN make install
 
 # Command to run when starting the container
-ENTRYPOINT ["./bin/current-system"]
+ENTRYPOINT ["./bin/slack-bot-current-system"]
