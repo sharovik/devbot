@@ -45,7 +45,7 @@ func (b *BitBucketClient) Init(client BaseHttpClientInterface) {
 func (b *BitBucketClient) isTokenInvalid() bool {
 	if b.OauthToken == "" {
 		log.Logger().Warn().Str("error", "oauth_empty").Msg("Invalid token")
-		return false
+		return true
 	}
 
 	if b.OauthTokenExpire.Unix() <= time.Now().Unix() {
@@ -59,7 +59,9 @@ func (b *BitBucketClient) isTokenInvalid() bool {
 func (b *BitBucketClient) beforeRequest() error {
 	log.Logger().StartMessage("Before BitBucket request")
 	if !b.isTokenInvalid() {
+		log.Logger().Warn().Msg("Trying to regenerate the token")
 		if err := b.loadAuthToken(); err != nil {
+			log.Logger().AddError(err).Msg("Failed to generate new token")
 			log.Logger().FinishMessage("Before BitBucket request")
 			return err
 		}
