@@ -58,7 +58,7 @@ func (b *BitBucketClient) isTokenInvalid() bool {
 
 func (b *BitBucketClient) beforeRequest() error {
 	log.Logger().StartMessage("Before BitBucket request")
-	if !b.isTokenInvalid() {
+	if b.isTokenInvalid() {
 		log.Logger().Warn().Msg("Trying to regenerate the token")
 		if err := b.loadAuthToken(); err != nil {
 			log.Logger().AddError(err).Msg("Failed to generate new token")
