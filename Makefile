@@ -40,6 +40,7 @@ create-if-not-exists-env:
 	if [ ! -f .env ]; then cp .env.example .env; fi
 
 install:
+	make build-installation-script-for-current-system
 	make create-if-not-exists-defined-events
 	make create-if-not-exists-env
 	./scripts/install/run
