@@ -198,7 +198,7 @@ func TestSlackClient_SendMessage_Bad(t *testing.T) {
 	for status, errorType := range badStatusCases {
 		MockSlackResponse(status, map[string]string{}, []byte(`{"ok": false, "error": "`+errorType+`"}`))
 
-		response, statusCode, err := slackClient.SendMessage(dto.ChatMessage{})
+		response, statusCode, err := slackClient.SendMessage(dto.SlackRequestChatPostMessage{})
 		assert.Error(t, err)
 		assert.Empty(t, response)
 		assert.Equal(t, status, statusCode)
@@ -208,7 +208,7 @@ func TestSlackClient_SendMessage_Bad(t *testing.T) {
 func TestSlackClient_SendMessage_Ok(t *testing.T) {
 	MockSlackResponse(http.StatusOK, map[string]string{}, test.FileToBytes(t, "./test/testdata/slack/users.list.ok.json"))
 
-	response, statusCode, err := slackClient.SendMessage(dto.ChatMessage{})
+	response, statusCode, err := slackClient.SendMessage(dto.SlackRequestChatPostMessage{})
 	assert.NoError(t, err)
 	assert.NotEmpty(t, response)
 	assert.Empty(t, response.Error)

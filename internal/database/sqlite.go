@@ -40,7 +40,7 @@ func (d *SQLiteDictionary) CloseDatabaseConnection() error {
 }
 
 //FindAnswer used for searching of message in the database
-func (d SQLiteDictionary) FindAnswer(message *dto.EventMessage) (dto.DictionaryMessage, error) {
+func (d SQLiteDictionary) FindAnswer(message *dto.SlackResponseEventMessage) (dto.DictionaryMessage, error) {
 	var (
 		dmAnswer dto.DictionaryMessage
 		regexID  int64

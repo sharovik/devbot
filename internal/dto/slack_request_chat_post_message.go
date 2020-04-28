@@ -2,12 +2,12 @@ package dto
 
 import "time"
 
-//ChatMessage request for post.chatMessage
-type ChatMessage struct {
+//SlackRequestChatPostMessage request for post.chatMessage
+type SlackRequestChatPostMessage struct {
 	Channel           string `json:"channel"`
 	Text              string `json:"text"`
 	AsUser            bool   `json:"as_user"`
 	Ts                time.Time
 	DictionaryMessage DictionaryMessage
-	OriginalMessage   EventMessage
+	OriginalMessage   SlackResponseEventMessage
 }

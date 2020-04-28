@@ -19,7 +19,7 @@ const (
 )
 
 var (
-	messagesReceived     = map[string]dto.ChatMessage{}
+	messagesReceived     = map[string]dto.SlackRequestChatPostMessage{}
 	acceptedMessageTypes = map[string]string{
 		eventTypeMessage:             eventTypeMessage,
 		eventTypeDesktopNotification: eventTypeDesktopNotification,
@@ -27,7 +27,7 @@ var (
 	}
 )
 
-func isValidMessage(message *dto.EventMessage) bool {
+func isValidMessage(message *dto.SlackResponseEventMessage) bool {
 	if message.Type == eventTypeDesktopNotification {
 		if messagesReceived[message.Channel].Channel == "" {
 			log.Logger().Debug().Str("type", message.Type).Msg("We received desktop notification, but answer wasn't prepared before.")
@@ -55,7 +55,7 @@ func isValidMessage(message *dto.EventMessage) bool {
 	return true
 }
 
-func processMessage(message *dto.EventMessage) error {
+func processMessage(message *dto.SlackResponseEventMessage) error {
 	log.Logger().Debug().
 		Str("type", message.Type).
 		Str("text", message.Text).
@@ -93,13 +93,23 @@ func processMessage(message *dto.EventMessage) error {
 		}
 
 		go func() {
-			answer, err := events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType].Execute(answerMessage)
+			answer, err := events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType].Execute(dto.BaseChatMessage{
+				Channel:           answerMessage.Channel,
+				Text:              answerMessage.Text,
+				AsUser:            answerMessage.AsUser,
+				Ts:                answerMessage.Ts,
+				DictionaryMessage: answerMessage.DictionaryMessage,
+				OriginalMessage:   dto.BaseOriginalMessage{
+					Text: answerMessage.OriginalMessage.Text,
+				},
+			})
 			if err != nil {
 				log.Logger().AddError(err).Msg("Failed to execute the event")
 			}
 
 			if answer.Text != "" {
-				if err := SendAnswerForReceivedMessage(answer); err != nil {
+				answerMessage.Text = answer.Text
+				if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
 					log.Logger().AddError(err).Msg("Failed to send post-answer for selected event")
 				}
 			}
@@ -137,11 +147,11 @@ func processMessage(message *dto.EventMessage) error {
 	return nil
 }
 
-func getPreparedAnswer(message *dto.EventMessage) dto.ChatMessage {
+func getPreparedAnswer(message *dto.SlackResponseEventMessage) dto.SlackRequestChatPostMessage {
 	return messagesReceived[message.Channel]
 }
 
-func answerToMessage(m dto.ChatMessage) error {
+func answerToMessage(m dto.SlackRequestChatPostMessage) error {
 	response, statusCode, err := container.C.SlackClient.SendMessage(m)
 	if err != nil {
 		log.Logger().AddError(err).
@@ -155,36 +165,36 @@ func answerToMessage(m dto.ChatMessage) error {
 	return nil
 }
 
-func analyseMessage(message *dto.EventMessage) (dto.ChatMessage, dto.DictionaryMessage, error) {
+func analyseMessage(message *dto.SlackResponseEventMessage) (dto.SlackRequestChatPostMessage, dto.DictionaryMessage, error) {
 	var (
-		responseMessage dto.ChatMessage
+		responseMessage dto.SlackRequestChatPostMessage
 		err             error
 		dmAnswer        dto.DictionaryMessage
 	)
 
 	dmAnswer, err = container.C.Dictionary.FindAnswer(message)
 	if err != nil {
-		return dto.ChatMessage{}, dto.DictionaryMessage{}, err
+		return dto.SlackRequestChatPostMessage{}, dto.DictionaryMessage{}, err
 	}
 
 	responseMessage, err = prepareAnswer(message, dmAnswer)
 	if err != nil {
-		return dto.ChatMessage{}, dto.DictionaryMessage{}, err
+		return dto.SlackRequestChatPostMessage{}, dto.DictionaryMessage{}, err
 	}
 
 	return responseMessage, dmAnswer, nil
 }
 
-func readyToAnswer(message dto.ChatMessage) {
+func readyToAnswer(message dto.SlackRequestChatPostMessage) {
 	messagesReceived[message.Channel] = message
 }
 
-func isAnswerWasPrepared(message *dto.EventMessage) bool {
+func isAnswerWasPrepared(message *dto.SlackResponseEventMessage) bool {
 	return messagesReceived[message.Channel].Channel != ""
 }
 
 //SendAnswerForReceivedMessage method which sends the answer by specific message
-func SendAnswerForReceivedMessage(message dto.ChatMessage) error {
+func SendAnswerForReceivedMessage(message dto.SlackRequestChatPostMessage) error {
 	if err := answerToMessage(message); err != nil {
 		log.Logger().AddError(err).Msg("Failed to sent answer message")
 		return err
@@ -194,7 +204,7 @@ func SendAnswerForReceivedMessage(message dto.ChatMessage) error {
 	return nil
 }
 
-func messageExpired(message dto.ChatMessage) {
+func messageExpired(message dto.SlackRequestChatPostMessage) {
 	delete(messagesReceived, message.Channel)
 }
 
@@ -214,7 +224,7 @@ func refreshPreparedMessages() {
 	}
 }
 
-func prepareAnswer(message *dto.EventMessage, dm dto.DictionaryMessage) (dto.ChatMessage, error) {
+func prepareAnswer(message *dto.SlackResponseEventMessage, dm dto.DictionaryMessage) (dto.SlackRequestChatPostMessage, error) {
 	log.Logger().StartMessage("Answer prepare")
 
 	var answer = defaultAnswer
@@ -222,7 +232,7 @@ func prepareAnswer(message *dto.EventMessage, dm dto.DictionaryMessage) (dto.Cha
 		answer = dm.Answer
 	}
 
-	responseMessage := dto.ChatMessage{
+	responseMessage := dto.SlackRequestChatPostMessage{
 		Channel:         message.Channel,
 		Text:            answer,
 		AsUser:          true,

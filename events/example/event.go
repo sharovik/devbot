@@ -28,7 +28,7 @@ var Event = ExmplEvent{
 }
 
 //Execute method which is called by message processor
-func (e ExmplEvent) Execute(message dto.ChatMessage) (dto.ChatMessage, error) {
+func (e ExmplEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
 	message.Text = "This is an example of the answer!"
 	return message, nil
 }
