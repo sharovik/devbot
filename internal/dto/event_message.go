@@ -1,6 +1,6 @@
 package dto
 
-//File child struct of SlackResponseEventMessage
+//File child struct of EventMessage
 type File struct {
 	Created            int    `json:"created"`
 	DisplayAsBot       bool   `json:"display_as_bot"`
@@ -53,7 +53,7 @@ type File struct {
 	Username           string `json:"username"`
 }
 
-//MessageBlock child struct of SlackResponseEventMessage
+//MessageBlock child struct of EventMessage
 type MessageBlock struct {
 	BlockID  string `json:"block_id"`
 	Elements []struct {
@@ -67,8 +67,8 @@ type MessageBlock struct {
 	Type string `json:"type"`
 }
 
-//SlackResponseEventMessage main event message object
-type SlackResponseEventMessage struct {
+//EventMessage main event message object
+type EventMessage struct {
 	Channel      string         `json:"channel"`
 	ClientMsgID  string         `json:"client_msg_id"`
 	DisplayAsBot bool           `json:"display_as_bot"`

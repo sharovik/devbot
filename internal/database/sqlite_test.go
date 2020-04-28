@@ -121,7 +121,7 @@ func TestSQLiteDictionary_FindAnswer(t *testing.T) {
 	}
 
 	for question, answer := range goodCases {
-		msg := dto.SlackResponseEventMessage{
+		msg := dto.EventMessage{
 			Text: question,
 		}
 
@@ -139,7 +139,7 @@ func TestSQLiteDictionary_FindAnswer(t *testing.T) {
 	}
 
 	for question := range badCases {
-		msg := dto.SlackResponseEventMessage{
+		msg := dto.EventMessage{
 			Text: question,
 		}
 

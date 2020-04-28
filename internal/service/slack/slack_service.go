@@ -117,7 +117,7 @@ func (s Service) InitWebSocketReceiver() error {
 
 	var (
 		event   interface{}
-		message dto.SlackResponseEventMessage
+		message dto.EventMessage
 	)
 
 	for {

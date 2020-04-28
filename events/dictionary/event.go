@@ -50,7 +50,7 @@ var Event = DctnrEvent{
 }
 
 //Execute method which is called by message processor
-func (e DctnrEvent) Execute(message dto.SlackRequestChatPostMessage) (dto.SlackRequestChatPostMessage, error) {
+func (e DctnrEvent) Execute(message dto.ChatMessage) (dto.ChatMessage, error) {
 	var answerMessage = message
 
 	if err := parseAttributes(html.UnescapeString(message.OriginalMessage.Text)); err != nil {

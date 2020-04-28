@@ -9,7 +9,7 @@ const ConnectionSQLite = "sqlite"
 type BaseDatabaseInterface interface {
 	InitDatabaseConnection() error
 	CloseDatabaseConnection() error
-	FindAnswer(message *dto.SlackResponseEventMessage) (dto.DictionaryMessage, error)
+	FindAnswer(message *dto.EventMessage) (dto.DictionaryMessage, error)
 	InsertQuestion(question string, answer string, scenarioID int64, questionRegex string, questionRegexGroup string) (int64, error)
 	InsertScenario(name string, eventID int64) (int64, error)
 	FindScenarioByID(scenarioID int64) (int64, error)

@@ -38,7 +38,7 @@ type SlackClientInterface interface {
 	SendMessageToWs(*websocket.Conn, dto.SlackRequestEventMessage) error
 
 	//PM messages
-	SendMessage(dto.SlackRequestChatPostMessage) (dto.SlackResponseChatPostMessage, int, error)
+	SendMessage(dto.ChatMessage) (dto.SlackResponseChatPostMessage, int, error)
 
 	//Send attachment
 	AttachFileTo(channel string, pathToFile string, filename string) ([]byte, int, error)
@@ -249,7 +249,7 @@ func (client SlackClient) SendMessageToWs(ws *websocket.Conn, m dto.SlackRequest
 }
 
 //SendMessage method for post message send through simple API request
-func (client SlackClient) SendMessage(message dto.SlackRequestChatPostMessage) (dto.SlackResponseChatPostMessage, int, error) {
+func (client SlackClient) SendMessage(message dto.ChatMessage) (dto.SlackResponseChatPostMessage, int, error) {
 	log.Logger().Debug().Interface("message", message).Msg("Start chat.postMessage")
 	byteStr, err := json.Marshal(message)
 	if err != nil {

@@ -5,7 +5,7 @@ import "github.com/sharovik/devbot/internal/dto"
 //Event main interface for events
 type Event interface {
 	//The main execution method, which will run the actual functionality for the event
-	Execute(message dto.SlackRequestChatPostMessage) (dto.SlackRequestChatPostMessage, error)
+	Execute(message dto.ChatMessage) (dto.ChatMessage, error)
 
 	//The installation method, which will executes the installation parts of the event
 	Install() error
