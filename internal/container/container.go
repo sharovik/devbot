@@ -19,6 +19,7 @@ type Main struct {
 	SlackClient     client.SlackClientInterface
 	BibBucketClient client.GitClientInterface
 	Dictionary      database.BaseDatabaseInterface
+	HttpClient      client.BaseHttpClientInterface
 }
 
 //C container variable
@@ -55,6 +56,10 @@ func (container Main) Init() Main {
 		Client:     &httpClient,
 		BaseURL:    container.Config.SlackConfig.BaseURL,
 		OAuthToken: container.Config.SlackConfig.OAuthToken,
+	}
+
+	container.HttpClient = &client.HttpClient{
+		Client:       &httpClient,
 	}
 
 	container.SlackClient = slackClient

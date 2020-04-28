@@ -15,6 +15,8 @@ This bot can help you to automate multiple processes of development and give the
 - [License](#license)
 
 ## How to run
+
+### Run from pre-compiled binary files
 This is the fastest way of the project setup.
 1. [Download latest version](https://github.com/sharovik/devbot/releases/latest) of project archive
 2. Unpack it somewhere in your machine
@@ -28,7 +30,34 @@ For windows
 start bin\slack-bot-windows-{TYPE_OF_SYSTEM}.exe
 ```
 
-You should see something like this:
+### Run after project build
+Before run, please make sure you follow build instructions, which [you can find here](documentation/build.md).
+
+Once project build was finished, please run the following command
+**For MacOS and Linux**
+``` 
+./bin/slack-bot-current-system
+```
+For windows
+``` 
+start bin\slack-bot-current-system
+```
+
+### Run by using docker
+This project also support the Docker.
+1. Clone the project into your working directory, go into that directory and run the following command
+``` 
+docker build . -t devbot-dock
+```
+2. If build was successful, please use this command to start the container
+```
+docker run --env-file=.env devbot-dock
+```
+
+``Before run, make sure you created .env file and setup the credentials``
+
+### Example of output
+If you did everything right, you should see something like this:
 ![Demo start slack-bo](documentation/images/start-slack-bot.gif)
 
 ## Prerequisites

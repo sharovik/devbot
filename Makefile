@@ -17,7 +17,7 @@ build-slack-bot-cross-platform:
 	env CGO_ENABLED=1 xgo --targets=darwin/*,linux/amd64,linux/386,windows/* --dest ./$(PROJECT_BUILD_DIR)/$(BIN_DIR)/ --out slack-bot ./cmd/slack-bot
 
 build-slack-bot-for-current-system:
-	env CGO_ENABLED=1 go build -o ./bin/current-system ./cmd/slack-bot/main.go
+	env CGO_ENABLED=1 go build -o ./bin/slack-bot-current-system ./cmd/slack-bot/main.go
 
 lint:
 	golint -set_exit_status ./events/...
@@ -40,6 +40,7 @@ create-if-not-exists-env:
 	if [ ! -f .env ]; then cp .env.example .env; fi
 
 install:
+	make build-installation-script-for-current-system
 	make create-if-not-exists-defined-events
 	make create-if-not-exists-env
 	./scripts/install/run

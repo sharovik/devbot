@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/sharovik/devbot/internal/log"
@@ -70,7 +71,13 @@ func (client HttpClient) BasicAuth(username string, password string) string {
 }
 
 //Request method for API requests
-func (client HttpClient) Request(method string, url string, body interface{}, headers map[string]string) ([]byte, int, error) {
+//
+//This method accepts parameters:
+//method - the method of request. Ex: POST, GET, PUT, DELETE and etc
+//endpoint - endpoint to which we should do a request
+//body - it's a request body. Accepted types of body: string, url.Values(for form_data requests), byte
+//headers - request headers
+func (client HttpClient) Request(method string, endpoint string, body interface{}, headers map[string]string) ([]byte, int, error) {
 
 	log.Logger().StartMessage("Http request")
 
@@ -83,31 +90,47 @@ func (client HttpClient) Request(method string, url string, body interface{}, he
 	switch body.(type) {
 	case string:
 		log.Logger().Debug().
-			Str("url", url).
+			Str("endpoint", endpoint).
 			Str("method", method).
 			Str("body", body.(string)).
 			Msg("Endpoint call")
-		request, err = http.NewRequest(method, url, strings.NewReader(fmt.Sprintf("%s", body)))
+		request, err = http.NewRequest(method, endpoint, strings.NewReader(fmt.Sprintf("%s", body)))
 		if err != nil {
 			log.Logger().AddError(err).Msg("Error during the request generation")
 			log.Logger().FinishMessage("Http request")
 			return nil, 0, err
 		}
+
+		request.Header.Set("Content-Type", "application/json")
+	case url.Values:
+		log.Logger().Debug().
+			Str("endpoint", endpoint).
+			Str("method", method).
+			Interface("body", body).
+			Msg("Endpoint call")
+
+		request, err = http.NewRequest(method, endpoint, strings.NewReader(body.(url.Values).Encode()))
+		if err != nil {
+			log.Logger().AddError(err).Msg("Error during the request generation")
+			log.Logger().FinishMessage("Http request")
+			return nil, 0, err
+		}
+		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	default:
 		log.Logger().Debug().
-			Str("url", url).
+			Str("endpoint", endpoint).
 			Str("method", method).
 			Str("body", string(body.([]byte))).
 			Msg("Endpoint call")
-		request, err = http.NewRequest(method, url, bytes.NewReader(body.([]byte)))
+		request, err = http.NewRequest(method, endpoint, bytes.NewReader(body.([]byte)))
 		if err != nil {
 			log.Logger().AddError(err).Msg("Error during the request generation")
 			log.Logger().FinishMessage("Http request")
 			return nil, 0, err
 		}
+		request.Header.Set("Content-Type", "application/json")
 	}
 
-	request.Header.Set("Content-Type", "application/json")
 	for attribute, value := range headers {
 		request.Header.Set(attribute, value)
 	}

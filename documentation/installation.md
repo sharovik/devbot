@@ -1,5 +1,5 @@
 # DevBot setup  
-You can do it in 2 ways: download the binary files and start the bot or build the project on your machine
+For proper project installation or update, I would recommend you to run special scripts for install or update.
 
 ## Prerequisites
 Before start the installation, [please be aware of prerequisites](prerequisites.md) 
