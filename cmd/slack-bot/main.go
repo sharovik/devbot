@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/sharovik/devbot/internal/config"
 	"os"
 	"path"
 	"runtime"
@@ -55,7 +56,10 @@ func run() error {
 			})
 
 			log.Logger().Debug().Msg("Triggered retry")
-			time.Sleep(time.Duration(numberOfRetries) * time.Second)
+			if container.C.Config.GetAppEnv() != config.EnvironmentTesting {
+				time.Sleep(time.Duration(numberOfRetries) * time.Minute)
+			}
+
 			continue
 		}
 	}
