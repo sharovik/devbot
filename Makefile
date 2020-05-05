@@ -45,6 +45,10 @@ install:
 	make create-if-not-exists-env
 	./scripts/install/run
 
+update:
+	make build-update-script-for-current-system
+	./scripts/update/run
+
 build-dictionary-script:
 	go build -o $(DICTIONARY_SCRIPT_DIR)/dictionary-loader $(DICTIONARY_SCRIPT_DIR)/main.go
 

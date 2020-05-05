@@ -93,13 +93,23 @@ func processMessage(message *dto.SlackResponseEventMessage) error {
 		}
 
 		go func() {
-			answer, err := events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType].Execute(answerMessage)
+			answer, err := events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType].Execute(dto.BaseChatMessage{
+				Channel:           answerMessage.Channel,
+				Text:              answerMessage.Text,
+				AsUser:            answerMessage.AsUser,
+				Ts:                answerMessage.Ts,
+				DictionaryMessage: answerMessage.DictionaryMessage,
+				OriginalMessage:   dto.BaseOriginalMessage{
+					Text: answerMessage.OriginalMessage.Text,
+				},
+			})
 			if err != nil {
 				log.Logger().AddError(err).Msg("Failed to execute the event")
 			}
 
 			if answer.Text != "" {
-				if err := SendAnswerForReceivedMessage(answer); err != nil {
+				answerMessage.Text = answer.Text
+				if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
 					log.Logger().AddError(err).Msg("Failed to send post-answer for selected event")
 				}
 			}
