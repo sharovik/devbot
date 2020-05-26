@@ -23,7 +23,7 @@ func init() {
 
 const (
 	maximumRetries      = 4
-	delayBetweenRetries = time.Second * 1800 //30 minutes
+	delayBetweenRetries = time.Second * 600 //10 minutes
 )
 
 var (
@@ -43,7 +43,8 @@ func run() error {
 			currentTime := time.Now()
 
 			//We set to 0 number of retries if there were no any retries since 30 minutes
-			if time.Duration(currentTime.Sub(lastRetry).Minutes()) > delayBetweenRetries {
+			elapsed := time.Duration(currentTime.Sub(lastRetry).Nanoseconds())
+			if elapsed > delayBetweenRetries {
 				numberOfRetries = 0
 			}
 
