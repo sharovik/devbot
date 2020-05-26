@@ -13,7 +13,7 @@ WORKDIR ${APP_PATH}
 
 COPY . .
 
-RUN apk add --no-cache bash && apk add --no-cache make && apk add build-base
+RUN apk add --no-cache bash && apk add --no-cache make && apk add build-base && apk add --no-cache git
 
 RUN make vendor
 RUN make build-project-for-current-system
