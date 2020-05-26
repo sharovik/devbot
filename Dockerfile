@@ -15,6 +15,8 @@ COPY . .
 
 RUN apk add --no-cache bash && apk add --no-cache make && apk add build-base && apk add --no-cache git
 
+RUN go get -d -v
+
 RUN make vendor
 RUN make build-project-for-current-system
 RUN make install
