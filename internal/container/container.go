@@ -84,7 +84,7 @@ func (container *Main) loadDictionary() error {
 			Cfg: container.Config,
 		}
 
-		if err := dictionary.InitDatabaseConnection(); err != nil {
+		if err := dictionary.InitSQLiteDatabaseConnection(); err != nil {
 			return err
 		}
 

@@ -1,13 +1,17 @@
 package database
 
-import "github.com/sharovik/devbot/internal/dto"
+import (
+	"database/sql"
+	"github.com/sharovik/devbot/internal/dto"
+)
 
 //ConnectionSQLite the sqlite database connection type
 const ConnectionSQLite = "sqlite"
 
 //BaseDatabaseInterface interface for base database client
 type BaseDatabaseInterface interface {
-	InitDatabaseConnection() error
+	InitSQLiteDatabaseConnection() error
+	GetClient() *sql.DB
 	CloseDatabaseConnection() error
 	FindAnswer(message *dto.SlackResponseEventMessage) (dto.DictionaryMessage, error)
 	InsertQuestion(question string, answer string, scenarioID int64, questionRegex string, questionRegexGroup string) (int64, error)
@@ -20,4 +24,7 @@ type BaseDatabaseInterface interface {
 	FindRegex(regex string) (int64, error)
 	InsertQuestionRegex(questionRegex string, questionRegexGroup string) (int64, error)
 	GetAllRegex() (map[int64]string, error)
+
+	//Should be used for your custom event migrations loading
+	RunMigrations(path string) error
 }

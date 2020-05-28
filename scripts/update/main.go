@@ -3,23 +3,43 @@ package main
 import (
 	"database/sql"
 	"flag"
-	"fmt"
 	"github.com/sharovik/devbot/events"
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/container"
+	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/log"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 )
 
-const descriptionEventAlias = "The event alias for which Update method will be called"
-const migrationDirectoryPath = "./scripts/update/migrations"
+const (
+	descriptionEventAlias  = "The event alias for which Update method will be called"
+	migrationDirectoryPath = "./scripts/update/migrations"
+)
 
-var cfg = config.Config{}
+var (
+	cfg = config.Config{}
+	db  *sql.DB
+)
 
 func init() {
 	_ = log.Init(cfg)
+	cfg = config.Init()
+
+	var err error
+	switch cfg.DatabaseConnection {
+	case database.ConnectionSQLite:
+		db, err = sql.Open("sqlite3", cfg.DatabaseHost)
+		if err != nil {
+			log.Logger().AddError(err).Msg("Failed to open connection")
+		}
+	default:
+		db, err = sql.Open(cfg.DatabaseConnection, cfg.DatabaseHost)
+		if err != nil {
+			log.Logger().AddError(err).Msg("Failed to open connection")
+		}
+	}
 }
 
 func main() {
@@ -29,26 +49,38 @@ func main() {
 	}
 
 	eventAlias := parseEventAlias()
+	container.C = container.C.Init()
+
 	if eventAlias == "" {
+		log.Logger().Debug().Msg("Trying to install all defined events if it's possible")
+		for eventAlias, event := range events.DefinedEvents.Events {
+			if err := event.Update(); err != nil {
+				log.Logger().AddError(err).Str("event_alias", eventAlias).Msg("Failed to update the event.")
+			}
+		}
+
+		log.Logger().Info().Msg("Done")
 		return
 	}
 
 	container.C = container.C.Init()
 	if events.DefinedEvents.Events[eventAlias] == nil {
-		fmt.Println("Event is not defined in the defined-events")
+		log.Logger().Info().Msg("Event is not defined in the defined-events")
 		return
 	}
 
 	if err := events.DefinedEvents.Events[eventAlias].Update(); err != nil {
-		fmt.Println("Failed to update the event. Error:" + err.Error())
+		log.Logger().Info().Msg("Failed to update the event. Error:" + err.Error())
 	}
 
-	fmt.Println("Done")
+	if err := db.Close(); err != nil {
+		log.Logger().AddError(err).Msg("Failed to close the connection")
+	}
+
+	log.Logger().Info().Msg("Done")
 }
 
 func runMigrations() error {
-	cfg = config.Init()
-
 	if _, err := os.Stat(migrationDirectoryPath); err != nil {
 		log.Logger().AddError(err).Str("migration_directory", migrationDirectoryPath).Msg("The migration directory was not found.")
 		return err
@@ -70,12 +102,6 @@ func runMigrations() error {
 		migrationData, err := ioutil.ReadFile(filePath)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Failed to open installation file")
-			return err
-		}
-
-		db, err := sql.Open("sqlite3", cfg.DatabaseHost)
-		if err != nil {
-			log.Logger().AddError(err).Msg("Failed to open connection")
 			return err
 		}
 

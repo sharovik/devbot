@@ -3,11 +3,7 @@ This is the functionality by which the DevBot understand what kind of the event 
 
 ## Table of contents
 - [The dictionary database](#the-dictionary-database)
-- [The database structure](#the-database-structure)
-- [The tables](#the-tables)
 - [Generator tool](#generator-tool)
-- [Attributes](#attributes)
-- [Example of generator tool execution](#example-of-generator-tool-execution)
 - [Add new data through PM in slack](#add-new-data-through-pm-in-slack)
 
 ## The dictionary database
@@ -23,7 +19,7 @@ The SQLite database used as a main storage for questions and answers. You can fi
 4. questions_regex - the table which contains all available unique regex
 
 ## Generator tool
-There is a tool which you can use for creation of new questions and answers for our dictionary. You can find this tool here `scripts/dictionary-loader/dictionary-loader`
+There is a tool which you can use for creation of new questions and answers for our dictionary. You can find this tool here `scripts/dictionary-loader/run`
 
 ### Attributes
 Below you can see the description for each field of the question and answer object
@@ -33,10 +29,17 @@ Below you can see the description for each field of the question and answer obje
 * **answer** - answer text. Example: `Hello %s` or `Hello`, where `%s` we need to use only in case if we used `question_regex` and `question_regex_group` attributes
 * **event_alias** - the name of the event which should be triggered after the message answer prepare. Example: see [events documentation](events.md)
 
+### Before start
+Please build this tool execution file for your system. You can do it by using this command:
+``` 
+make build-dictionary-script-for-current-system
+```
+
 ### Example of generator tool execution
 ``` 
-./scripts/dictionary-loader/dictionary-loader --question="Hello, my name is John" --question_regex="(?i)Hello, my name is (?P<name>\w+)" --question_regex_group=name --answer="Hello %s" --event_alias="hello"
+./scripts/dictionary-loader/run --question="Hello, my name is John" --question_regex="(?i)Hello, my name is (?P<name>\w+)" --question_regex_group=name --answer="Hello %s" --event_alias="hello"
 ```
+
 
 ## Add new dictionary data through PM in slack
 There is another way of how to add new message to the dictionary database. You can simple send the message to your bot in PM or in channel where he is connected.

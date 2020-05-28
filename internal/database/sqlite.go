@@ -3,6 +3,8 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 
 	"os"
 
@@ -19,8 +21,13 @@ type SQLiteDictionary struct {
 	Cfg    config.Config
 }
 
-//InitDatabaseConnection initialise the database connection
-func (d *SQLiteDictionary) InitDatabaseConnection() error {
+//GetClient method returns the client connection
+func (d *SQLiteDictionary) GetClient() *sql.DB {
+	return d.client
+}
+
+//InitSQLiteDatabaseConnection initialise the database connection
+func (d *SQLiteDictionary) InitSQLiteDatabaseConnection() error {
 	if _, err := os.Stat(d.Cfg.DatabaseHost); err != nil {
 		return err
 	}
@@ -320,4 +327,50 @@ func (d SQLiteDictionary) GetAllRegex() (map[int64]string, error) {
 	}
 
 	return result, nil
+}
+
+//RunMigrations method for migrations load from specified path
+func (d SQLiteDictionary) RunMigrations(pathToFiles string) error  {
+	if _, err := os.Stat(pathToFiles); os.IsNotExist(err) {
+		return nil
+	}
+
+	var files = map[string]string{}
+	err := filepath.Walk(pathToFiles, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			files[info.Name()] = path
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	var db = d.GetClient()
+	for file, filePath := range files {
+		migrationData, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			return err
+		}
+
+		var id int64
+		err = db.QueryRow("select id from migration where version = $1", file).Scan(&id)
+		if err == sql.ErrNoRows {
+			_, err := db.Exec(string(migrationData))
+			if err != nil {
+				return err
+			}
+
+			_, err = db.Exec("insert into migration (version) values ($1)", file)
+			if err != nil {
+				return err
+			}
+
+		} else if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

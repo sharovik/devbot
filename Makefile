@@ -1,14 +1,17 @@
 BIN_DIR=bin
 PROJECT_BUILD_DIR=project-build
-PROJECT_BUILD_SCRIPTS_DIR=$(PROJECT_BUILD_DIR)/scripts
-PROJECT_BUILD_SCRIPTS_INSTALL_DIR=$(PROJECT_BUILD_DIR)/scripts/install
-PROJECT_BUILD_SCRIPTS_UPDATE_DIR=$(PROJECT_BUILD_DIR)/scripts/update
-CMD:=$(patsubst cmd/%/main.go,%,$(shell find cmd -type f -name 'main.go'))
-LDFLAGS=-ldflags="-s -w"
 
 DICTIONARY_SCRIPT_DIR=scripts/dictionary-loader
 INSTALL_SCRIPT_DIR=scripts/install
 UPDATE_SCRIPT_DIR=scripts/update
+
+PROJECT_BUILD_SCRIPTS_DIR=$(PROJECT_BUILD_DIR)/scripts
+PROJECT_BUILD_SCRIPTS_INSTALL_DIR=$(PROJECT_BUILD_DIR)/$(INSTALL_SCRIPT_DIR)
+PROJECT_BUILD_SCRIPTS_UPDATE_DIR=$(PROJECT_BUILD_DIR)/$(UPDATE_SCRIPT_DIR)
+PROJECT_BUILD_SCRIPTS_DICTIONARY_DIR=$(PROJECT_BUILD_DIR)/$(DICTIONARY_SCRIPT_DIR)
+
+CMD:=$(patsubst cmd/%/main.go,%,$(shell find cmd -type f -name 'main.go'))
+LDFLAGS=-ldflags="-s -w"
 
 vendor:
 	if [ ! -d "vendor" ] || [ -z "$(shell ls -A vendor)" ]; then go mod vendor; fi
@@ -49,9 +52,6 @@ update:
 	make build-update-script-for-current-system
 	./scripts/update/run
 
-build-dictionary-script:
-	go build -o $(DICTIONARY_SCRIPT_DIR)/dictionary-loader $(DICTIONARY_SCRIPT_DIR)/main.go
-
 create-project-build-dirs:
 	if [[ ! -d $(PROJECT_BUILD_DIR) ]]; then mkdir $(PROJECT_BUILD_DIR); fi
 	if [[ ! -d $(PROJECT_BUILD_SCRIPTS_DIR) ]]; then mkdir $(PROJECT_BUILD_SCRIPTS_DIR); fi
@@ -63,6 +63,12 @@ build-installation-script:
 
 build-installation-script-for-current-system:
 	go build -o $(INSTALL_SCRIPT_DIR)/run $(INSTALL_SCRIPT_DIR)/main.go
+
+build-dictionary-script:
+	env CGO_ENABLED=1 xgo --targets=darwin/*,linux/amd64,linux/386,windows/* --dest ./$(PROJECT_BUILD_SCRIPTS_INSTALL_DIR) --out install ./$(DICTIONARY_SCRIPT_DIR)
+
+build-dictionary-script-for-current-system:
+	go build -o $(DICTIONARY_SCRIPT_DIR)/run $(DICTIONARY_SCRIPT_DIR)/main.go
 
 build-update-script:
 	env CGO_ENABLED=1 xgo --targets=darwin/*,linux/amd64,linux/386,windows/* --dest ./$(PROJECT_BUILD_SCRIPTS_UPDATE_DIR) --out update ./$(UPDATE_SCRIPT_DIR)
