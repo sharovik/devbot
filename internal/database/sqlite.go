@@ -330,7 +330,7 @@ func (d SQLiteDictionary) GetAllRegex() (map[int64]string, error) {
 }
 
 //RunMigrations method for migrations load from specified path
-func (d SQLiteDictionary) RunMigrations(pathToFiles string) error  {
+func (d SQLiteDictionary) RunMigrations(pathToFiles string) error {
 	if _, err := os.Stat(pathToFiles); os.IsNotExist(err) {
 		return nil
 	}

@@ -99,7 +99,7 @@ func processMessage(message *dto.SlackResponseEventMessage) error {
 				AsUser:            answerMessage.AsUser,
 				Ts:                answerMessage.Ts,
 				DictionaryMessage: answerMessage.DictionaryMessage,
-				OriginalMessage:   dto.BaseOriginalMessage{
+				OriginalMessage: dto.BaseOriginalMessage{
 					Text: answerMessage.OriginalMessage.Text,
 				},
 			})

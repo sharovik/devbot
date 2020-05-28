@@ -2,6 +2,7 @@ package example
 
 import (
 	"fmt"
+
 	"github.com/sharovik/devbot/internal/log"
 
 	"github.com/sharovik/devbot/internal/container"

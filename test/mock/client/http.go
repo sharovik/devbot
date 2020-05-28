@@ -9,14 +9,14 @@ import (
 type MockedHttpClient struct {
 	BaseURL string
 
-	RequestMethodResponse []byte
+	RequestMethodResponse           []byte
 	RequestMethodResponseStatusCode int
-	RequestMethodError error
+	RequestMethodError              error
 }
 
 //SetOauthToken method sets the oauth token and retrieves its self
 func (client *MockedHttpClient) SetOauthToken(token string) {
-	
+
 }
 
 //GetClientID method retrieves the clientID

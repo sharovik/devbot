@@ -28,10 +28,10 @@ lint:
 	golint -set_exit_status ./internal/...
 
 imports:
-	goimports -d -w $(find . -type f -name '*.go' -not -path "./vendor/*")
+	goimports -d -w $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 format:
-	go fmt $(go list ./... | grep -v /vendor/)
+	go fmt $(shell go list ./... | grep -v /vendor/)
 
 tests:
 	go test ./...

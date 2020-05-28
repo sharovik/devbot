@@ -59,7 +59,7 @@ func (container Main) Init() Main {
 	}
 
 	container.HttpClient = &client.HttpClient{
-		Client:       &httpClient,
+		Client: &httpClient,
 	}
 
 	container.SlackClient = slackClient

@@ -4,10 +4,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/sharovik/devbot/internal/container"
 	"os"
 	"path"
 	"runtime"
+
+	"github.com/sharovik/devbot/internal/container"
 )
 
 var (
@@ -21,7 +22,7 @@ var (
 )
 
 const (
-	defaultVersion     = "1.0.0"
+	defaultVersion = "1.0.0"
 
 	//Description constants
 	descriptionScenarioIdAttr         = "Scenario id, to which we need to attach this question. If 0 then new scenarioId will be created for this question"

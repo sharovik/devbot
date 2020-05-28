@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/sharovik/devbot/internal/config"
 	"os"
 	"path"
 	"runtime"
 	"time"
+
+	"github.com/sharovik/devbot/internal/config"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/log"

@@ -3,14 +3,15 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/sharovik/devbot/events"
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/log"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 )
 
 const (
