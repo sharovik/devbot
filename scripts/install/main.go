@@ -3,13 +3,14 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"io/ioutil"
+	"os"
+
 	"github.com/sharovik/devbot/events"
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/log"
-	"io/ioutil"
-	"os"
 )
 
 const descriptionEventAlias = "The event alias for which Install method will be called"
@@ -69,7 +70,7 @@ func main() {
 func checkIfDatabaseExists() error {
 	log.Logger().AppendGlobalContext(map[string]interface{}{
 		"database_connection": cfg.DatabaseConnection,
-		"database_host": cfg.DatabaseHost,
+		"database_host":       cfg.DatabaseHost,
 	})
 	log.Logger().Info().Msg("Check if the database exists")
 	switch cfg.DatabaseConnection {

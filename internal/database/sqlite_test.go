@@ -33,7 +33,7 @@ func TestSQLiteDictionary_InitDatabaseConnection(t *testing.T) {
 	cfg.DatabaseHost = "./wrong_path"
 	dictionary.Cfg = cfg
 
-	err := dictionary.InitDatabaseConnection()
+	err := dictionary.InitSQLiteDatabaseConnection()
 
 	assert.Error(t, err)
 	assert.Empty(t, dictionary.client)
@@ -41,7 +41,7 @@ func TestSQLiteDictionary_InitDatabaseConnection(t *testing.T) {
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
-	err = dictionary.InitDatabaseConnection()
+	err = dictionary.InitSQLiteDatabaseConnection()
 	assert.NoError(t, err)
 
 	defer dictionary.client.Close()
@@ -56,7 +56,7 @@ func TestSQLiteDictionary_CloseDatabaseConnection(t *testing.T) {
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
-	err := dictionary.InitDatabaseConnection()
+	err := dictionary.InitSQLiteDatabaseConnection()
 	assert.NoError(t, err)
 
 	checkIfDataCanBeReturned(t)
@@ -108,7 +108,7 @@ func TestSQLiteDictionary_FindAnswer(t *testing.T) {
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
-	err := dictionary.InitDatabaseConnection()
+	err := dictionary.InitSQLiteDatabaseConnection()
 	assert.NoError(t, err)
 	upTestTables(t)
 	insertTestData(t)
@@ -158,7 +158,7 @@ func TestSQLiteDictionary_FindEventByAlias(t *testing.T) {
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
-	err := dictionary.InitDatabaseConnection()
+	err := dictionary.InitSQLiteDatabaseConnection()
 	assert.NoError(t, err)
 	upTestTables(t)
 	insertTestData(t)
@@ -182,7 +182,7 @@ func TestSQLiteDictionary_FindScenarioById(t *testing.T) {
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
-	err := dictionary.InitDatabaseConnection()
+	err := dictionary.InitSQLiteDatabaseConnection()
 	assert.NoError(t, err)
 	upTestTables(t)
 	insertTestData(t)
@@ -206,7 +206,7 @@ func TestSQLiteDictionary_InsertScenario(t *testing.T) {
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
-	err := dictionary.InitDatabaseConnection()
+	err := dictionary.InitSQLiteDatabaseConnection()
 	assert.NoError(t, err)
 	upTestTables(t)
 	insertTestData(t)
@@ -230,7 +230,7 @@ func TestSQLiteDictionary_InsertEvent(t *testing.T) {
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
-	err := dictionary.InitDatabaseConnection()
+	err := dictionary.InitSQLiteDatabaseConnection()
 	assert.NoError(t, err)
 	upTestTables(t)
 	insertTestData(t)
@@ -254,7 +254,7 @@ func TestSQLiteDictionary_InsertQuestion(t *testing.T) {
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
-	err := dictionary.InitDatabaseConnection()
+	err := dictionary.InitSQLiteDatabaseConnection()
 	assert.NoError(t, err)
 	upTestTables(t)
 	insertTestData(t)
@@ -290,7 +290,7 @@ func TestSQLiteDictionary_GetLastScenarioID(t *testing.T) {
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
-	err := dictionary.InitDatabaseConnection()
+	err := dictionary.InitSQLiteDatabaseConnection()
 	assert.NoError(t, err)
 	upTestTables(t)
 	insertTestData(t)
@@ -318,7 +318,7 @@ func TestSQLiteDictionary_GetAllRegex(t *testing.T) {
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
-	err := dictionary.InitDatabaseConnection()
+	err := dictionary.InitSQLiteDatabaseConnection()
 	assert.NoError(t, err)
 	upTestTables(t)
 
@@ -350,7 +350,7 @@ func TestSQLiteDictionary_FindRegex(t *testing.T) {
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
-	err := dictionary.InitDatabaseConnection()
+	err := dictionary.InitSQLiteDatabaseConnection()
 	assert.NoError(t, err)
 	upTestTables(t)
 	insertTestData(t)
@@ -374,7 +374,7 @@ func TestSQLiteDictionary_FindScenarioByID(t *testing.T) {
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
-	err := dictionary.InitDatabaseConnection()
+	err := dictionary.InitSQLiteDatabaseConnection()
 	assert.NoError(t, err)
 	upTestTables(t)
 	insertTestData(t)
@@ -398,7 +398,7 @@ func TestSQLiteDictionary_InsertQuestionRegex(t *testing.T) {
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
 
-	err := dictionary.InitDatabaseConnection()
+	err := dictionary.InitSQLiteDatabaseConnection()
 	assert.NoError(t, err)
 	upTestTables(t)
 	insertTestData(t)

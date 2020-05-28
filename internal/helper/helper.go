@@ -165,7 +165,7 @@ func FindMatches(regex string, subject string) map[string]string {
 	}
 
 	if len(result) == 0 {
-		return map[string]string{"0": matches[0],}
+		return map[string]string{"0": matches[0]}
 	}
 
 	return result

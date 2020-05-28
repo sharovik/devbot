@@ -59,7 +59,7 @@ func (container Main) Init() Main {
 	}
 
 	container.HttpClient = &client.HttpClient{
-		Client:       &httpClient,
+		Client: &httpClient,
 	}
 
 	container.SlackClient = slackClient
@@ -84,7 +84,7 @@ func (container *Main) loadDictionary() error {
 			Cfg: container.Config,
 		}
 
-		if err := dictionary.InitDatabaseConnection(); err != nil {
+		if err := dictionary.InitSQLiteDatabaseConnection(); err != nil {
 			return err
 		}
 

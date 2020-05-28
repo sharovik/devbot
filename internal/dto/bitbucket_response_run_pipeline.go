@@ -88,7 +88,7 @@ type BitBucketResponseRunPipeline struct {
 		} `json:"steps"`
 	} `json:"links"`
 	HasVariables bool `json:"has_variables"`
-	Error struct {
+	Error        struct {
 		Message string `json:"message"`
 		Detail  string `json:"detail"`
 		Data    struct {

@@ -8,10 +8,10 @@ type PipelineTargetSelector struct {
 
 //PipelineTarget the target for the pipeline to run
 type PipelineTarget struct {
-	RefName  string `json:"ref_name"`
-	RefType  string `json:"ref_type"`
+	RefName  string                 `json:"ref_name"`
+	RefType  string                 `json:"ref_type"`
 	Selector PipelineTargetSelector `json:"selector"`
-	Type string `json:"type"`
+	Type     string                 `json:"type"`
 }
 
 //BitBucketRequestRunPipeline the request for the pipeline run endpoint

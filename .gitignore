@@ -17,4 +17,6 @@ project-build
 
 scripts/install/run
 scripts/update/run
+scripts/dictionary-loader/run
+
 test/testdata/database

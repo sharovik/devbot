@@ -14,7 +14,9 @@ const (
 	EventName = "example"
 
 	//EventVersion the version of the event
-	EventVersion = "1.0.0"
+	EventVersion = "1.0.1"
+
+	migrationDirectoryPath = "./events/example/migrations"
 )
 
 //ExmplEvent the struct for the event object
@@ -91,5 +93,5 @@ func (e ExmplEvent) Install() error {
 
 //Update for event update actions
 func (e ExmplEvent) Update() error {
-	return nil
+	return container.C.Dictionary.RunMigrations(migrationDirectoryPath)
 }

@@ -8,12 +8,10 @@ import (
 	"path"
 	"runtime"
 
-	"github.com/sharovik/devbot/internal/config"
-	"github.com/sharovik/devbot/internal/database"
+	"github.com/sharovik/devbot/internal/container"
 )
 
 var (
-	dictionary         database.SQLiteDictionary
 	scenarioId         int64
 	scenarioName       string
 	question           string
@@ -24,8 +22,7 @@ var (
 )
 
 const (
-	sqliteDatabaseHost = "./devbot.sqlite"
-	defaultVersion     = "1.0.0"
+	defaultVersion = "1.0.0"
 
 	//Description constants
 	descriptionScenarioIdAttr         = "Scenario id, to which we need to attach this question. If 0 then new scenarioId will be created for this question"
@@ -43,16 +40,7 @@ func init() {
 	dir := path.Join(path.Dir(filename), "../../")
 	_ = os.Chdir(dir)
 
-	_, err := os.Stat(sqliteDatabaseHost)
-	if os.IsNotExist(err) {
-		panic("Database file doesn't exists.")
-	}
-
-	cfg := config.Config{DatabaseHost: sqliteDatabaseHost}
-
-	dictionary = database.SQLiteDictionary{
-		Cfg: cfg,
-	}
+	container.C = container.C.Init()
 }
 
 func main() {
@@ -63,36 +51,29 @@ func main() {
 		panic(err)
 	}
 
-	//Init the database connection
-	if err := dictionary.InitDatabaseConnection(); err != nil {
-		panic(err)
-	}
-
-	defer dictionary.CloseDatabaseConnection()
-
 	//We get the event id for selected event alias. The eventId we will use for scenarioId and question inserting
-	eventId, err := dictionary.FindEventByAlias(eventAlias)
+	eventId, err := container.C.Dictionary.FindEventByAlias(eventAlias)
 	if err != nil {
 		panic(err)
 	}
 
 	//If we received empty event id, it means that for that event-alias we don't have any row created. We need to create it now
 	if eventId == 0 {
-		eventId, err = dictionary.InsertEvent(eventAlias, defaultVersion)
+		eventId, err = container.C.Dictionary.InsertEvent(eventAlias, defaultVersion)
 		if err != nil {
 			panic(err)
 		}
 	}
 
 	//Now we need to do the similar procedure for the scenarioId
-	scenarioId, err = dictionary.FindScenarioByID(scenarioId)
+	scenarioId, err = container.C.Dictionary.FindScenarioByID(scenarioId)
 	if err != nil {
 		panic(err)
 	}
 
 	//If the scenarioId is 0 it means that scenarioId is not created. We need to create it now
 	if scenarioId == 0 {
-		lastScenarioId, err := dictionary.GetLastScenarioID()
+		lastScenarioId, err := container.C.Dictionary.GetLastScenarioID()
 		if err != nil {
 			panic(err)
 		}
@@ -101,7 +82,7 @@ func main() {
 			scenarioName = fmt.Sprintf("Scenario #%d", lastScenarioId+1)
 		}
 
-		scenarioId, err = dictionary.InsertScenario(scenarioName, eventId)
+		scenarioId, err = container.C.Dictionary.InsertScenario(scenarioName, eventId)
 		if err != nil {
 			panic(err)
 		}
@@ -109,7 +90,7 @@ func main() {
 
 	//In that step we have valid scenarioId and eventId. It means that we can proceed with question creation
 	var questionId int64
-	questionId, err = dictionary.InsertQuestion(question, answer, scenarioId, questionRegex, questionRegexGroup)
+	questionId, err = container.C.Dictionary.InsertQuestion(question, answer, scenarioId, questionRegex, questionRegexGroup)
 	if err != nil {
 		panic(err)
 	}
