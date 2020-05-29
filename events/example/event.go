@@ -16,10 +16,11 @@ const (
 	//EventVersion the version of the event
 	EventVersion = "1.0.1"
 
+	//The migrations folder, which can be used for event installation or for event update
 	migrationDirectoryPath = "./events/example/migrations"
 )
 
-//ExmplEvent the struct for the event object
+//ExmplEvent the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
 type ExmplEvent struct {
 	EventName string
 }
@@ -31,7 +32,9 @@ var Event = ExmplEvent{
 
 //Execute method which is called by message processor
 func (e ExmplEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
-	message.Text = "This is an example of the answer!"
+	//This answer will be show once the event get triggered.
+	//Leave message.Text empty, once you need to not show the message, once this event get triggered.
+	message.Text = "This is an example of the answer."
 	return message, nil
 }
 
@@ -40,55 +43,16 @@ func (e ExmplEvent) Install() error {
 	log.Logger().Debug().
 		Str("event_name", EventName).
 		Str("event_version", EventVersion).
-		Msg("Start event Install")
-	eventID, err := container.C.Dictionary.FindEventByAlias(EventName)
-	if err != nil {
-		log.Logger().AddError(err).Msg("Error during FindEventBy method execution")
-		return err
-	}
+		Msg("Triggered event installation")
 
-	if eventID == 0 {
-		log.Logger().Info().
-			Str("event_name", EventName).
-			Str("event_version", EventVersion).
-			Msg("Event wasn't installed. Trying to install it")
-
-		eventID, err := container.C.Dictionary.InsertEvent(EventName, EventVersion)
-		if err != nil {
-			log.Logger().AddError(err).Msg("Error during FindEventBy method execution")
-			return err
-		}
-
-		log.Logger().Debug().
-			Str("event_name", EventName).
-			Str("event_version", EventVersion).
-			Int64("event_id", eventID).
-			Msg("Event installed")
-
-		scenarioID, err := container.C.Dictionary.InsertScenario(EventName, eventID)
-		if err != nil {
-			return err
-		}
-
-		log.Logger().Debug().
-			Str("event_name", EventName).
-			Str("event_version", EventVersion).
-			Int64("scenario_id", scenarioID).
-			Msg("Scenario installed")
-
-		questionID, err := container.C.Dictionary.InsertQuestion("who are you?", fmt.Sprintf("Hello, my name is %s", container.C.Config.SlackConfig.BotName), scenarioID, "", "")
-		if err != nil {
-			return err
-		}
-
-		log.Logger().Debug().
-			Str("event_name", EventName).
-			Str("event_version", EventVersion).
-			Int64("question_id", questionID).
-			Msg("Question installed")
-	}
-
-	return nil
+	return container.C.Dictionary.InstallEvent(
+		EventName,      //We specify the event name which will be used for scenario generation
+		EventVersion,   //This will be set during the event creation
+		"who are you?", //Actual question, which system will wait and which will trigger our event
+		fmt.Sprintf("Hello, my name is %s", container.C.Config.SlackConfig.BotName), //Answer which will be used by the bot
+		"", //Optional field. This is regular expression which can be used for question parsing.
+		"", //Optional field. This is a regex group and it can be used for parsing the match group from the regexp result
+	)
 }
 
 //Update for event update actions

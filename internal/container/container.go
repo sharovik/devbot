@@ -19,7 +19,7 @@ type Main struct {
 	SlackClient     client.SlackClientInterface
 	BibBucketClient client.GitClientInterface
 	Dictionary      database.BaseDatabaseInterface
-	HttpClient      client.BaseHttpClientInterface
+	HTTPClient      client.BaseHTTPClientInterface
 }
 
 //C container variable
@@ -44,7 +44,7 @@ func (container Main) Init() Main {
 	}
 
 	bitBucketClient := client.BitBucketClient{}
-	bitBucketClient.Init(&client.HttpClient{
+	bitBucketClient.Init(&client.HTTPClient{
 		Client:       &httpClient,
 		BaseURL:      client.DefaultBitBucketBaseAPIUrl,
 		ClientID:     container.Config.BitBucketConfig.ClientID,
@@ -58,7 +58,7 @@ func (container Main) Init() Main {
 		OAuthToken: container.Config.SlackConfig.OAuthToken,
 	}
 
-	container.HttpClient = &client.HttpClient{
+	container.HTTPClient = &client.HTTPClient{
 		Client: &httpClient,
 	}
 

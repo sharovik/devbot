@@ -64,10 +64,21 @@ type BaseOriginalMessage struct {
 
 //BaseChatMessage the chat message which will be retrieved from websocket api
 type BaseChatMessage struct {
-	Channel           string
-	Text              string
-	AsUser            bool
-	Ts                time.Time
+	//The channel from where was message received
+	Channel string
+
+	//The text of the message, which was received from the channel. Example: Hello bot
+	Text string
+
+	//This is an optional value which is used currently for slack messages.
+	AsUser bool
+
+	//The message timestamp. When it was received
+	Ts time.Time
+
+	//The dictionary answer which was found in our database
 	DictionaryMessage DictionaryMessage
-	OriginalMessage   BaseOriginalMessage
+
+	//The copy of original message received from the system
+	OriginalMessage BaseOriginalMessage
 }

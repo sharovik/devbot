@@ -12,8 +12,9 @@ import (
 	"github.com/sharovik/devbot/internal/log"
 )
 
+//BitBucketClient the bitbucket client struct
 type BitBucketClient struct {
-	client           BaseHttpClientInterface
+	client           BaseHTTPClientInterface
 	OauthToken       string
 	OauthTokenExpire time.Time
 	RefreshToken     string
@@ -28,17 +29,24 @@ type responseAccessToken struct {
 }
 
 const (
-	DefaultBitBucketBaseAPIUrl     = "https://api.bitbucket.org/2.0"
-	DefaultBitBucketAccessTokenUrl = "https://bitbucket.org/site/oauth2"
+	//DefaultBitBucketBaseAPIUrl the base url
+	DefaultBitBucketBaseAPIUrl = "https://api.bitbucket.org/2.0"
 
+	//DefaultBitBucketAccessTokenURL the access token endpoint which will be used for token generation
+	DefaultBitBucketAccessTokenURL = "https://bitbucket.org/site/oauth2"
+
+	//DefaultBitBucketMainBranch the default main branch
 	DefaultBitBucketMainBranch = "master"
 
+	//ErrorBranchExists error message for "branch exists error"
 	ErrorBranchExists = "BRANCH_ALREADY_EXISTS"
 
+	//ErrorMsgNoAccess error message response of bot, once he got a bad status code from the API
 	ErrorMsgNoAccess = "I received unauthorized response. Looks like I'm not permitted to do any actions to that repository."
 )
 
-func (b *BitBucketClient) Init(client BaseHttpClientInterface) {
+//Init initialise the client
+func (b *BitBucketClient) Init(client BaseHTTPClientInterface) {
 	b.client = client
 }
 
@@ -74,7 +82,7 @@ func (b *BitBucketClient) beforeRequest() error {
 func (b *BitBucketClient) loadAuthToken() error {
 	log.Logger().StartMessage("Loading OAuth token")
 
-	b.client.SetBaseUrl(DefaultBitBucketAccessTokenUrl)
+	b.client.SetBaseURL(DefaultBitBucketAccessTokenURL)
 	b.client.SetOauthToken("") //this will cleanup the token in the client and will generate new basic auth for specific client_id and client_secret
 
 	formData := url.Values{}
@@ -107,6 +115,7 @@ func (b *BitBucketClient) loadAuthToken() error {
 	return nil
 }
 
+//CreateBranch creates the branch in API
 func (b *BitBucketClient) CreateBranch(workspace string, repositorySlug string, branchName string) (dto.BitBucketResponseBranchCreate, error) {
 	log.Logger().StartMessage("Create branch")
 	if err := b.beforeRequest(); err != nil {
@@ -114,7 +123,7 @@ func (b *BitBucketClient) CreateBranch(workspace string, repositorySlug string, 
 		return dto.BitBucketResponseBranchCreate{}, err
 	}
 
-	b.client.SetBaseUrl(DefaultBitBucketBaseAPIUrl)
+	b.client.SetBaseURL(DefaultBitBucketBaseAPIUrl)
 
 	endpoint := fmt.Sprintf("/repositories/%s/%s/refs/branches/%s", workspace, repositorySlug, branchName)
 	response, statusCode, err := b.client.Get(endpoint, map[string]string{})
@@ -193,6 +202,7 @@ func (b *BitBucketClient) CreateBranch(workspace string, repositorySlug string, 
 	return responseObject, nil
 }
 
+//PullRequestInfo gets the pull-requests information
 func (b *BitBucketClient) PullRequestInfo(workspace string, repositorySlug string, pullRequestID int64) (dto.BitBucketPullRequestInfoResponse, error) {
 	log.Logger().StartMessage("Get pull-request status")
 	if err := b.beforeRequest(); err != nil {
@@ -200,7 +210,7 @@ func (b *BitBucketClient) PullRequestInfo(workspace string, repositorySlug strin
 		return dto.BitBucketPullRequestInfoResponse{}, err
 	}
 
-	b.client.SetBaseUrl(DefaultBitBucketBaseAPIUrl)
+	b.client.SetBaseURL(DefaultBitBucketBaseAPIUrl)
 	endpoint := fmt.Sprintf("/repositories/%s/%s/pullrequests/%d", workspace, repositorySlug, pullRequestID)
 	response, _, err := b.client.Get(endpoint, map[string]string{})
 
@@ -220,6 +230,7 @@ func (b *BitBucketClient) PullRequestInfo(workspace string, repositorySlug strin
 	return responseObject, nil
 }
 
+//MergePullRequest merge the selected pull-request
 func (b *BitBucketClient) MergePullRequest(workspace string, repositorySlug string, pullRequestID int64, description string) (dto.BitBucketPullRequestInfoResponse, error) {
 	log.Logger().StartMessage("Merge pull-request")
 	if err := b.beforeRequest(); err != nil {
@@ -239,7 +250,7 @@ func (b *BitBucketClient) MergePullRequest(workspace string, repositorySlug stri
 		return dto.BitBucketPullRequestInfoResponse{}, err
 	}
 
-	b.client.SetBaseUrl(DefaultBitBucketBaseAPIUrl)
+	b.client.SetBaseURL(DefaultBitBucketBaseAPIUrl)
 	endpoint := fmt.Sprintf("/repositories/%s/%s/pullrequests/%d/merge", workspace, repositorySlug, pullRequestID)
 
 	var dtoResponse = dto.BitBucketPullRequestInfoResponse{}
@@ -280,6 +291,7 @@ func (b *BitBucketClient) MergePullRequest(workspace string, repositorySlug stri
 	return responseObject, nil
 }
 
+//ChangePullRequestDestination changes the pull-request destination to selected one
 func (b *BitBucketClient) ChangePullRequestDestination(workspace string, repositorySlug string, pullRequestID int64, title string, branchName string) (dto.BitBucketPullRequestInfoResponse, error) {
 	log.Logger().StartMessage("Change destination")
 	if err := b.beforeRequest(); err != nil {
@@ -301,7 +313,7 @@ func (b *BitBucketClient) ChangePullRequestDestination(workspace string, reposit
 		return dto.BitBucketPullRequestInfoResponse{}, err
 	}
 
-	b.client.SetBaseUrl(DefaultBitBucketBaseAPIUrl)
+	b.client.SetBaseURL(DefaultBitBucketBaseAPIUrl)
 	endpoint := fmt.Sprintf("/repositories/%s/%s/pullrequests/%d", workspace, repositorySlug, pullRequestID)
 
 	var dtoResponse = dto.BitBucketPullRequestInfoResponse{}
@@ -342,6 +354,7 @@ func (b *BitBucketClient) ChangePullRequestDestination(workspace string, reposit
 	return responseObject, nil
 }
 
+//CreatePullRequest creates the pull-request
 func (b *BitBucketClient) CreatePullRequest(workspace string, repositorySlug string, request dto.BitBucketRequestPullRequestCreate) (dto.BitBucketPullRequestInfoResponse, error) {
 	log.Logger().StartMessage("Create pull-request")
 	if err := b.beforeRequest(); err != nil {
@@ -355,7 +368,7 @@ func (b *BitBucketClient) CreatePullRequest(workspace string, repositorySlug str
 		return dto.BitBucketPullRequestInfoResponse{}, err
 	}
 
-	b.client.SetBaseUrl(DefaultBitBucketBaseAPIUrl)
+	b.client.SetBaseURL(DefaultBitBucketBaseAPIUrl)
 	endpoint := fmt.Sprintf("/repositories/%s/%s/pullrequests", workspace, repositorySlug)
 
 	response, statusCode, err := b.client.Post(endpoint, byteString, map[string]string{})
@@ -394,6 +407,7 @@ func (b *BitBucketClient) CreatePullRequest(workspace string, repositorySlug str
 	return dtoResponse, nil
 }
 
+//RunPipeline runs the selected custom pipeline
 func (b *BitBucketClient) RunPipeline(workspace string, repositorySlug string, request dto.BitBucketRequestRunPipeline) (dto.BitBucketResponseRunPipeline, error) {
 	log.Logger().StartMessage("Run pipeline")
 	if err := b.beforeRequest(); err != nil {
@@ -407,7 +421,7 @@ func (b *BitBucketClient) RunPipeline(workspace string, repositorySlug string, r
 		return dto.BitBucketResponseRunPipeline{}, err
 	}
 
-	b.client.SetBaseUrl(DefaultBitBucketBaseAPIUrl)
+	b.client.SetBaseURL(DefaultBitBucketBaseAPIUrl)
 	endpoint := fmt.Sprintf("/repositories/%s/%s/pipelines/", workspace, repositorySlug)
 	response, statusCode, err := b.client.Post(endpoint, byteString, map[string]string{})
 	if err != nil {

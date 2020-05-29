@@ -100,7 +100,6 @@ func checkIfDataCanBeReturned(t *testing.T) {
 	sqlStmt = `drop table if exists foo;`
 	_, err = dictionary.client.Exec(sqlStmt)
 	assert.NoError(t, err)
-	removeDatabase()
 }
 
 func TestSQLiteDictionary_FindAnswer(t *testing.T) {

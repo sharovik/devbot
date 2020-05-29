@@ -2,8 +2,9 @@ package client
 
 import "github.com/sharovik/devbot/internal/dto"
 
+//GitClientInterface the main git client interface which should be used once you connect VCS API
 type GitClientInterface interface {
-	Init(client BaseHttpClientInterface)
+	Init(client BaseHTTPClientInterface)
 	PullRequestInfo(workspace string, repositorySlug string, pullRequestID int64) (dto.BitBucketPullRequestInfoResponse, error)
 	MergePullRequest(workspace string, repositorySlug string, pullRequestID int64, description string) (dto.BitBucketPullRequestInfoResponse, error)
 	CreateBranch(workspace string, repositorySlug string, branchName string) (dto.BitBucketResponseBranchCreate, error)
