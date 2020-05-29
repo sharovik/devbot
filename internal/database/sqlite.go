@@ -374,3 +374,30 @@ func (d SQLiteDictionary) RunMigrations(pathToFiles string) error {
 
 	return nil
 }
+
+//InstallEvent method installs the event(if it wasn't installed before) and creates the scenario for selected event with selected question and answer
+func (d SQLiteDictionary) InstallEvent(eventName string, eventVersion string, question string, answer string, questionRegex string, questionRegexGroup string) error {
+	eventID, err := d.FindEventByAlias(eventName)
+	if err != nil {
+		return err
+	}
+
+	if eventID == 0 {
+		eventID, err = d.InsertEvent(eventName, eventVersion)
+		if err != nil {
+			return err
+		}
+	}
+
+	scenarioID, err := d.InsertScenario(eventName, eventID)
+	if err != nil {
+		return err
+	}
+
+	_, err = d.InsertQuestion(question, answer, scenarioID, questionRegex, questionRegexGroup)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -34,8 +34,8 @@ func (client MockedHttpClient) GetOAuthToken() string {
 	return "client.OAuthToken"
 }
 
-//SetBaseUrl method sets the base url and retrieves its self
-func (client *MockedHttpClient) SetBaseUrl(baseUrl string) {
+//SetBaseURL method sets the base url and retrieves its self
+func (client *MockedHttpClient) SetBaseURL(baseUrl string) {
 
 }
 

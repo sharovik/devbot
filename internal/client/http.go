@@ -13,11 +13,11 @@ import (
 	"github.com/sharovik/devbot/internal/log"
 )
 
-//BaseHttpClientInterface base interface for all http clients
-type BaseHttpClientInterface interface {
+//BaseHTTPClientInterface base interface for all http clients
+type BaseHTTPClientInterface interface {
 	//Configuration methods
 	SetOauthToken(token string)
-	SetBaseUrl(baseUrl string)
+	SetBaseURL(baseURL string)
 	BasicAuth(username string, password string) string
 	GetClientID() string
 	GetClientSecret() string
@@ -30,8 +30,8 @@ type BaseHttpClientInterface interface {
 	Put(string, interface{}, map[string]string) ([]byte, int, error)
 }
 
-//HttpClient main http client
-type HttpClient struct {
+//HTTPClient main http client
+type HTTPClient struct {
 	Client *http.Client
 
 	//Configuration of client
@@ -42,31 +42,32 @@ type HttpClient struct {
 }
 
 //SetOauthToken method sets the oauth token and retrieves its self
-func (client *HttpClient) SetOauthToken(token string) {
+func (client *HTTPClient) SetOauthToken(token string) {
 	client.OAuthToken = token
 }
 
 //GetClientID method retrieves the clientID
-func (client HttpClient) GetClientID() string {
+func (client HTTPClient) GetClientID() string {
 	return client.ClientID
 }
 
 //GetClientSecret method retrieves the clientSecret
-func (client HttpClient) GetClientSecret() string {
+func (client HTTPClient) GetClientSecret() string {
 	return client.ClientSecret
 }
 
 //GetOAuthToken method retrieves the oauth token
-func (client HttpClient) GetOAuthToken() string {
+func (client HTTPClient) GetOAuthToken() string {
 	return client.OAuthToken
 }
 
-//SetBaseUrl method sets the base url and retrieves its self
-func (client *HttpClient) SetBaseUrl(baseUrl string) {
-	client.BaseURL = baseUrl
+//SetBaseURL method sets the base url and retrieves its self
+func (client *HTTPClient) SetBaseURL(baseURL string) {
+	client.BaseURL = baseURL
 }
 
-func (client HttpClient) BasicAuth(username string, password string) string {
+//BasicAuth retrieves the encode string for basic auth
+func (client HTTPClient) BasicAuth(username string, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password)))
 }
 
@@ -77,7 +78,7 @@ func (client HttpClient) BasicAuth(username string, password string) string {
 //endpoint - endpoint to which we should do a request
 //body - it's a request body. Accepted types of body: string, url.Values(for form_data requests), byte
 //headers - request headers
-func (client HttpClient) Request(method string, endpoint string, body interface{}, headers map[string]string) ([]byte, int, error) {
+func (client HTTPClient) Request(method string, endpoint string, body interface{}, headers map[string]string) ([]byte, int, error) {
 
 	log.Logger().StartMessage("Http request")
 
@@ -177,17 +178,17 @@ func (client HttpClient) Request(method string, endpoint string, body interface{
 }
 
 //Post method for POST http requests
-func (client HttpClient) Post(endpoint string, body interface{}, headers map[string]string) ([]byte, int, error) {
+func (client HTTPClient) Post(endpoint string, body interface{}, headers map[string]string) ([]byte, int, error) {
 	return client.Request(http.MethodPost, client.generateAPIUrl(endpoint), body, headers)
 }
 
 //Put method for PUT http requests
-func (client HttpClient) Put(endpoint string, body interface{}, headers map[string]string) ([]byte, int, error) {
+func (client HTTPClient) Put(endpoint string, body interface{}, headers map[string]string) ([]byte, int, error) {
 	return client.Request(http.MethodPut, client.generateAPIUrl(endpoint), body, headers)
 }
 
 //Get method for GET http requests
-func (client *HttpClient) Get(endpoint string, query map[string]string) ([]byte, int, error) {
+func (client *HTTPClient) Get(endpoint string, query map[string]string) ([]byte, int, error) {
 	if client.OAuthToken != "" {
 		query["access_token"] = client.OAuthToken
 	}
@@ -206,7 +207,7 @@ func (client *HttpClient) Get(endpoint string, query map[string]string) ([]byte,
 	return client.Request(http.MethodGet, client.generateAPIUrl(endpoint)+fmt.Sprintf("%s", queryString), []byte(``), map[string]string{})
 }
 
-func (client HttpClient) generateAPIUrl(endpoint string) string {
+func (client HTTPClient) generateAPIUrl(endpoint string) string {
 	log.Logger().Debug().
 		Str("base_url", client.BaseURL).
 		Str("endpoint", endpoint).

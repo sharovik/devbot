@@ -58,7 +58,7 @@ docker run --env-file=.env devbot-dock
 
 ### Example of output
 If you did everything right, you should see something like this:
-![Demo start slack-bo](documentation/images/start-slack-bot.gif)
+![Demo start slack-bot](documentation/images/start-slack-bot.gif)
 
 ## Prerequisites
 Please read the [prerequisites documentation](documentation/prerequisites.md)
@@ -72,7 +72,7 @@ Please read the [installation documentation](documentation/installation.md)
 - [BitBucket run pipeline event](https://github.com/sharovik/bitbucket-run-pipeline)
 
 ## How to write custom event
-Please read the [events documentation](documentation/events.md)
+Please read the [events documentation](documentation/events.md). There you can find an example of the custom event.
 
 ## How to add new questions into the database
 Please read the [dictionary documentation](documentation/dictionary.md)

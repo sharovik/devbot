@@ -2,6 +2,7 @@ package dto
 
 import "time"
 
+//BitBucketResponseRunPipeline the response struct of run-pipeline request
 type BitBucketResponseRunPipeline struct {
 	Type       string `json:"type"`
 	UUID       string `json:"uuid"`

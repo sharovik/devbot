@@ -28,4 +28,8 @@ type BaseDatabaseInterface interface {
 
 	//Should be used for your custom event migrations loading
 	RunMigrations(path string) error
+
+	//Should be used for your custom event installation. This will create a new event row in the database if previously this row wasn't
+	//exists and insert new scenario for specified question and answer
+	InstallEvent(eventName string, eventVersion string, question string, answer string, questionRegex string, questionRegexGroup string) error
 }

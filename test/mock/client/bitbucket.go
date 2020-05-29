@@ -29,7 +29,7 @@ type MockedBitBucketClient struct {
 	RunPipelineError    error
 }
 
-func (b *MockedBitBucketClient) Init(client client.BaseHttpClientInterface) {
+func (b *MockedBitBucketClient) Init(client client.BaseHTTPClientInterface) {
 
 }
 
