@@ -5,6 +5,8 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/sharovik/devbot/events"
+
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/service/base"
 
@@ -75,7 +77,8 @@ func (Service) fetchBotUserID() error {
 	return nil
 }
 
-func (s Service) beforeWSConnectionStart() error {
+//BeforeWSConnectionStart runs methods before the WS connection start
+func (s Service) BeforeWSConnectionStart() error {
 	if container.C.Config.SlackConfig.MainChannelID == "" {
 		log.Logger().Info().Msg("Main channel ID wasn't specified. Trying to fetch main channel from API")
 		if err := s.fetchMainChannelID(); err != nil {
@@ -104,7 +107,7 @@ func (s Service) beforeWSConnectionStart() error {
 
 //InitWebSocketReceiver method for initialization of websocket receiver
 func (s Service) InitWebSocketReceiver() error {
-	if err := s.beforeWSConnectionStart(); err != nil {
+	if err := s.BeforeWSConnectionStart(); err != nil {
 		log.Logger().AddError(err).Msg("Failed to prepare service for WS connection")
 		return err
 	}
@@ -145,10 +148,104 @@ func (s Service) InitWebSocketReceiver() error {
 			continue
 		}
 
-		if err := processMessage(&message); err != nil {
+		if err := s.ProcessMessage(&message); err != nil {
 			log.Logger().AddError(err).Interface("message_object", &message).Msg("Can't check or answer to the message")
 		}
 	}
+}
+
+//ProcessMessage processes the message from the WS connection
+func (Service) ProcessMessage(msg interface{}) error {
+	message := msg.(*dto.SlackResponseEventMessage)
+	log.Logger().Debug().
+		Str("type", message.Type).
+		Str("text", message.Text).
+		Str("team", message.Team).
+		Str("source_team", message.SourceTeam).
+		Str("ts", message.Ts).
+		Str("user", message.User).
+		Str("channel", message.Channel).
+		Msg("Message received")
+
+	//We need to trim the message before all checks
+	message.Text = strings.TrimSpace(message.Text)
+
+	switch message.Type {
+	case eventTypeDesktopNotification:
+		if !isAnswerWasPrepared(message) {
+			log.Logger().Warn().
+				Interface("message_object", message).
+				Msg("Answer wasn't prepared")
+			return nil
+		}
+
+		answerMessage := getPreparedAnswer(message)
+
+		if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
+			log.Logger().AddError(err).Msg("Failed to send prepared answers")
+			return err
+		}
+
+		if answerMessage.DictionaryMessage.ReactionType == "" || events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType] == nil {
+			log.Logger().Warn().
+				Interface("answer", answerMessage).
+				Msg("Reaction type wasn't found")
+			return nil
+		}
+
+		go func() {
+			answer, err := events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType].Execute(dto.BaseChatMessage{
+				Channel:           answerMessage.Channel,
+				Text:              answerMessage.Text,
+				AsUser:            answerMessage.AsUser,
+				Ts:                answerMessage.Ts,
+				DictionaryMessage: answerMessage.DictionaryMessage,
+				OriginalMessage: dto.BaseOriginalMessage{
+					Text: answerMessage.OriginalMessage.Text,
+				},
+			})
+			if err != nil {
+				log.Logger().AddError(err).Msg("Failed to execute the event")
+			}
+
+			if answer.Text != "" {
+				answerMessage.Text = answer.Text
+				if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
+					log.Logger().AddError(err).Msg("Failed to send post-answer for selected event")
+				}
+			}
+		}()
+	default:
+		m, dmAnswer, err := analyseMessage(message)
+		if err != nil {
+			log.Logger().AddError(err).Msg("Failed to analyse received message")
+			return err
+		}
+
+		emptyDmMessage := dto.DictionaryMessage{}
+		if dmAnswer == emptyDmMessage {
+			log.Logger().Debug().
+				Str("type", message.Type).
+				Str("text", message.Text).
+				Str("team", message.Team).
+				Str("source_team", message.SourceTeam).
+				Str("ts", message.Ts).
+				Str("user", message.User).
+				Str("channel", message.Channel).
+				Msg("No answer found for the received message")
+		}
+
+		//We put a dictionary message into our message object,
+		// so later we can identify what kind of reaction will be executed
+		m.DictionaryMessage = dmAnswer
+
+		//We need to put this message into our small queue,
+		//because we need to make sure if we received our notification.
+		readyToAnswer(m)
+	}
+
+	refreshPreparedMessages()
+	return nil
 }
 
 //wsConnect method for receiving of websocket URL which we will use for our connection

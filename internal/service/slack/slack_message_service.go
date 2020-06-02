@@ -1,10 +1,8 @@
 package slack
 
 import (
-	"strings"
 	"time"
 
-	"github.com/sharovik/devbot/events"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/sharovik/devbot/internal/log"
@@ -53,98 +51,6 @@ func isValidMessage(message *dto.SlackResponseEventMessage) bool {
 	}
 
 	return true
-}
-
-func processMessage(message *dto.SlackResponseEventMessage) error {
-	log.Logger().Debug().
-		Str("type", message.Type).
-		Str("text", message.Text).
-		Str("team", message.Team).
-		Str("source_team", message.SourceTeam).
-		Str("ts", message.Ts).
-		Str("user", message.User).
-		Str("channel", message.Channel).
-		Msg("Message received")
-
-	//We need to trim the message before all checks
-	message.Text = strings.TrimSpace(message.Text)
-
-	switch message.Type {
-	case eventTypeDesktopNotification:
-		if !isAnswerWasPrepared(message) {
-			log.Logger().Warn().
-				Interface("message_object", message).
-				Msg("Answer wasn't prepared")
-			return nil
-		}
-
-		answerMessage := getPreparedAnswer(message)
-
-		if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
-			log.Logger().AddError(err).Msg("Failed to send prepared answers")
-			return err
-		}
-
-		if answerMessage.DictionaryMessage.ReactionType == "" || events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType] == nil {
-			log.Logger().Warn().
-				Interface("answer", answerMessage).
-				Msg("Reaction type wasn't found")
-			return nil
-		}
-
-		go func() {
-			answer, err := events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType].Execute(dto.BaseChatMessage{
-				Channel:           answerMessage.Channel,
-				Text:              answerMessage.Text,
-				AsUser:            answerMessage.AsUser,
-				Ts:                answerMessage.Ts,
-				DictionaryMessage: answerMessage.DictionaryMessage,
-				OriginalMessage: dto.BaseOriginalMessage{
-					Text: answerMessage.OriginalMessage.Text,
-				},
-			})
-			if err != nil {
-				log.Logger().AddError(err).Msg("Failed to execute the event")
-			}
-
-			if answer.Text != "" {
-				answerMessage.Text = answer.Text
-				if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
-					log.Logger().AddError(err).Msg("Failed to send post-answer for selected event")
-				}
-			}
-		}()
-	default:
-		m, dmAnswer, err := analyseMessage(message)
-		if err != nil {
-			log.Logger().AddError(err).Msg("Failed to analyse received message")
-			return err
-		}
-
-		emptyDmMessage := dto.DictionaryMessage{}
-		if dmAnswer == emptyDmMessage {
-			log.Logger().Debug().
-				Str("type", message.Type).
-				Str("text", message.Text).
-				Str("team", message.Team).
-				Str("source_team", message.SourceTeam).
-				Str("ts", message.Ts).
-				Str("user", message.User).
-				Str("channel", message.Channel).
-				Msg("No answer found for the received message")
-		}
-
-		//We put a dictionary message into our message object,
-		// so later we can identify what kind of reaction will be executed
-		m.DictionaryMessage = dmAnswer
-
-		//We need to put this message into our small queue,
-		//because we need to make sure if we received our notification.
-		readyToAnswer(m)
-	}
-
-	refreshPreparedMessages()
-	return nil
 }
 
 func getPreparedAnswer(message *dto.SlackResponseEventMessage) dto.SlackRequestChatPostMessage {

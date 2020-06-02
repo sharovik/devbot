@@ -26,7 +26,7 @@ check-code:
 	make lint
 	make tests
 
-clean-style:
+clean-code:
 	make imports
 	make format
 
