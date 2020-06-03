@@ -99,13 +99,18 @@ prepare-release:
 build:
 	make create-if-not-exists-defined-events
 	make create-if-not-exists-env
+	make refresh-events
 	make build-slack-bot-for-current-system
 	make build-installation-script-for-current-system
 	make build-update-script-for-current-system
 
+refresh-events:
+	./scripts/project-tools/update-events.sh
+
 build-project-cross-platform:
 	make create-if-not-exists-defined-events
 	make create-if-not-exists-env
+	make refresh-events
 	make build-slack-bot-cross-platform
 	make build-installation-script
 	make build-update-script
