@@ -2,6 +2,7 @@ package eventslist
 
 import (
 	"fmt"
+
 	"github.com/sharovik/devbot/internal/log"
 
 	"github.com/sharovik/devbot/internal/container"
@@ -47,8 +48,8 @@ func (e EListEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, e
 	}
 
 	var (
-		id    int64
-		alias string
+		id       int64
+		alias    string
 		question string
 	)
 
@@ -73,8 +74,8 @@ func (e EListEvent) Install() error {
 		Msg("Triggered event installation")
 
 	return container.C.Dictionary.InstallEvent(
-		EventName,      //We specify the event name which will be used for scenario generation
-		EventVersion,   //This will be set during the event creation
+		EventName,     //We specify the event name which will be used for scenario generation
+		EventVersion,  //This will be set during the event creation
 		"events list", //Actual question, which system will wait and which will trigger our event
 		"Just a sec, I will prepare the list for you.", //Answer which will be used by the bot
 		"", //Optional field. This is regular expression which can be used for question parsing.

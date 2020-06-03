@@ -22,11 +22,11 @@ build-slack-bot-cross-platform:
 build-slack-bot-for-current-system:
 	env CGO_ENABLED=1 go build -o ./bin/slack-bot-current-system ./cmd/slack-bot/main.go
 
-check-code:
+code-check:
 	make lint
 	make tests
 
-clean-code:
+code-clean:
 	make imports
 	make format
 

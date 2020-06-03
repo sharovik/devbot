@@ -49,7 +49,7 @@ func (b *MockedBitBucketClient) PullRequestInfo(workspace string, repositorySlug
 	return b.PullRequestInfoResponse, b.PullRequestInfoError
 }
 
-func (b *MockedBitBucketClient) MergePullRequest(workspace string, repositorySlug string, pullRequestID int64, description string) (dto.BitBucketPullRequestInfoResponse, error) {
+func (b *MockedBitBucketClient) MergePullRequest(workspace string, repositorySlug string, pullRequestID int64, description string, strategy string) (dto.BitBucketPullRequestInfoResponse, error) {
 	return b.MergePullRequestResponse, b.MergePullRequestError
 }
 

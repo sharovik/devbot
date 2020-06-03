@@ -2,6 +2,7 @@ package example
 
 import (
 	"fmt"
+
 	"github.com/sharovik/devbot/internal/helper"
 
 	"github.com/sharovik/devbot/internal/log"
@@ -64,7 +65,7 @@ func (e ExmplEvent) Install() error {
 		"who are you?", //Actual question, which system will wait and which will trigger our event
 		fmt.Sprintf("Hello, my name is %s", container.C.Config.SlackConfig.BotName), //Answer which will be used by the bot
 		"(?i)who are you?", //Optional field. This is regular expression which can be used for question parsing.
-		"", //Optional field. This is a regex group and it can be used for parsing the match group from the regexp result
+		"",                 //Optional field. This is a regex group and it can be used for parsing the match group from the regexp result
 	)
 }
 

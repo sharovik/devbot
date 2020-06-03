@@ -19,7 +19,7 @@ const (
 	//EventVersion the version of the event
 	EventVersion = "1.0.0"
 
-	helpMessage       = "Please use the following template:```" + `
+	helpMessage = "Please use the following template:```" + `
 New answer
 Scenario id: SCENARIO_ID_PUT_HERE (optional)
 Question: QUESTION_PUT_HERE (required)
@@ -37,7 +37,7 @@ Event alias: EVENT_ALIAS_PUT_HERE (optional, by default it will be used as text 
 	regexQuestionRegexGroupAttribute = "(?im)((?:question regex group:) (?P<question_regex_group>.+))"
 	regexAnswerAttribute             = "(?im)((?:answer:) (?P<answer>.+))"
 	regexEventAliasAttribute         = "(?im)((?:event alias:) (?P<event_alias>.+))"
-	defaultEventAlias = "text"
+	defaultEventAlias                = "text"
 )
 
 var (
