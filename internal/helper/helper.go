@@ -170,3 +170,17 @@ func FindMatches(regex string, subject string) map[string]string {
 
 	return result
 }
+
+func HelpMessageShouldBeTriggered(text string) (bool, error) {
+	re, err := regexp.Compile("(?i)(--help)")
+	if err != nil {
+		return false, err
+	}
+
+	matches := re.FindAllStringSubmatch(text, -1)
+	if len(matches) == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
