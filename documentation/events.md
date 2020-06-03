@@ -37,7 +37,8 @@ package example
 import (
 	"fmt"
 
-	"github.com/sharovik/devbot/internal/log"
+    "github.com/sharovik/devbot/internal/helper"
+    "github.com/sharovik/devbot/internal/log"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
@@ -49,6 +50,8 @@ const (
 
 	//EventVersion the version of the event
 	EventVersion = "1.0.1"
+
+    helpMessage = "Ask me `who are you?` and you will see the answer."
 
     //The migrations folder, which can be used for event installation or for event update
 	migrationDirectoryPath = "./events/example/migrations"
@@ -66,6 +69,16 @@ var Event = ExmplEvent{
 
 //Execute method which is called by message processor
 func (e ExmplEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
+    isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.OriginalMessage.Text)
+    if err != nil {
+        log.Logger().Warn().Err(err).Msg("Something went wrong with help message parsing")
+    }
+
+    if isHelpAnswerTriggered {
+        message.Text = helpMessage
+        return message, nil
+    }
+
     //This answer will be show once the event get triggered.
     //Leave message.Text empty, once you need to not show the message, once this event get triggered.
 	message.Text = "This is an example of the answer."

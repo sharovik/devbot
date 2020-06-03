@@ -2,6 +2,7 @@ package example
 
 import (
 	"fmt"
+	"github.com/sharovik/devbot/internal/helper"
 
 	"github.com/sharovik/devbot/internal/log"
 
@@ -15,6 +16,8 @@ const (
 
 	//EventVersion the version of the event
 	EventVersion = "1.0.1"
+
+	helpMessage = "Ask me `who are you?` and you will see the answer."
 
 	//The migrations folder, which can be used for event installation or for event update
 	migrationDirectoryPath = "./events/example/migrations"
@@ -32,6 +35,16 @@ var Event = ExmplEvent{
 
 //Execute method which is called by message processor
 func (e ExmplEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
+	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.OriginalMessage.Text)
+	if err != nil {
+		log.Logger().Warn().Err(err).Msg("Something went wrong with help message parsing")
+	}
+
+	if isHelpAnswerTriggered {
+		message.Text = helpMessage
+		return message, nil
+	}
+
 	//This answer will be show once the event get triggered.
 	//Leave message.Text empty, once you need to not show the message, once this event get triggered.
 	message.Text = "This is an example of the answer."
@@ -50,7 +63,7 @@ func (e ExmplEvent) Install() error {
 		EventVersion,   //This will be set during the event creation
 		"who are you?", //Actual question, which system will wait and which will trigger our event
 		fmt.Sprintf("Hello, my name is %s", container.C.Config.SlackConfig.BotName), //Answer which will be used by the bot
-		"", //Optional field. This is regular expression which can be used for question parsing.
+		"(?i)who are you?", //Optional field. This is regular expression which can be used for question parsing.
 		"", //Optional field. This is a regex group and it can be used for parsing the match group from the regexp result
 	)
 }

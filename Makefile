@@ -96,7 +96,7 @@ prepare-release:
 	cp devbot.sqlite $(PROJECT_BUILD_DIR)/devbot.sqlite
 	make build-project-archive
 
-build-project-for-current-system:
+build:
 	make create-if-not-exists-defined-events
 	make create-if-not-exists-env
 	make build-slack-bot-for-current-system

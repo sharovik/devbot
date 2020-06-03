@@ -66,6 +66,16 @@ Please read the [prerequisites documentation](documentation/prerequisites.md)
 ## Installation
 Please read the [installation documentation](documentation/installation.md)
 
+## Help triggers
+You can always ask bot to help you, if you don't know what kind of features currently are available or if you need detailed help regarding to the event.
+### Current installed events
+Ask bot `events list` to see the list of available events. This is useful, when you don't know which event what command have.
+![events-list](documentation/images/events-list.png)
+
+### Help of event
+Each event should have `--help` feature. So, once you don't know how to use selected event, please type `--help` after the event command
+![usage-help-command](documentation/images/new-answer-help.png)
+
 ## Available events
 - [WordPress theme generation event](https://github.com/sharovik/themer-wordpress-event)
 - [BitBucket release event](https://github.com/sharovik/bitbucket-release-event)
