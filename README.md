@@ -76,7 +76,7 @@ Ask bot `events list` to see the list of available events. This is useful, when 
 Each event should have `--help` feature. So, once you don't know how to use selected event, please type `--help` after the event command
 ![usage-help-command](documentation/images/new-answer-help.png)
 
-## Available events
+## Events available for installation
 - [WordPress theme generation event](https://github.com/sharovik/themer-wordpress-event)
 - [BitBucket release event](https://github.com/sharovik/bitbucket-release-event)
 - [BitBucket run pipeline event](https://github.com/sharovik/bitbucket-run-pipeline)
