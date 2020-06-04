@@ -79,7 +79,7 @@ func (e EListEvent) Install() error {
 		"events list", //Actual question, which system will wait and which will trigger our event
 		"Just a sec, I will prepare the list for you.", //Answer which will be used by the bot
 		"(?i)events list", //Optional field. This is regular expression which can be used for question parsing.
-		"", //Optional field. This is a regex group and it can be used for parsing the match group from the regexp result
+		"",                //Optional field. This is a regex group and it can be used for parsing the match group from the regexp result
 	)
 }
 

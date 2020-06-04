@@ -201,7 +201,9 @@ func (Service) ProcessMessage(msg interface{}) error {
 				Ts:                answerMessage.Ts,
 				DictionaryMessage: answerMessage.DictionaryMessage,
 				OriginalMessage: dto.BaseOriginalMessage{
-					Text: answerMessage.OriginalMessage.Text,
+					Text:  answerMessage.OriginalMessage.Text,
+					User:  answerMessage.OriginalMessage.User,
+					Files: answerMessage.OriginalMessage.Files,
 				},
 			})
 			if err != nil {
