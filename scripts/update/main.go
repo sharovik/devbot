@@ -53,7 +53,7 @@ func main() {
 	container.C = container.C.Init()
 
 	if eventAlias == "" {
-		log.Logger().Debug().Msg("Trying to install all defined events if it's possible")
+		log.Logger().Debug().Msg("Trying to update all defined events if it's possible")
 		for eventAlias, event := range events.DefinedEvents.Events {
 			if err := event.Update(); err != nil {
 				log.Logger().AddError(err).Str("event_alias", eventAlias).Msg("Failed to update the event.")

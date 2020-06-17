@@ -14,7 +14,7 @@ const (
 	EventName = "eventslist"
 
 	//EventVersion the version of the event
-	EventVersion = "1.0.0"
+	EventVersion = "1.0.1"
 
 	//The migrations folder, which can be used for event installation or for event update
 	migrationDirectoryPath = "./events/eventslist/migrations"
@@ -53,14 +53,14 @@ func (e EListEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, e
 		question string
 	)
 
-	message.Text = "Here is the list of the events:"
+	message.Text = "Here is the list of the possible phrases which your can use:"
 	for rows.Next() {
 		if err := rows.Scan(&id, &alias, &question); err != nil {
 			message.Text += fmt.Sprintf("Oops!I tried to prepare the report for you and I failed. Here is the error: ```%s```", err)
 			return message, err
 		}
 
-		message.Text += fmt.Sprintf("\n#%d event: `%s`. Try to ask `%s`", id, alias, question)
+		message.Text += fmt.Sprintf("\n#%d event: `%s`. Try to ask `%s`. Also you could try to ask `%s --help`", id, alias, question, question)
 	}
 
 	return message, nil
