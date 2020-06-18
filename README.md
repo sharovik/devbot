@@ -68,6 +68,8 @@ Please read the [installation documentation](documentation/installation.md)
 
 ## Help triggers
 You can always ask bot to help you, if you don't know what kind of features currently are available or if you need detailed help regarding to the event.
+Please ask bot `help` for more details.
+
 ### Current installed events
 Ask bot `events list` to see the list of available events. This is useful, when you don't know which event what command have.
 ![events-list](documentation/images/events-list.png)
