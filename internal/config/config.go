@@ -26,6 +26,8 @@ type BitBucketConfig struct {
 	ReleaseChannelMessageEnabled bool
 	ReleaseChannel               string
 	CurrentUserUUID              string
+	DefaultWorkspace             string
+	DefaultMainBranch            string
 	RequiredReviewers            []BitBucketReviewer
 }
 
@@ -109,6 +111,12 @@ const (
 	//BitBucketCurrentUserUUID the current BitBucket user UUID the client credentials of which we are using in BITBUCKET_CLIENT_ID and BITBUCKET_CLIENT_SECRET
 	BitBucketCurrentUserUUID = "BITBUCKET_USER_UUID"
 
+	//BitBucketDefaultWorkspace the default workspace which will can be used in the functionality, once you don't have PR link, from where to get this information
+	BitBucketDefaultWorkspace = "BITBUCKET_DEFAULT_WORKSPACE"
+
+	//BitBucketDefaultMainBranch the default main branch which can be used in cases, when you can't get the information from the PR link
+	BitBucketDefaultMainBranch = "BITBUCKET_DEFAULT_MAIN_BRANCH"
+
 	defaultMainChannelAlias       = "general"
 	defaultBotName                = "devbot"
 	defaultAppDictionary          = "slack"
@@ -172,6 +180,8 @@ func Init() Config {
 				ClientSecret:                 os.Getenv(BitBucketClientSecret),
 				ReleaseChannel:               os.Getenv(BitBucketReleaseChannel),
 				CurrentUserUUID:              os.Getenv(BitBucketCurrentUserUUID),
+				DefaultWorkspace:             os.Getenv(BitBucketDefaultWorkspace),
+				DefaultMainBranch:            os.Getenv(BitBucketDefaultMainBranch),
 				ReleaseChannelMessageEnabled: bitBucketReleaseChannelMessageEnabled,
 				RequiredReviewers:            prepareBitBucketReviewers(os.Getenv(BitBucketRequiredReviewers)),
 			},

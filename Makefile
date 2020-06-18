@@ -22,11 +22,11 @@ build-slack-bot-cross-platform:
 build-slack-bot-for-current-system:
 	env CGO_ENABLED=1 go build -o ./bin/slack-bot-current-system ./cmd/slack-bot/main.go
 
-check-code:
+code-check:
 	make lint
 	make tests
 
-clean-style:
+code-clean:
 	make imports
 	make format
 
@@ -57,6 +57,7 @@ install:
 	./scripts/install/run
 
 update:
+	make refresh-events
 	make build-update-script-for-current-system
 	./scripts/update/run
 
@@ -93,19 +94,23 @@ prepare-release:
 	cp -R $(UPDATE_SCRIPT_DIR)/migrations $(PROJECT_BUILD_SCRIPTS_UPDATE_DIR)/migrations
 	cp .env.example $(PROJECT_BUILD_DIR)/.env
 	cp .env.example $(PROJECT_BUILD_DIR)/.env.example
-	cp devbot.sqlite $(PROJECT_BUILD_DIR)/devbot.sqlite
 	make build-project-archive
 
-build-project-for-current-system:
+build:
 	make create-if-not-exists-defined-events
 	make create-if-not-exists-env
+	make refresh-events
 	make build-slack-bot-for-current-system
 	make build-installation-script-for-current-system
 	make build-update-script-for-current-system
 
+refresh-events:
+	./scripts/project-tools/update-events.sh
+
 build-project-cross-platform:
 	make create-if-not-exists-defined-events
 	make create-if-not-exists-env
+	make refresh-events
 	make build-slack-bot-cross-platform
 	make build-installation-script
 	make build-update-script

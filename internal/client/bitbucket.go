@@ -41,6 +41,12 @@ const (
 	//ErrorBranchExists error message for "branch exists error"
 	ErrorBranchExists = "BRANCH_ALREADY_EXISTS"
 
+	//StrategySquash the squash strategy which can be used during the merge
+	StrategySquash = "squash"
+
+	//StrategyMerge the default merge strategy which can be used during the merge
+	StrategyMerge = "merge_commit"
+
 	//ErrorMsgNoAccess error message response of bot, once he got a bad status code from the API
 	ErrorMsgNoAccess = "I received unauthorized response. Looks like I'm not permitted to do any actions to that repository."
 )
@@ -231,7 +237,7 @@ func (b *BitBucketClient) PullRequestInfo(workspace string, repositorySlug strin
 }
 
 //MergePullRequest merge the selected pull-request
-func (b *BitBucketClient) MergePullRequest(workspace string, repositorySlug string, pullRequestID int64, description string) (dto.BitBucketPullRequestInfoResponse, error) {
+func (b *BitBucketClient) MergePullRequest(workspace string, repositorySlug string, pullRequestID int64, description string, strategy string) (dto.BitBucketPullRequestInfoResponse, error) {
 	log.Logger().StartMessage("Merge pull-request")
 	if err := b.beforeRequest(); err != nil {
 		log.Logger().FinishMessage("Merge pull-request")
@@ -239,7 +245,7 @@ func (b *BitBucketClient) MergePullRequest(workspace string, repositorySlug stri
 	}
 
 	formData := map[string]string{
-		"merge_strategy":      "squash",
+		"merge_strategy":      strategy,
 		"message":             description,
 		"close_source_branch": "1",
 	}

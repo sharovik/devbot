@@ -382,11 +382,13 @@ func (d SQLiteDictionary) InstallEvent(eventName string, eventVersion string, qu
 		return err
 	}
 
-	if eventID == 0 {
-		eventID, err = d.InsertEvent(eventName, eventVersion)
-		if err != nil {
-			return err
-		}
+	if eventID != 0 {
+		return nil
+	}
+
+	eventID, err = d.InsertEvent(eventName, eventVersion)
+	if err != nil {
+		return err
 	}
 
 	scenarioID, err := d.InsertScenario(eventName, eventID)

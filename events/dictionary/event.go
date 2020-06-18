@@ -19,6 +19,16 @@ const (
 	//EventVersion the version of the event
 	EventVersion = "1.0.0"
 
+	helpMessage = "Please use the following template:```" + `
+New answer
+Scenario id: SCENARIO_ID_PUT_HERE (optional)
+Question: QUESTION_PUT_HERE (required)
+Question regex: QUESTION_REGEX_PUT_HERE (optional)
+Question regex group: QUESTION_REGEX_GROUP_PUT_HERE (optional)
+Answer: ANSWER_PUT_HERE (required)
+Event alias: EVENT_ALIAS_PUT_HERE (optional, by default it will be used as text message)
+	` + "```"
+
 	//Regex for catching of the information from the received message
 	regexScenarioIDAttribute         = "(?im)((?:scenario id:) (?P<scenario_id>.+))"
 	regexScenarioNameAttribute       = "(?im)((?:scenario name:) (?P<scenario_name>.+))"
@@ -27,6 +37,7 @@ const (
 	regexQuestionRegexGroupAttribute = "(?im)((?:question regex group:) (?P<question_regex_group>.+))"
 	regexAnswerAttribute             = "(?im)((?:answer:) (?P<answer>.+))"
 	regexEventAliasAttribute         = "(?im)((?:event alias:) (?P<event_alias>.+))"
+	defaultEventAlias                = "text"
 )
 
 var (
@@ -52,6 +63,16 @@ var Event = DctnrEvent{
 //Execute method which is called by message processor
 func (e DctnrEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
 	var answerMessage = message
+
+	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(answerMessage.OriginalMessage.Text)
+	if err != nil {
+		log.Logger().Warn().Err(err).Msg("Something went wrong with help message parsing")
+	}
+
+	if isHelpAnswerTriggered {
+		answerMessage.Text = helpMessage
+		return answerMessage, nil
+	}
 
 	if err := parseAttributes(html.UnescapeString(message.OriginalMessage.Text)); err != nil {
 		answerMessage.Text = "Error received during the attributes parsing: " + err.Error()
@@ -174,7 +195,7 @@ func parseAttributes(text string) error {
 	}
 
 	if _eventAlias == "" {
-		return fmt.Errorf("Event alias cannot be empty. ")
+		eventAlias = defaultEventAlias
 	}
 
 	if _scenarioID == "" {

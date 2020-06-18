@@ -26,3 +26,11 @@ func (s Service) InitWebSocketReceiver() error {
 	numberInitWebSocketReceiverCalls++
 	return err
 }
+
+func (s Service) BeforeWSConnectionStart() error {
+	return nil
+}
+
+func (s Service) ProcessMessage(message interface{}) error {
+	return nil
+}

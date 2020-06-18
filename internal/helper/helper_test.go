@@ -34,3 +34,15 @@ func TestFileToBytes(t *testing.T) {
 		assert.Equal(t, []byte(`{"id":1,"name":"John"}`), bytes)
 	})
 }
+
+func TestHelpMessageShouldBeTriggered(t *testing.T) {
+	var text = "this is test"
+	isHelpExists, err := HelpMessageShouldBeTriggered(text)
+	assert.False(t, isHelpExists)
+	assert.NoError(t, err)
+
+	text = "this is test --help"
+	isHelpExists, err = HelpMessageShouldBeTriggered(text)
+	assert.True(t, isHelpExists)
+	assert.NoError(t, err)
+}
