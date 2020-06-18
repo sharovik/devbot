@@ -4,6 +4,7 @@ This feature will help you to improve the skills of your bot. With it you are ab
 ## Table of contents
 - [Good to know](#good-to-know-for-event-setup)
 - [Prerequisites](#prerequisites)
+- [The event diagram](#the-event-diagram)
 - [Event setup](#event-setup)
 - [Example](#example)
 
@@ -13,6 +14,9 @@ This feature will help you to improve the skills of your bot. With it you are ab
 
 ## Prerequisites
 * run `cp defined-events.go.dist defined-events.go` to create the file where you will define your events
+
+## The event diagram
+![base-event-diagram](images/base-event-scheme.png)
 
 ## Event setup
 * create your event directory in `events` directory. Ex: `events/my-brand-new-event`
