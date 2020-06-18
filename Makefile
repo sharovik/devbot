@@ -57,6 +57,7 @@ install:
 	./scripts/install/run
 
 update:
+	make refresh-events
 	make build-update-script-for-current-system
 	./scripts/update/run
 
@@ -93,7 +94,6 @@ prepare-release:
 	cp -R $(UPDATE_SCRIPT_DIR)/migrations $(PROJECT_BUILD_SCRIPTS_UPDATE_DIR)/migrations
 	cp .env.example $(PROJECT_BUILD_DIR)/.env
 	cp .env.example $(PROJECT_BUILD_DIR)/.env.example
-	cp devbot.sqlite $(PROJECT_BUILD_DIR)/devbot.sqlite
 	make build-project-archive
 
 build:
