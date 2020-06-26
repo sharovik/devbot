@@ -1,7 +1,7 @@
 # BitBucket client configuration
 For this you need to do the following steps:
-1. Go to your profile settings in bitbucket.org
-2. Under the **ACCESS MANAGEMENT** section you will find `OAuth`, please go there
+1. Go to your workspace settings in bitbucket.org
+2. Under the **APPS AND FEATURES** section you will find `OAuth`, please go there
 3. In the OAuth page you will find `OAuth consumers`. Please add new consumer with the following checked permissions:
 - Pull requests: Read, Write
 - Repositories: Read, Write
