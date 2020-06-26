@@ -183,7 +183,7 @@ func Init() Config {
 				DefaultWorkspace:             os.Getenv(BitBucketDefaultWorkspace),
 				DefaultMainBranch:            os.Getenv(BitBucketDefaultMainBranch),
 				ReleaseChannelMessageEnabled: bitBucketReleaseChannelMessageEnabled,
-				RequiredReviewers:            prepareBitBucketReviewers(os.Getenv(BitBucketRequiredReviewers)),
+				RequiredReviewers:            PrepareBitBucketReviewers(os.Getenv(BitBucketRequiredReviewers)),
 			},
 			initialised:        true,
 			DatabaseConnection: dbConnection,
@@ -235,7 +235,7 @@ func (c Config) SetToEnv(field string, value string, writeToEnvFile bool) error 
 	return nil
 }
 
-func prepareBitBucketReviewers(reviewers string) []BitBucketReviewer {
+func PrepareBitBucketReviewers(reviewers string) []BitBucketReviewer {
 	entries := strings.Split(reviewers, ",")
 
 	var result []BitBucketReviewer
