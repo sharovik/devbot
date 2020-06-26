@@ -77,7 +77,7 @@ insert into main.questions (id, question, answer, scenario_id, regex_id) values 
 insert into main.questions (id, question, answer, scenario_id, regex_id) values (10, 'Wellcome John', 'Wellcome %s', 10, 8);
 
 insert into main.questions_regex (id, regex, regex_group) values (2, '(?i)(New answer)', '');
-insert into main.questions_regex (id, regex, regex_group) values (4, '(?i)here?', '');
+insert into main.questions_regex (id, regex, regex_group) values (4, '(?i)(here\?)', '');
 insert into main.questions_regex (id, regex, regex_group) values (5, '(?i)Say hello to (?P<name>.+)', 'name');
 insert into main.questions_regex (id, regex, regex_group) values (8, '(?i)Wellcome (?P<name>.+)', 'name');
 
