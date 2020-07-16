@@ -24,7 +24,7 @@ type Service struct {
 var S base.ServiceInterface = Service{}
 
 func (Service) fetchMainChannelID() error {
-	availableChannels, statusCode, err := container.C.SlackClient.GetConversationsList()
+	availableChannels, statusCode, err := container.C.MessageClient.GetConversationsList()
 	if err != nil {
 		log.Logger().AddError(err).Int("status_code", statusCode).Msg("Failed conversations list fetching")
 		return err
@@ -51,7 +51,7 @@ func (Service) fetchMainChannelID() error {
 }
 
 func (Service) fetchBotUserID() error {
-	availableUsers, statusCode, err := container.C.SlackClient.GetUsersList()
+	availableUsers, statusCode, err := container.C.MessageClient.GetUsersList()
 	if err != nil {
 		log.Logger().AddError(err).Int("status_code", statusCode).Msg("Failed conversations list fetching")
 		return err
@@ -252,7 +252,7 @@ func (Service) ProcessMessage(msg interface{}) error {
 
 //wsConnect method for receiving of websocket URL which we will use for our connection
 func (Service) wsConnect() (*websocket.Conn, int, error) {
-	response, statusCode, err := container.C.SlackClient.Get("/rtm.connect")
+	response, statusCode, err := container.C.MessageClient.Get("/rtm.connect")
 	if err != nil {
 		log.Logger().AddError(err).RawJSON("response", response).Int("status_code", statusCode).Msg("Failed send message")
 		return &websocket.Conn{}, statusCode, err

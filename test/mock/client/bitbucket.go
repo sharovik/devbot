@@ -29,6 +29,14 @@ type MockedBitBucketClient struct {
 	RunPipelineError    error
 }
 
+func (b *MockedBitBucketClient) GetBranch(workspace string, repositorySlug string, branchName string) (dto.BitBucketResponseBranchCreate, error) {
+	panic("implement me")
+}
+
+func (b *MockedBitBucketClient) GetAuthToken() (string, error) {
+	panic("implement me")
+}
+
 func (b *MockedBitBucketClient) Init(client client.BaseHTTPClientInterface) {
 
 }

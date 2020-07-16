@@ -16,7 +16,7 @@ import (
 //Main container object
 type Main struct {
 	Config          config.Config
-	SlackClient     client.SlackClientInterface
+	MessageClient   client.MessageClientInterface
 	BibBucketClient client.GitClientInterface
 	Dictionary      database.BaseDatabaseInterface
 	HTTPClient      client.BaseHTTPClientInterface
@@ -62,7 +62,7 @@ func (container Main) Init() Main {
 		Client: &httpClient,
 	}
 
-	container.SlackClient = slackClient
+	container.MessageClient = slackClient
 	if err := container.loadDictionary(); err != nil {
 		panic(err)
 	}
