@@ -58,7 +58,7 @@ func getPreparedAnswer(message *dto.SlackResponseEventMessage) dto.SlackRequestC
 }
 
 func answerToMessage(m dto.SlackRequestChatPostMessage) error {
-	response, statusCode, err := container.C.SlackClient.SendMessage(m)
+	response, statusCode, err := container.C.MessageClient.SendMessage(m)
 	if err != nil {
 		log.Logger().AddError(err).
 			Interface("response", response).

@@ -11,7 +11,7 @@ git clone git@github.com:sharovik/devbot.git
 ```
 2. Go to the project dir and run next command:
 ``` 
-make build-project-for-current-system
+make build
 ```
 3. If there is no errors, you will see the next binary files
 -- `./bin/slack-bot-current-system` - the slack-bot binary file which is ready for run
@@ -30,6 +30,7 @@ For cross-platform build I use `karalabe/xgo-latest`. So please before project b
 cp events/defined-events.go.dist events/defined-events.go
 ```
 This will fix the issue with undefined `events` package, which might happen during project compilation locally.
+
 4. Your project should be in `GOPATH` folder or `GOPATH` should point to the directory where you clone this project
 
 ### Build
