@@ -1,14 +1,14 @@
 # devbot
 [![Gitter](https://badges.gitter.im/devbot-tool/community.svg)](https://gitter.im/devbot-tool/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-This bot can help you to automate multiple processes of development and give the possibility to achieve more goals for less time.
+This is a simple bot-framework which can potentially help you to automate multiple processes of development and give the possibility to achieve more goals for less time. 
 
 ## Table of contents
 - [How to run](#how-to-run)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [How to write custom event](#how-to-write-custom-event)
-- [Available events](#available-events)
+- [Available events](#events-available-for-installation)
 - [How to add new questions into the database](#how-to-add-new-questions-into-the-database)
 - [Project build](#project-build)
 - [Authors](#authors)
@@ -77,6 +77,9 @@ Ask bot `events list` to see the list of available events. This is useful, when 
 ### Help of event
 Each event should have `--help` feature. So, once you don't know how to use selected event, please type `--help` after the event command
 ![usage-help-command](documentation/images/new-answer-help.png)
+
+## Available features
+Please read the [available-features documentation](documentation/available-features.md), to understand what kind of available functionality can be used during development of your custom event.
 
 ## Events available for installation
 - [WordPress theme generation event](https://github.com/sharovik/themer-wordpress-event)
