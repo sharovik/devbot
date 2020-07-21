@@ -85,6 +85,16 @@ func (b *BitBucketClient) beforeRequest() error {
 	return nil
 }
 
+//GetAuthToken method retrieves the access token which can be used for custom needs outside of the internal services
+func (b *BitBucketClient) GetAuthToken() (string, error) {
+	if err := b.beforeRequest(); err != nil {
+		log.Logger().FinishMessage("Can't load access token")
+		return "", err
+	}
+
+	return b.OauthToken, nil
+}
+
 func (b *BitBucketClient) loadAuthToken() error {
 	log.Logger().StartMessage("Loading OAuth token")
 
@@ -205,6 +215,45 @@ func (b *BitBucketClient) CreateBranch(workspace string, repositorySlug string, 
 	}
 
 	log.Logger().FinishMessage("Create branch")
+	return responseObject, nil
+}
+
+//CreateBranch creates the branch in API
+func (b *BitBucketClient) GetBranch(workspace string, repositorySlug string, branchName string) (dto.BitBucketResponseBranchCreate, error) {
+	log.Logger().StartMessage("Get branch")
+	if err := b.beforeRequest(); err != nil {
+		log.Logger().FinishMessage("Get branch")
+		return dto.BitBucketResponseBranchCreate{}, err
+	}
+
+	b.client.SetBaseURL(DefaultBitBucketBaseAPIUrl)
+
+	endpoint := fmt.Sprintf("/repositories/%s/%s/refs/branches/%s", workspace, repositorySlug, branchName)
+	response, statusCode, err := b.client.Get(endpoint, map[string]string{})
+	if err != nil {
+		log.Logger().FinishMessage("Get branch")
+		return dto.BitBucketResponseBranchCreate{}, err
+	}
+
+	if statusCode == http.StatusNotFound {
+		log.Logger().FinishMessage("Get branch")
+		return dto.BitBucketResponseBranchCreate{}, errors.New("This branch doesn't exist. ")
+	}
+
+	if statusCode == http.StatusForbidden {
+		log.Logger().FinishMessage("Get branch")
+		return dto.BitBucketResponseBranchCreate{}, errors.New("Action is not permitted. ")
+	}
+
+	responseObject := dto.BitBucketResponseBranchCreate{}
+	err = json.Unmarshal(response, &responseObject)
+	if err != nil {
+		log.Logger().AddError(err).Msg("Error during response unmarshal")
+		log.Logger().FinishMessage("Get branch")
+		return dto.BitBucketResponseBranchCreate{}, err
+	}
+
+	log.Logger().FinishMessage("Get branch")
 	return responseObject, nil
 }
 
