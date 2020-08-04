@@ -120,10 +120,10 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 	`
 
 	if regexID != 0 {
-		query = query + " where q.regex_id = ? order by e.id limit 1"
+		query = query + " where q.regex_id = ? order by q.id limit 1"
 		err = d.client.QueryRow(query, regexID).Scan(&id, &answer, &question, &questionRegex, &questionRegexGroup, &alias)
 	} else {
-		query = query + " where q.question like ? order by e.id limit 1"
+		query = query + " where q.question like ? order by q.id limit 1"
 		err = d.client.QueryRow(query, questionText+"%").Scan(&id, &answer, &question, &questionRegex, &questionRegexGroup, &alias)
 	}
 
