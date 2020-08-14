@@ -18,6 +18,7 @@ terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 terraform/terraform.tfstate.d/
 terraform/local.container_definition.tf
+terraform/terraform.tfvars
 
 bin
 project-build

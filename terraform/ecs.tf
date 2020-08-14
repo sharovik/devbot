@@ -1,7 +1,7 @@
 provider "aws" {
-  region                  = "us-east-1"
+  region                  = var.region
   shared_credentials_file = "~/.aws/credentials"
-  profile                 = "free-tier"
+  profile                 = var.profile
 }
 
 resource "aws_ecs_task_definition" "main" {
