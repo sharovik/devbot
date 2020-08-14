@@ -13,10 +13,10 @@ WORKDIR ${APP_PATH}
 
 COPY . .
 
-RUN apk add --no-cache bash && apk add --no-cache make && apk add build-base
+RUN apk add --no-cache bash && apk add --no-cache make && apk add build-base && apk add --no-cache git
 
 RUN make vendor
-RUN make build-project-for-current-system
+RUN make build-slack-bot-for-current-system
 RUN make install
 
 # Command to run when starting the container

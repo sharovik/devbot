@@ -47,6 +47,9 @@ tests:
 create-if-not-exists-defined-events:
 	if [ ! -f events/defined-events.go ]; then cp events/defined-events.go.dist events/defined-events.go; fi
 
+tf-container-definition:
+	if [ ! -f terraform/local.container_definition.tf ]; then cp terraform/local.container_definition.tf.dist terraform/local.container_definition.tf; fi
+
 create-if-not-exists-env:
 	if [ ! -f .env ]; then cp .env.example .env; fi
 
