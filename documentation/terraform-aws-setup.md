@@ -8,7 +8,7 @@ If you have AWS account you might need to install the DevBot there.
 - after aws cli were installed and credentials are exported into memory, please run ecr login command
 - install terraform to your system
 ```
-$(aws ecr get-login --no-include-email --region us-east-1)
+aws  ecr get-login-password --region us-east-1
 ```
 
 ## 1 Step - Push your image to AWS ECR repository
