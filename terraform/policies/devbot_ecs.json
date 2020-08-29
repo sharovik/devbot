@@ -1,0 +1,42 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecs:*"
+      ],
+      "Resource": [
+        "${cluster_arn}",
+        "arn:aws:ecs:us-east-1:${account_id}:task/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecs:ListTasks"
+      ],
+      "Condition": {
+        "ArnEquals": {
+          "ecs:cluster": "${cluster_arn}"
+        }
+      },
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iam:PassRole",
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+      ],
+      "Resource": [
+        "arn:aws:iam::${account_id}:role/ecsTaskExecutionRole"
+      ]
+    }
+  ]
+}

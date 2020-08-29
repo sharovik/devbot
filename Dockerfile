@@ -11,12 +11,13 @@ ENV GO111MODULE=on \
 
 WORKDIR ${APP_PATH}
 
+#I am guessing you already already aware of distroless. It is a matter of developer taste, but distroless has been something I have fallen in love with due to security and simplicity.
 COPY . .
 
-RUN apk add --no-cache bash && apk add --no-cache make && apk add build-base
+RUN apk add --no-cache bash && apk add --no-cache make && apk add build-base && apk add --no-cache git
 
 RUN make vendor
-RUN make build-project-for-current-system
+RUN make build-slack-bot-for-current-system
 RUN make install
 
 # Command to run when starting the container

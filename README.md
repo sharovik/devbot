@@ -7,6 +7,7 @@ This is a simple bot-framework which can potentially help you to automate multip
 - [How to run](#how-to-run)
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
+- [Install to AWS](documentation/terraform-aws-setup.md)
 - [How to write custom event](#how-to-write-custom-event)
 - [Available features](#available-features)
 - [Events available for installation](#events-available-for-installation)

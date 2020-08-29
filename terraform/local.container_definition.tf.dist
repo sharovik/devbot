@@ -1,0 +1,87 @@
+locals {
+  container_definition = {
+    essential = true
+    name      = local.application
+    image     = "${local.account_id}.dkr.ecr.us-east-1.amazonaws.com/devbot"
+    environment = [
+      {
+        name  = "APP_ENV"
+        value = "development"
+      },
+      {
+        name  = "SLACK_MAIN_CHANNEL_ALIAS"
+        value = "general"
+      },
+      {
+        name  = "SLACK_BASE_URL"
+        value = "https://slack.com/api"
+      },
+      {
+        name  = "SLACK_OAUTH_TOKEN"
+        value = "TOKEN_HERE"
+      },
+      {
+        name  = "SLACK_BOT_NAME"
+        value = "DevBot"
+      },
+      {
+        name  = "SLACK_USER_ID"
+        value = "__PUT_USER_ID_HERE__"
+      },
+      {
+        name  = "SLACK_MAIN_CHANNEL_ID"
+        value = "__PUT_MAIN_ID_HERE__"
+      },
+      {
+        name  = "DATABASE_CONNECTION"
+        value = "sqlite"
+      },
+      {
+        name  = "DATABASE_HOST"
+        value = "./devbot.sqlite"
+      },
+      {
+        name  = "DATABASE_USERNAME"
+        value = ""
+      },
+      {
+        name  = "DATABASE_PASSWORD"
+        value = ""
+      },
+      {
+        name  = "BITBUCKET_CLIENT_ID"
+        value = ""
+      },
+      {
+        name  = "BITBUCKET_CLIENT_SECRET"
+        value = ""
+      },
+      {
+        name  = "BITBUCKET_REQUIRED_REVIEWERS"
+        value = ""
+      },
+      {
+        name  = "BITBUCKET_USER_UUID"
+        value = ""
+      }
+    ]
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        awslogs-group         = aws_cloudwatch_log_group.main.name
+        awslogs-region        = "us-east-1"
+        awslogs-stream-prefix = "devbot"
+      }
+    }
+    portMappings = [
+      {
+        containerPort = 80
+        hostPort      = 80
+        protocol      = "tcp"
+      }
+    ]
+    cpu = 0
+    mountPoints = []
+    volumesFrom = []
+  }
+}
