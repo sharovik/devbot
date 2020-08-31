@@ -7,6 +7,7 @@ If you have AWS account you might need to install the DevBot there.
 - install the docker to your system
 - after aws cli were installed and credentials are exported into memory, please run ecr login command
 - install terraform to your system
+- make sure you run `make build` before the project build
 ```
 aws  ecr get-login-password --region us-east-1
 ```
