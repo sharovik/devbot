@@ -54,14 +54,14 @@ func TestGetCurrentConversations(t *testing.T) {
 }
 
 func TestAddConversation(t *testing.T) {
-	AddConversation("_test_channel_", dto.BaseChatMessage{
+	AddConversation("_test_channel_", 0, dto.BaseChatMessage{
 		Channel:           "_test_channel_",
 		Text:              "Testing",
 		AsUser:            false,
 		Ts:                time.Time{},
 		DictionaryMessage: dto.DictionaryMessage{},
 		OriginalMessage:   dto.BaseOriginalMessage{},
-	})
+	}, "")
 
 	list := GetCurrentConversations()
 	assert.NotEmpty(t, list)
@@ -71,23 +71,23 @@ func TestAddConversation(t *testing.T) {
 func TestCleanUpExpiredMessages(t *testing.T) {
 	now := time.Now()
 
-	AddConversation("_test_channel_", dto.BaseChatMessage{
+	AddConversation("_test_channel_", 0, dto.BaseChatMessage{
 		Channel:           "_test_channel_",
 		Text:              "Testing",
 		AsUser:            false,
 		Ts:                now.Add(-time.Second * 600),
 		DictionaryMessage: dto.DictionaryMessage{},
 		OriginalMessage:   dto.BaseOriginalMessage{},
-	})
+	}, "")
 
-	AddConversation("_test_channel2_", dto.BaseChatMessage{
+	AddConversation("_test_channel2_", 0, dto.BaseChatMessage{
 		Channel:           "_test_channel2_",
 		Text:              "Testing",
 		AsUser:            false,
 		Ts:                now.Add(time.Second * 600),
 		DictionaryMessage: dto.DictionaryMessage{},
 		OriginalMessage:   dto.BaseOriginalMessage{},
-	})
+	}, "")
 
 	CleanUpExpiredMessages()
 
@@ -96,15 +96,36 @@ func TestCleanUpExpiredMessages(t *testing.T) {
 	assert.NotEmpty(t, CurrentConversations["_test_channel2_"])
 }
 
+func TestGetConversation(t *testing.T) {
+	now := time.Now()
+
+	AddConversation("_test_channel_", 0, dto.BaseChatMessage{
+		Channel:           "_test_channel_",
+		Text:              "Testing",
+		AsUser:            false,
+		Ts:                now.Add(time.Second * 600),
+		DictionaryMessage: dto.DictionaryMessage{},
+		OriginalMessage:   dto.BaseOriginalMessage{},
+	}, "")
+
+	conversation := GetConversation("_test_channel_")
+
+	assert.NotEmpty(t, conversation)
+	assert.Equal(t, "Testing", conversation.LastQuestion.Text)
+
+	conversation = GetConversation("_test_channel2_")
+	assert.Empty(t, conversation)
+}
+
 func TestDeleteConversation(t *testing.T) {
-	AddConversation("_test_channel_", dto.BaseChatMessage{
+	AddConversation("_test_channel_", 0, dto.BaseChatMessage{
 		Channel:           "_test_channel_",
 		Text:              "Testing",
 		AsUser:            false,
 		Ts:                time.Time{},
 		DictionaryMessage: dto.DictionaryMessage{},
 		OriginalMessage:   dto.BaseOriginalMessage{},
-	})
+	}, "")
 
 	assert.NotEmpty(t, CurrentConversations["_test_channel_"])
 	DeleteConversation("_test_channel_")

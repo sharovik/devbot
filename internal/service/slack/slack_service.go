@@ -151,6 +151,8 @@ func (s Service) InitWebSocketReceiver() error {
 		if err := s.ProcessMessage(&message); err != nil {
 			log.Logger().AddError(err).Interface("message_object", &message).Msg("Can't check or answer to the message")
 		}
+
+		base.CleanUpExpiredMessages()
 	}
 }
 
@@ -190,6 +192,14 @@ func (Service) ProcessMessage(msg interface{}) error {
 			log.Logger().Warn().
 				Interface("answer", answerMessage).
 				Msg("Reaction type wasn't found")
+			return nil
+		}
+
+		activeConversation := base.GetConversation(message.Channel)
+		if activeConversation.ScenarioID != int64(0) && !activeConversation.EventReadyToBeExecuted {
+			log.Logger().Info().
+				Interface("conversation", activeConversation).
+				Msg("This conversation isn't finished yet, so event cannot be executed.")
 			return nil
 		}
 

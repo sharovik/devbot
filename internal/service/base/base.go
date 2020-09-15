@@ -15,9 +15,13 @@ type ServiceInterface interface {
 
 //Conversation the conversation object which contains the information about the scenario selected for the conversation and the last question asked by the customer.
 type Conversation struct {
-	ScenarioID int64
-	ScenarioQuestionID int64
-	LastQuestion dto.BaseChatMessage
+	ScenarioID             int64
+	ScenarioQuestionID     int64
+	EventReadyToBeExecuted bool
+	LastQuestion           dto.BaseChatMessage
+	ReactionType           string
+	//This is map for custom variables of conversation, which can be used in custom events
+	Variables []string
 }
 
 //CurrentConversations contains the list of current open conversations, where each key is a channel ID and the value is the last channel question
@@ -29,12 +33,32 @@ func GetCurrentConversations() map[string]Conversation {
 }
 
 //AddConversation method adds the new conversation to the list of open conversations. This will be used for scenarios build
-func AddConversation(channel string, message dto.BaseChatMessage) {
-	CurrentConversations[channel] = Conversation{
+func AddConversation(channel string, questionID int64, message dto.BaseChatMessage, variable string) {
+	updatedConversation := Conversation{
 		ScenarioID:         message.DictionaryMessage.ScenarioID,
-		ScenarioQuestionID: 0,
+		ScenarioQuestionID: questionID,
 		LastQuestion:       message,
+		ReactionType:       message.DictionaryMessage.ReactionType,
 	}
+
+	updatedConversation = AddConversationVariable(updatedConversation, variable)
+
+	CurrentConversations[channel] = updatedConversation
+}
+
+//GetConversation method retrieve the conversation for selected channel
+func GetConversation(channel string) Conversation {
+	if conversation, ok := CurrentConversations[channel]; ok {
+		return conversation
+	}
+
+	return Conversation{}
+}
+
+//MarkAsReadyEventToBeExecuted
+func MarkAsReadyEventToBeExecuted(conversation Conversation) Conversation {
+	conversation.EventReadyToBeExecuted = true
+	return conversation
 }
 
 //CleanUpExpiredMessages removes the messages from the CleanUpExpiredMessages map object, which are expired
@@ -52,4 +76,14 @@ func CleanUpExpiredMessages() {
 //DeleteConversation method delete the conversation for selected channel
 func DeleteConversation(channel string) {
 	delete(CurrentConversations, channel)
+}
+
+//AddConversationVariable method add the variable to the variables of the selected conversation
+func AddConversationVariable(conversation Conversation, variable string) Conversation {
+	if variable != "" {
+		//We save the current list of variables and add the new value there
+		conversation.Variables = append(conversation.Variables, variable)
+	}
+
+	return conversation
 }

@@ -25,6 +25,7 @@ type BaseDatabaseInterface interface {
 	FindRegex(regex string) (int64, error)
 	InsertQuestionRegex(questionRegex string, questionRegexGroup string) (int64, error)
 	GetAllRegex() (map[int64]string, error)
+	GetQuestionsByScenarioID(scenarioID int64) (result []QuestionObject, err error)
 
 	//Should be used for your custom event migrations loading
 	RunMigrations(path string) error
@@ -32,4 +33,12 @@ type BaseDatabaseInterface interface {
 	//Should be used for your custom event installation. This will create a new event row in the database if previously this row wasn't
 	//exists and insert new scenario for specified question and answer
 	InstallEvent(eventName string, eventVersion string, question string, answer string, questionRegex string, questionRegexGroup string) error
+}
+
+//QuestionObject used for proper data mapping from questions table
+type QuestionObject struct {
+	ID int64
+	Question string
+	Answer string
+	ReactionType string
 }

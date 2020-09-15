@@ -284,6 +284,46 @@ func TestSQLiteDictionary_InsertQuestion(t *testing.T) {
 	removeDatabase()
 }
 
+func TestSQLiteDictionary_GetQuestionsByScenarioID(t *testing.T) {
+	initDatabase()
+	cfg.DatabaseHost = testSQLiteDatabasePath
+	dictionary.Cfg = cfg
+
+	err := dictionary.InitSQLiteDatabaseConnection()
+	assert.NoError(t, err)
+	upTestTables(t)
+	insertTestData(t)
+
+	var questionID int64
+	questionID, err = dictionary.InsertQuestion(
+		"Hello bot",
+		"Yo",
+		int64(1),
+		"",
+		"",
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(4), questionID)
+
+	questionID, err = dictionary.InsertQuestion(
+		"",
+		"test",
+		int64(1),
+		"",
+		"",
+	)
+
+	assert.NoError(t, err)
+
+	questions, err := dictionary.GetQuestionsByScenarioID(int64(1))
+	assert.NoError(t, err)
+	assert.Equal(t, 5, len(questions))
+
+	dropTestTables(t)
+	dictionary.CloseDatabaseConnection()
+	removeDatabase()
+}
+
 func TestSQLiteDictionary_GetLastScenarioID(t *testing.T) {
 	initDatabase()
 	cfg.DatabaseHost = testSQLiteDatabasePath
