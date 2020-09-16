@@ -27,18 +27,18 @@ const (
 	regexChannel = `(?im)(?:<#)(\w+)(?:\|)`
 )
 
-//ExmplEvent the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
-type ExmplSnrEvent struct {
+//EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
+type EventStruct struct {
 	EventName string
 }
 
 //Event - object which is ready to use
-var Event = ExmplSnrEvent{
+var Event = EventStruct{
 	EventName: EventName,
 }
 
 //Execute method which is called by message processor
-func (e ExmplSnrEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
+func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
 	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.OriginalMessage.Text)
 	if err != nil {
 		log.Logger().Warn().Err(err).Msg("Something went wrong with help message parsing")
@@ -102,7 +102,7 @@ func extractChannelName(text string) string {
 }
 
 //Install method for installation of event
-func (e ExmplSnrEvent) Install() error {
+func (e EventStruct) Install() error {
 	log.Logger().Debug().
 		Str("event_name", EventName).
 		Str("event_version", EventVersion).
@@ -133,6 +133,6 @@ func (e ExmplSnrEvent) Install() error {
 }
 
 //Update for event update actions
-func (e ExmplSnrEvent) Update() error {
+func (e EventStruct) Update() error {
 	return container.C.Dictionary.RunMigrations(migrationDirectoryPath)
 }

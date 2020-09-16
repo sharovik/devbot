@@ -55,7 +55,7 @@ func GetConversation(channel string) Conversation {
 	return Conversation{}
 }
 
-//MarkAsReadyEventToBeExecuted
+//MarkAsReadyEventToBeExecuted method set the conversation event ready to be executed
 func MarkAsReadyEventToBeExecuted(conversation Conversation) Conversation {
 	conversation.EventReadyToBeExecuted = true
 	return conversation

@@ -98,6 +98,7 @@ func TestCleanUpExpiredMessages(t *testing.T) {
 
 func TestGetConversation(t *testing.T) {
 	now := time.Now()
+	CurrentConversations = map[string]Conversation{}
 
 	AddConversation("_test_channel_", 0, dto.BaseChatMessage{
 		Channel:           "_test_channel_",

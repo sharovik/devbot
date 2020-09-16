@@ -250,6 +250,7 @@ func (c Config) SetToEnv(field string, value string, writeToEnvFile bool) error 
 	return nil
 }
 
+//PrepareBitBucketReviewers method retrieves the list of bitbucket reviewers
 func PrepareBitBucketReviewers(reviewers string) []BitBucketReviewer {
 	entries := strings.Split(reviewers, ",")
 

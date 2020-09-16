@@ -218,7 +218,7 @@ func (b *BitBucketClient) CreateBranch(workspace string, repositorySlug string, 
 	return responseObject, nil
 }
 
-//CreateBranch creates the branch in API
+//GetBranch creates the branch in API
 func (b *BitBucketClient) GetBranch(workspace string, repositorySlug string, branchName string) (dto.BitBucketResponseBranchCreate, error) {
 	log.Logger().StartMessage("Get branch")
 	if err := b.beforeRequest(); err != nil {
