@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/devbot/internal/service/base"
+	"regexp"
 	"time"
 
 	"github.com/sharovik/devbot/internal/log"
@@ -25,6 +26,9 @@ const (
 	migrationDirectoryPath = "./events/examplescenario/migrations"
 
 	regexChannel = `(?im)(?:<#)(\w+)(?:\|)`
+
+	stepMessage = "What I need to write?"
+	stepChannel = "Where I need to post this message? If it's channel, the channel should be public."
 )
 
 //EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
@@ -54,13 +58,26 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 	whatToWrite := ""
 	whereToWrite := ""
 
-	if len(currentConversation.Variables) == 2 {
-		if currentConversation.Variables[0] != "" {
-			whatToWrite = currentConversation.Variables[0]
-		}
+	//If we don't have all variables for our conversation, that means, we didn't received answers for all questions of our scenario
+	if len(currentConversation.Variables) != 2 {
+		message.Text = "Not all variables are defined."
 
-		if currentConversation.Variables[1] != "" {
-			whereToWrite = extractChannelName(currentConversation.Variables[1])
+		//We remove this conversation from the memory, because it is expired. You must do this, otherwise bot will think that this conversation is still opened.
+		base.DeleteConversation(message.Channel)
+		return message, nil
+	}
+
+	if currentConversation.Variables[0] != "" {
+		whatToWrite = removeCurrentUserFromTheMessage(currentConversation.Variables[0])
+	}
+
+	if currentConversation.Variables[1] != "" {
+		whereToWrite = extractChannelName(currentConversation.Variables[1])
+
+		if whereToWrite == "" {
+			message.Text = "Something went wrong and I can't parse properly the channel name."
+			base.DeleteConversation(message.Channel)
+			return message, nil
 		}
 	}
 
@@ -112,8 +129,8 @@ func (e EventStruct) Install() error {
 		EventName,      //We specify the event name which will be used for scenario generation
 		EventVersion,   //This will be set during the event creation
 		"write a message", //Actual question, which system will wait and which will trigger our event
-		"What I need to write?", //Answer which will be used by the bot
-		"", //Optional field. This is regular expression which can be used for question parsing.
+		stepMessage, //Answer which will be used by the bot
+		"(?i)(write a message)", //Optional field. This is regular expression which can be used for question parsing.
 		"", //Optional field. This is a regex group and it can be used for parsing the match group from the regexp result
 	); err != nil {
 		return err
@@ -124,7 +141,7 @@ func (e EventStruct) Install() error {
 		return err
 	}
 
-	_, err = container.C.Dictionary.InsertQuestion("", "Where I need to post this message? If it's channel, the channel should be public.", scenarioID, "", "")
+	_, err = container.C.Dictionary.InsertQuestion("", stepChannel, scenarioID, "", "")
 	if err != nil {
 		return err
 	}
@@ -135,4 +152,12 @@ func (e EventStruct) Install() error {
 //Update for event update actions
 func (e EventStruct) Update() error {
 	return container.C.Dictionary.RunMigrations(migrationDirectoryPath)
+}
+
+func removeCurrentUserFromTheMessage(message string) string {
+	regexString := fmt.Sprintf("(?im)(<@%s>)", container.C.Config.SlackConfig.BotUserID)
+	re := regexp.MustCompile(regexString)
+	result := re.ReplaceAllString(message, ``)
+
+	return result
 }

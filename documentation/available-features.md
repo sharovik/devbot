@@ -7,6 +7,7 @@ Here you can see the list potential useful features for your custom event.
 - [Http client](#http-client)
 - [Available helper functions](#available-helper-functions)
 - [Logger](#logger)
+- [Scenarios](scenarios.md)
 
 ## BitBucket API client
 The client, which can be used for custom requests to the BitBucket API. The good examples of usage of that client are [bb release](https://github.com/sharovik/bitbucket-release-event) and [start pipeline](https://github.com/sharovik/bitbucket-run-pipeline) events. Feel free to check the source of these events.
