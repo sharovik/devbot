@@ -126,7 +126,6 @@ func (b *BitBucketClient) loadAuthToken() error {
 	b.OauthToken = responseObject.AccessToken
 	b.client.SetOauthToken(responseObject.AccessToken)
 
-	log.Logger().Debug().Interface("response", responseObject).Msg("Successfully updated token data")
 	log.Logger().FinishMessage("Loading OAuth token")
 	return nil
 }
