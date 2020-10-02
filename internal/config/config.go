@@ -4,7 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -39,15 +41,16 @@ type BitBucketReviewer struct {
 
 //Config configuration object
 type Config struct {
-	appEnv             string
-	AppDictionary      string
-	SlackConfig        SlackConfig
-	BitBucketConfig    BitBucketConfig
-	initialised        bool
-	DatabaseConnection string
-	DatabaseHost       string
-	DatabaseUsername   string
-	DatabasePassword   string
+	appEnv                  string
+	AppDictionary           string
+	SlackConfig             SlackConfig
+	BitBucketConfig         BitBucketConfig
+	initialised             bool
+	OpenConversationTimeout time.Duration
+	DatabaseConnection      string
+	DatabaseHost            string
+	DatabaseUsername        string
+	DatabasePassword        string
 }
 
 //cfg variable which contains initialised Config
@@ -117,12 +120,16 @@ const (
 	//BitBucketDefaultMainBranch the default main branch which can be used in cases, when you can't get the information from the PR link
 	BitBucketDefaultMainBranch = "BITBUCKET_DEFAULT_MAIN_BRANCH"
 
-	defaultMainChannelAlias       = "general"
-	defaultBotName                = "devbot"
-	defaultAppDictionary          = "slack"
-	defaultDatabaseConnection     = "sqlite"
-	defaultEnvFilePath            = "./.env"
-	defaultEnvFileRootProjectPath = "./../../.env"
+	//OpenConversationTimeout the life time of open conversations
+	OpenConversationTimeout = "OPEN_CONVERSATION_TIMEOUT"
+
+	defaultMainChannelAlias        = "general"
+	defaultBotName                 = "devbot"
+	defaultAppDictionary           = "slack"
+	defaultDatabaseConnection      = "sqlite"
+	defaultEnvFilePath             = "./.env"
+	defaultOpenConversationTimeout = time.Second * 600
+	defaultEnvFileRootProjectPath  = "./../../.env"
 )
 
 //Init initialise configuration for this project
@@ -158,6 +165,13 @@ func Init() Config {
 			dbConnection = os.Getenv(DatabaseConnection)
 		}
 
+		openConversationTimeout := defaultOpenConversationTimeout
+		if os.Getenv(OpenConversationTimeout) != "" {
+			//@todo: add error handling
+			openConversationTimeoutIntVal, _ := strconv.ParseInt(os.Getenv(OpenConversationTimeout), 10, 64)
+			openConversationTimeout = time.Second * time.Duration(openConversationTimeoutIntVal)
+		}
+
 		bitBucketReleaseChannelMessageEnabled := false
 		bitBucketReleaseChannelMessageEnabledValue := os.Getenv(BitBucketReleaseChannelMessageEnabled)
 		if bitBucketReleaseChannelMessageEnabledValue == "true" || bitBucketReleaseChannelMessageEnabledValue == "1" {
@@ -185,11 +199,12 @@ func Init() Config {
 				ReleaseChannelMessageEnabled: bitBucketReleaseChannelMessageEnabled,
 				RequiredReviewers:            PrepareBitBucketReviewers(os.Getenv(BitBucketRequiredReviewers)),
 			},
-			initialised:        true,
-			DatabaseConnection: dbConnection,
-			DatabaseHost:       os.Getenv(DatabaseHost),
-			DatabaseUsername:   os.Getenv(DatabaseUsername),
-			DatabasePassword:   os.Getenv(DatabasePassword),
+			initialised:             true,
+			DatabaseConnection:      dbConnection,
+			DatabaseHost:            os.Getenv(DatabaseHost),
+			DatabaseUsername:        os.Getenv(DatabaseUsername),
+			DatabasePassword:        os.Getenv(DatabasePassword),
+			OpenConversationTimeout: openConversationTimeout,
 		}
 
 		return cfg
@@ -235,6 +250,7 @@ func (c Config) SetToEnv(field string, value string, writeToEnvFile bool) error 
 	return nil
 }
 
+//PrepareBitBucketReviewers method retrieves the list of bitbucket reviewers
 func PrepareBitBucketReviewers(reviewers string) []BitBucketReviewer {
 	entries := strings.Split(reviewers, ",")
 

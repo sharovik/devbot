@@ -5,14 +5,15 @@ This is a simple bot-framework which can potentially help you to automate multip
 
 ## Table of contents
 - [How to run](#how-to-run)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
+- [Prerequisites](documentation/prerequisites.md)
+- [Installation](documentation/installation.md)
 - [Install to AWS](documentation/terraform-aws-setup.md)
-- [How to write custom event](#how-to-write-custom-event)
-- [Available features](#available-features)
+- [How to write custom event](documentation/events.md)
+- [How to build scenario](documentation/scenarios.md)
+- [Available events](documentation/available-features.md)
 - [Events available for installation](#events-available-for-installation)
-- [How to add new questions into the database](#how-to-add-new-questions-into-the-database)
-- [Project build](#project-build)
+- [How to add new questions into the database](documentation/dictionary.md)
+- [Project build](documentation/build.md)
 - [Authors](#authors)
 - [License](#license)
 
@@ -62,12 +63,6 @@ docker run --env-file=.env devbot-dock
 If you did everything right, you should see something like this:
 ![Demo start slack-bot](documentation/images/start-slack-bot.gif)
 
-## Prerequisites
-Please read the [prerequisites documentation](documentation/prerequisites.md)
-
-## Installation
-Please read the [installation documentation](documentation/installation.md)
-
 ## Help triggers
 You can always ask bot to help you, if you don't know what kind of features currently are available or if you need detailed help regarding to the event.
 Please ask bot `help` for more details.
@@ -80,22 +75,10 @@ Ask bot `events list` to see the list of available events. This is useful, when 
 Each event should have `--help` feature. So, once you don't know how to use selected event, please type `--help` after the event command
 ![usage-help-command](documentation/images/new-answer-help.png)
 
-## Available features
-Please read the [available-features documentation](documentation/available-features.md), to understand what kind of available functionality can be used during development of your custom event.
-
 ## Events available for installation
 - [WordPress theme generation event](https://github.com/sharovik/themer-wordpress-event)
 - [BitBucket release event](https://github.com/sharovik/bitbucket-release-event)
 - [BitBucket run pipeline event](https://github.com/sharovik/bitbucket-run-pipeline)
-
-## How to write custom event
-Please read the [events documentation](documentation/events.md). There you can find an example of the custom event.
-
-## How to add new questions into the database
-Please read the [dictionary documentation](documentation/dictionary.md)
-
-## Project build
-Please read the [build documentation](documentation/build.md)
 
 ## Authors
 

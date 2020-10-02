@@ -98,6 +98,7 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 	var (
 		id                 int64
 		answer             string
+		questionID           int64
 		question           string
 		questionRegex      sql.NullString
 		questionRegexGroup sql.NullString
@@ -108,6 +109,7 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 	query := `
 		select
 		s.id,
+		q.id as question_id,
 		q.answer,
 		q.question,
 		qr.regex as question_regex,
@@ -120,11 +122,11 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 	`
 
 	if regexID != 0 {
-		query = query + " where q.regex_id = ? order by e.id limit 1"
-		err = d.client.QueryRow(query, regexID).Scan(&id, &answer, &question, &questionRegex, &questionRegexGroup, &alias)
+		query = query + " where q.regex_id = ? order by q.id limit 1"
+		err = d.client.QueryRow(query, regexID).Scan(&id, &questionID, &answer, &question, &questionRegex, &questionRegexGroup, &alias)
 	} else {
-		query = query + " where q.question like ? order by e.id limit 1"
-		err = d.client.QueryRow(query, questionText+"%").Scan(&id, &answer, &question, &questionRegex, &questionRegexGroup, &alias)
+		query = query + " where q.question like ? order by q.id limit 1"
+		err = d.client.QueryRow(query, questionText+"%").Scan(&id, &questionID, &answer, &question, &questionRegex, &questionRegexGroup, &alias)
 	}
 
 	if err == sql.ErrNoRows {
@@ -136,6 +138,7 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 	return dto.DictionaryMessage{
 		ScenarioID:            id,
 		Answer:                answer,
+		QuestionID:            questionID,
 		Question:              question,
 		Regex:                 questionRegex.String,
 		MainGroupIndexInRegex: questionRegexGroup.String,
@@ -402,4 +405,43 @@ func (d SQLiteDictionary) InstallEvent(eventName string, eventVersion string, qu
 	}
 
 	return nil
+}
+
+//GetQuestionsByScenarioID method retrieves all available questions and answers for selected scenarioID
+func (d SQLiteDictionary) GetQuestionsByScenarioID(scenarioID int64) (result []QuestionObject, err error) {
+	rows, err := d.client.Query(`
+	select q.id, q.question, q.answer, e.alias
+	from questions q
+	join scenarios s on q.scenario_id = s.id
+	join events e on s.event_id = e.id
+	where s.id = $1
+	order by q.id asc
+	`, scenarioID)
+	if err == sql.ErrNoRows {
+		return result, nil
+	} else if err != nil {
+		return result, err
+	}
+
+	var (
+		id    int64
+		question string
+		answer string
+		alias string
+	)
+
+	for rows.Next() {
+		if err := rows.Scan(&id, &question, &answer, &alias); err != nil {
+			return result, err
+		}
+
+		result = append(result, QuestionObject{
+			ID: id,
+			Question: question,
+			Answer: answer,
+			ReactionType: alias,
+		})
+	}
+
+	return result, nil
 }

@@ -10,6 +10,7 @@ events/*
 !events/base
 !events/dictionary
 !events/example
+!events/examplescenario
 !events/eventslist
 devbot.sqlite
 
