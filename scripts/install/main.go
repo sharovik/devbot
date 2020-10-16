@@ -49,6 +49,17 @@ func main() {
 			return
 		}
 
+		eventID, err := container.C.Dictionary.FindEventByAlias(eventAlias)
+		if err != nil {
+			log.Logger().AddError(err).Msg("Failed to check if event exists")
+			return
+		}
+
+		if eventID != int64(0) {
+			log.Logger().Info().Msg("Event is already installed")
+			return
+		}
+
 		if err := events.DefinedEvents.Events[eventAlias].Install(); err != nil {
 			log.Logger().AddError(err).Str("event_name", eventAlias).Msg("Failed to install the event.")
 		}
@@ -59,6 +70,18 @@ func main() {
 
 	log.Logger().Debug().Msg("Trying to install all defined events if it's possible")
 	for eventAlias, event := range events.DefinedEvents.Events {
+
+		eventID, err := container.C.Dictionary.FindEventByAlias(eventAlias)
+		if err != nil {
+			log.Logger().AddError(err).Msg("Failed to check if event exists")
+			return
+		}
+
+		if eventID != int64(0) {
+			log.Logger().Info().Int64("event_id", eventID).Str("event_alias", eventAlias).Msg("Event is already installed")
+			continue
+		}
+
 		if err := event.Install(); err != nil {
 			log.Logger().AddError(err).Str("event_alias", eventAlias).Msg("Failed to install the event.")
 		}
