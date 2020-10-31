@@ -34,11 +34,19 @@ func GetCurrentConversations() map[string]Conversation {
 
 //AddConversation method adds the new conversation to the list of open conversations. This will be used for scenarios build
 func AddConversation(channel string, questionID int64, message dto.BaseChatMessage, variable string) {
-	updatedConversation := Conversation{
-		ScenarioID:         message.DictionaryMessage.ScenarioID,
-		ScenarioQuestionID: questionID,
-		LastQuestion:       message,
-		ReactionType:       message.DictionaryMessage.ReactionType,
+	updatedConversation := Conversation{}
+	if CurrentConversations[channel].ScenarioID != int64(0) {
+		updatedConversation = CurrentConversations[channel]
+		updatedConversation.ScenarioQuestionID = questionID
+		updatedConversation.LastQuestion = message
+		updatedConversation.ReactionType = message.DictionaryMessage.ReactionType
+	} else {
+		updatedConversation = Conversation{
+			ScenarioID:         message.DictionaryMessage.ScenarioID,
+			ScenarioQuestionID: questionID,
+			LastQuestion:       message,
+			ReactionType:       message.DictionaryMessage.ReactionType,
+		}
 	}
 
 	updatedConversation = AddConversationVariable(updatedConversation, variable)
