@@ -22,7 +22,7 @@ const (
 	//The migrations folder, which can be used for event installation or for event update
 	migrationDirectoryPath = "./events/cancelscenario/migrations"
 
-	regexChannel = `(?im)(?:[<#@])(\w+)(?:[>])`
+	regexChannel = `(?im)(?:[<#@]|(?:&lt;))(\w+)(?:[|>]|(?:&gt;))`
 )
 
 //EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
