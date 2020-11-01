@@ -41,6 +41,7 @@ func (e EListEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, e
 	from events e
 	join scenarios s on e.id = s.event_id
 	join questions q on s.id = q.scenario_id
+	where q.question <> ''
 	`)
 	if err != nil {
 		message.Text = fmt.Sprintf("Hmm. I tried to get the list of the available events and I failed. Here is the error: ```%s```", err)
