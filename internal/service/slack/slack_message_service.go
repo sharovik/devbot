@@ -2,6 +2,7 @@ package slack
 
 import (
 	"github.com/sharovik/devbot/internal/database"
+	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/devbot/internal/service/base"
 	"time"
 
@@ -162,8 +163,9 @@ func analyseMessage(message *dto.SlackResponseEventMessage) (dto.SlackRequestCha
 		log.Logger().AddError(err).Msg("Failed to get the list of question by the scenarioID")
 	}
 
+	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.Text)
 	//If the questions amount is more than 1, we need to start the conversation algorithm
-	if len(questions) > 1 {
+	if len(questions) > 1 && !isHelpAnswerTriggered {
 		base.AddConversation(message.Channel, dmAnswer.QuestionID, dto.BaseChatMessage{
 			Channel:           message.Channel,
 			Text:              message.Text,

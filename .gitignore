@@ -12,6 +12,8 @@ events/*
 !events/example
 !events/examplescenario
 !events/eventslist
+!events/cancelscenario
+!events/listopenconversations
 devbot.sqlite
 
 terraform/.terraform
