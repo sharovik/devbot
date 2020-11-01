@@ -25,7 +25,7 @@ const (
 	//The migrations folder, which can be used for event installation or for event update
 	migrationDirectoryPath = "./events/examplescenario/migrations"
 
-	regexChannel = `(?im)(?:[<#@])(\w+)(?:[>])`
+	regexChannel = `(?im)(?:[<#@]|(?:&lt;))(\w+)(?:[|>]|(?:&gt;))`
 
 	stepMessage = "What I need to write?"
 	stepChannel = "Where I need to post this message? If it's channel, the channel should be public."
