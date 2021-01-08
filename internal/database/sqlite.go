@@ -357,25 +357,43 @@ func (d SQLiteDictionary) RunMigrations(pathToFiles string) error {
 			return err
 		}
 
-		var id int64
-		err = db.QueryRow("select id from migration where version = $1", file).Scan(&id)
-		if err == sql.ErrNoRows {
-			_, err := db.Exec(string(migrationData))
-			if err != nil {
-				return err
-			}
+		isMigrationAlreadyExecuted, err := d.IsMigrationAlreadyExecuted(file)
+		if err != nil {
+			return err
+		}
 
-			_, err = db.Exec("insert into migration (version) values ($1)", file)
-			if err != nil {
-				return err
-			}
+		if isMigrationAlreadyExecuted {
+			continue
+		}
 
-		} else if err != nil {
+		_, err = db.Exec(string(migrationData))
+		if err != nil {
+			return err
+		}
+
+		if err := d.MarkMigrationExecuted(file); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+//IsMigrationAlreadyExecuted checks if the migration name was already executed
+func (d SQLiteDictionary) IsMigrationAlreadyExecuted(version string) (executed bool, err error) {
+	var id int64
+	err = d.GetClient().QueryRow("select id from migration where version = $1", version).Scan(&id)
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+
+	return true, err
+}
+
+//MarkMigrationExecuted marks the selected migration version as executed
+func (d SQLiteDictionary) MarkMigrationExecuted(version string) (err error) {
+	_, err = d.GetClient().Exec("insert into migration (version) values ($1)", version)
+	return
 }
 
 //InstallEvent method installs the event(if it wasn't installed before) and creates the scenario for selected event with selected question and answer
