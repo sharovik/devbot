@@ -35,7 +35,7 @@ order by q.id asc
 
 Each scenario must have:
 1. at least 2 questions
-2. connected event with the alias defined(otherwise the custom event will not be triggered)
+2. a connected event with the alias defined(otherwise the custom event will not be triggered)
 3. only first question of scenario should have the filled `question` attribute and all next questions should have that field as empty string
 
 ## Conversations

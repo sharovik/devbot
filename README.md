@@ -10,6 +10,7 @@ This is a free, opensource chatbot framework, based on GoLang. It can help you t
 - [Install to AWS](documentation/terraform-aws-setup.md)
 - [How to write custom event](documentation/events.md)
 - [How to build scenario](documentation/scenarios.md)
+- [Migrations](documentation/migrations.md)
 - [Available events](documentation/available-features.md)
 - [Events available for installation](#events-available-for-installation)
 - [How to add new questions into the database](documentation/dictionary.md)

@@ -20,6 +20,7 @@ type Main struct {
 	BibBucketClient client.GitClientInterface
 	Dictionary      database.BaseDatabaseInterface
 	HTTPClient      client.BaseHTTPClientInterface
+	MigrationService database.MigrationService
 }
 
 //C container variable
@@ -65,6 +66,11 @@ func (container Main) Init() Main {
 	container.MessageClient = slackClient
 	if err := container.loadDictionary(); err != nil {
 		panic(err)
+	}
+
+	container.MigrationService = database.MigrationService{
+		Logger:     *log.Logger(),
+		Dictionary: container.Dictionary,
 	}
 
 	return container

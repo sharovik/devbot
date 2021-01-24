@@ -27,8 +27,10 @@ type BaseDatabaseInterface interface {
 	GetAllRegex() (map[int64]string, error)
 	GetQuestionsByScenarioID(scenarioID int64) (result []QuestionObject, err error)
 
-	//Should be used for your custom event migrations loading
+	//Should be used for custom event migrations loading
 	RunMigrations(path string) error
+	IsMigrationAlreadyExecuted(name string) (bool, error)
+	MarkMigrationExecuted(name string) error
 
 	//Should be used for your custom event installation. This will create a new event row in the database if previously this row wasn't
 	//exists and insert new scenario for specified question and answer
