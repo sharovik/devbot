@@ -2,8 +2,11 @@ package base
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
+	"regexp"
+	"strings"
 	"time"
 )
 
@@ -142,26 +145,32 @@ func generateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error)
 	}, nil
 }
 
-//RunScenario method initialize the scenario for selected step
-//scenarioFirstStepString - it's the answer string of your scenario, by this string we will try to find your scenario data.
-func RunScenario(scenarioFirstStepString string, message dto.BaseChatMessage) error {
-	dmAnswer, err := generateDMAnswerForScenarioStep(scenarioFirstStepString)
-	if err != nil {
-		return err
+//getStopScenarioWords method returns the stop words, which will be used for identification if we need to stop the scenario.
+func getStopScenarioWords() []string {
+	var stopPhrases []string
+
+	for _, text := range []string {
+		"stop!",
+		"stop scenario!",
+	} {
+		modifiedText := fmt.Sprintf("(%s)", text)
+		stopPhrases = append(stopPhrases, modifiedText)
 	}
 
-	AddConversation(message.Channel, dmAnswer.QuestionID, dto.BaseChatMessage{
-		Channel:           message.Channel,
-		Text:              scenarioFirstStepString,
-		AsUser:            false,
-		Ts:                time.Now(),
-		DictionaryMessage: dmAnswer,
-		OriginalMessage:   dto.BaseOriginalMessage{
-			Text:  message.OriginalMessage.Text,
-			User:  message.OriginalMessage.User,
-			Files: message.OriginalMessage.Files,
-		},
-	}, "")
+	return stopPhrases
+}
 
-	return nil
+func IsScenarioStopTriggered(text string) bool {
+	regexStr := fmt.Sprintf("(?i)%s", strings.Join(getStopScenarioWords(), "|"))
+	regex, err := regexp.Compile(regexStr)
+	if err != nil {
+		return false
+	}
+
+	matches := regex.FindStringSubmatch(text)
+	if len(matches) == 0 {
+		return false
+	}
+
+	return true
 }
