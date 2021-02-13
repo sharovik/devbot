@@ -173,7 +173,12 @@ func FindMatches(regex string, subject string) map[string]string {
 
 //HelpMessageShouldBeTriggered method which can be used for help string parsing in the custom events to identifying if need to show help message, or not
 func HelpMessageShouldBeTriggered(text string) (bool, error) {
-	re, err := regexp.Compile("(?i)(--help)")
+	return IsFoundMatches("(?i)(--help)", text)
+}
+
+//IsFoundMatches method checks if there are matches for selected regexp pattern in the received text
+func IsFoundMatches(regexPattern string, text string) (bool, error) {
+	re, err := regexp.Compile(regexPattern)
 	if err != nil {
 		return false, err
 	}
