@@ -157,7 +157,7 @@ func (s Service) InitWebSocketReceiver() error {
 }
 
 //ProcessMessage processes the message from the WS connection
-func (Service) ProcessMessage(msg interface{}) error {
+func (s Service) ProcessMessage(msg interface{}) error {
 	message := msg.(*dto.SlackResponseEventMessage)
 	log.Logger().Debug().
 		Str("type", message.Type).
@@ -181,52 +181,10 @@ func (Service) ProcessMessage(msg interface{}) error {
 			return nil
 		}
 
-		answerMessage := getPreparedAnswer(message)
-
-		if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
-			log.Logger().AddError(err).Msg("Failed to send prepared answers")
+		if err := s.TriggerAnswer(message); err != nil {
+			log.Logger().AddError(err).Msg("Failed trigger the answer")
 			return err
 		}
-
-		if answerMessage.DictionaryMessage.ReactionType == "" || events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType] == nil {
-			log.Logger().Warn().
-				Interface("answer", answerMessage).
-				Msg("Reaction type wasn't found")
-			return nil
-		}
-
-		activeConversation := base.GetConversation(message.Channel)
-		if activeConversation.ScenarioID != int64(0) && !activeConversation.EventReadyToBeExecuted {
-			log.Logger().Info().
-				Interface("conversation", activeConversation).
-				Msg("This conversation isn't finished yet, so event cannot be executed.")
-			return nil
-		}
-
-		go func() {
-			answer, err := events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType].Execute(dto.BaseChatMessage{
-				Channel:           answerMessage.Channel,
-				Text:              answerMessage.Text,
-				AsUser:            answerMessage.AsUser,
-				Ts:                answerMessage.Ts,
-				DictionaryMessage: answerMessage.DictionaryMessage,
-				OriginalMessage: dto.BaseOriginalMessage{
-					Text:  answerMessage.OriginalMessage.Text,
-					User:  answerMessage.OriginalMessage.User,
-					Files: answerMessage.OriginalMessage.Files,
-				},
-			})
-			if err != nil {
-				log.Logger().AddError(err).Msg("Failed to execute the event")
-			}
-
-			if answer.Text != "" {
-				answerMessage.Text = answer.Text
-				if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
-					log.Logger().AddError(err).Msg("Failed to send post-answer for selected event")
-				}
-			}
-		}()
 	default:
 		m, dmAnswer, err := analyseMessage(message)
 		if err != nil {
@@ -256,6 +214,19 @@ func (Service) ProcessMessage(msg interface{}) error {
 		readyToAnswer(m)
 	}
 
+	openConversation := base.GetConversation(message.Channel)
+	if openConversation.ScenarioID != 0 {
+		isChannelMessage, err := IsChannelID(message.Channel)
+		if err != nil {
+			log.Logger().AddError(err).Msg("Error received during channel ID check")
+			return err
+		}
+
+		if isChannelMessage {
+			return s.TriggerAnswer(message)
+		}
+	}
+
 	refreshPreparedMessages()
 	return nil
 }
@@ -280,4 +251,55 @@ func (Service) wsConnect() (*websocket.Conn, int, error) {
 	ws, err := websocket.Dial(dtoResponse.URL, "", "https://api.slack.com/")
 
 	return ws, statusCode, nil
+}
+
+func (Service) TriggerAnswer(message *dto.SlackResponseEventMessage) error {
+	answerMessage := getPreparedAnswer(message)
+
+	if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
+		log.Logger().AddError(err).Msg("Failed to send prepared answers")
+		return err
+	}
+
+	if answerMessage.DictionaryMessage.ReactionType == "" || events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType] == nil {
+		log.Logger().Warn().
+			Interface("answer", answerMessage).
+			Msg("Reaction type wasn't found")
+		return nil
+	}
+
+	activeConversation := base.GetConversation(message.Channel)
+	if activeConversation.ScenarioID != int64(0) && !activeConversation.EventReadyToBeExecuted {
+		log.Logger().Info().
+			Interface("conversation", activeConversation).
+			Msg("This conversation isn't finished yet, so event cannot be executed.")
+		return nil
+	}
+
+	go func() {
+		answer, err := events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType].Execute(dto.BaseChatMessage{
+			Channel:           answerMessage.Channel,
+			Text:              answerMessage.Text,
+			AsUser:            answerMessage.AsUser,
+			Ts:                answerMessage.Ts,
+			DictionaryMessage: answerMessage.DictionaryMessage,
+			OriginalMessage: dto.BaseOriginalMessage{
+				Text:  answerMessage.OriginalMessage.Text,
+				User:  answerMessage.OriginalMessage.User,
+				Files: answerMessage.OriginalMessage.Files,
+			},
+		})
+		if err != nil {
+			log.Logger().AddError(err).Msg("Failed to execute the event")
+		}
+
+		if answer.Text != "" {
+			answerMessage.Text = answer.Text
+			if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
+				log.Logger().AddError(err).Msg("Failed to send post-answer for selected event")
+			}
+		}
+	}()
+
+	return nil
 }

@@ -9,6 +9,12 @@ Imagine user triggered your event, but unfortunately from the message bot cannot
 ### Without tagging of the bot-user
 ![non-demo-tagging](images/scenario-demo-without-tagging.gif)
 
+### How to stop active scenario
+To stop the scenario, please use the following phrases:
+- `stop!`
+- `stop scenario!`
+Once bot receives some of these phrases, he will try to stop the active scenario in the current channel, where the message posted.
+
 ## Database
 Before describing of the code base, let's check the database schema and see how on the database level the scenario looks like.
 First, let's have a look on the database schema

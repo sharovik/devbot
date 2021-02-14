@@ -4,6 +4,7 @@ import (
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/devbot/internal/service/base"
+	"regexp"
 	"time"
 
 	"github.com/sharovik/devbot/internal/container"
@@ -84,7 +85,9 @@ func analyseMessage(message *dto.SlackResponseEventMessage) (dto.SlackRequestCha
 	//Now we need to check if there was already opened conversation for this channel
 	//If so, then we need to get the Answer from this scenario
 	openConversation := base.GetConversation(message.Channel)
-	if openConversation.ScenarioID != 0 {
+
+	IsScenarioStopTriggered := base.IsScenarioStopTriggered(message.Text)
+	if openConversation.ScenarioID != 0 && !IsScenarioStopTriggered {
 		questions, err := container.C.Dictionary.GetQuestionsByScenarioID(openConversation.ScenarioID)
 		//if we don't have an error here, then we can proceed with the questions preparing for scenarios
 		if err != nil {
@@ -152,9 +155,22 @@ func analyseMessage(message *dto.SlackResponseEventMessage) (dto.SlackRequestCha
 		}
 	}
 
-	dmAnswer, err = container.C.Dictionary.FindAnswer(message)
-	if err != nil {
-		return dto.SlackRequestChatPostMessage{}, dto.DictionaryMessage{}, err
+	if IsScenarioStopTriggered {
+		dmAnswer = dto.DictionaryMessage{
+			ScenarioID:            0,
+			Answer:                "Ok, no more questions!",
+			QuestionID:            0,
+			Question:              message.Text,
+			Regex:                 "",
+			MainGroupIndexInRegex: "",
+			ReactionType:          "text",
+		}
+		base.DeleteConversation(message.Channel)
+	} else {
+		dmAnswer, err = container.C.Dictionary.FindAnswer(message)
+		if err != nil {
+			return dto.SlackRequestChatPostMessage{}, dto.DictionaryMessage{}, err
+		}
 	}
 
 	questions, err := container.C.Dictionary.GetQuestionsByScenarioID(dmAnswer.ScenarioID)
@@ -238,6 +254,21 @@ func SendAnswerForReceivedMessage(message dto.SlackRequestChatPostMessage) error
 
 func messageExpired(message dto.SlackRequestChatPostMessage) {
 	delete(messagesReceived, message.Channel)
+}
+
+//IsChannelID method checks the ID of received message and if it is a channel ID, then the TRUE will be returned
+func IsChannelID(ID string) (isChannelMessage bool, err error) {
+	regex, err := regexp.Compile(`(?i)(^C(\w+))`)
+	if err != nil {
+		return
+	}
+
+	matches := regex.FindStringSubmatch(ID)
+	if len(matches) == 0 {
+		return
+	}
+
+	return true, nil
 }
 
 func refreshPreparedMessages() {
