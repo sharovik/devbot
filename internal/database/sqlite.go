@@ -3,6 +3,8 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"github.com/sharovik/orm/clients"
+	cdto "github.com/sharovik/orm/dto"
 	"io/ioutil"
 	"path/filepath"
 
@@ -18,6 +20,7 @@ import (
 //SQLiteDictionary the sqlite dictionary object
 type SQLiteDictionary struct {
 	client *sql.DB
+	newClient clients.BaseClientInterface
 	Cfg    config.Config
 }
 
@@ -38,6 +41,7 @@ func (d *SQLiteDictionary) InitSQLiteDatabaseConnection() error {
 	}
 
 	d.client = db
+	d.newClient = clients.SQLiteClient{Client: db}
 	return nil
 }
 
@@ -306,30 +310,24 @@ func (d SQLiteDictionary) InsertQuestionRegex(questionRegex string, questionRege
 	return regexID, nil
 }
 
-//GetAllRegex method retrieves all available regex from questions_regex
-func (d SQLiteDictionary) GetAllRegex() (map[int64]string, error) {
-	var result = map[int64]string{}
-	rows, err := d.client.Query("select id, regex from questions_regex")
+func (d SQLiteDictionary) GetAllRegex() (res map[int64]string, err error) {
+	rows, err := d.newClient.Execute(new(clients.Query).Select([]interface{}{"id","regex"}).From(&cdto.BaseModel{TableName: "questions_regex"}))
 	if err == sql.ErrNoRows {
-		return map[int64]string{}, nil
+		return res, nil
 	} else if err != nil {
-		return map[int64]string{}, err
+		return res, err
 	}
 
-	var (
-		id    int64
-		regex string
-	)
-
-	for rows.Next() {
-		if err := rows.Scan(&id, &regex); err != nil {
-			return map[int64]string{}, err
-		}
-
-		result[id] = regex
+	res = map[int64]string{}
+	if len(rows.Items()) == 0 {
+		return nil, nil
 	}
 
-	return result, nil
+	for _, item := range rows.Items() {
+		res[item.GetField("id").Value.(int64)] = item.GetField("regex").Value.(string)
+	}
+
+	return res, nil
 }
 
 //RunMigrations method for migrations load from specified path
