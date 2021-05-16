@@ -49,6 +49,11 @@ func isValidMessage(message *dto.SlackResponseEventMessage) bool {
 		return false
 	}
 
+	if isGlobalAlertTriggered(message.Text) {
+		log.Logger().Debug().Msg("The global alert is triggered. Skipping.")
+		return false
+	}
+
 	if message.User == container.C.Config.SlackConfig.BotUserID {
 		log.Logger().Debug().Msg("This message is from our bot user")
 		return false
@@ -59,6 +64,16 @@ func isValidMessage(message *dto.SlackResponseEventMessage) bool {
 
 func getPreparedAnswer(message *dto.SlackResponseEventMessage) dto.SlackRequestChatPostMessage {
 	return messagesReceived[message.Channel]
+}
+
+func isGlobalAlertTriggered(text string) bool {
+	re, err := regexp.Compile(`(?i)(\<\!(here|channel)\>)`)
+	if err != nil {
+		log.Logger().AddError(err).Msg("Failed to parse global alert text part")
+		return false
+	}
+
+	return re.MatchString(text)
 }
 
 func answerToMessage(m dto.SlackRequestChatPostMessage) error {
