@@ -233,7 +233,7 @@ func (s Service) ProcessMessage(msg interface{}) error {
 
 //wsConnect method for receiving of websocket URL which we will use for our connection
 func (Service) wsConnect() (*websocket.Conn, int, error) {
-	response, statusCode, err := container.C.MessageClient.Get("/rtm.connect")
+	response, statusCode, err := container.C.MessageClient.Post("/apps.connections.open", []byte{})
 	if err != nil {
 		log.Logger().AddError(err).RawJSON("response", response).Int("status_code", statusCode).Msg("Failed send message")
 		return &websocket.Conn{}, statusCode, err
@@ -248,7 +248,7 @@ func (Service) wsConnect() (*websocket.Conn, int, error) {
 		return &websocket.Conn{}, statusCode, errors.New(dtoResponse.Error)
 	}
 
-	ws, err := websocket.Dial(dtoResponse.URL, "", "https://api.slack.com/")
+	ws, err := websocket.Dial(dtoResponse.URL, "", "https://slack.com/api")
 
 	return ws, statusCode, nil
 }
