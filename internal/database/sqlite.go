@@ -20,9 +20,9 @@ import (
 
 //SQLiteDictionary the sqlite dictionary object
 type SQLiteDictionary struct {
-	client *sql.DB
+	client    *sql.DB
 	newClient clients.BaseClientInterface
-	Cfg    config.Config
+	Cfg       config.Config
 }
 
 //GetClient method returns the client connection
@@ -133,7 +133,7 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 		query.Where(cquery.Where{
 			First:    "questions.regex_id",
 			Operator: "=",
-			Second:   cquery.Bind{
+			Second: cquery.Bind{
 				Field: "regex_id",
 				Value: regexID,
 			},
@@ -142,9 +142,9 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 		query.Where(cquery.Where{
 			First:    "questions.question",
 			Operator: "LIKE",
-			Second:   cquery.Bind{
+			Second: cquery.Bind{
 				Field: "question",
-				Value: questionText+"%",
+				Value: questionText + "%",
 			},
 		})
 	}
@@ -169,7 +169,7 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 	item := res.Items()[0]
 
 	var (
-		r string
+		r  string
 		rg string
 	)
 
@@ -220,15 +220,15 @@ func (d SQLiteDictionary) InsertScenario(name string, eventID int64) (int64, err
 func (d SQLiteDictionary) FindScenarioByID(scenarioID int64) (int64, error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
-		From(&cdto.BaseModel{TableName:  "scenarios"}).
+		From(&cdto.BaseModel{TableName: "scenarios"}).
 		Where(cquery.Where{
-		First:    "id",
-		Operator: "=",
-		Second:   cquery.Bind{
-			Field: "id",
-			Value: scenarioID,
-		},
-	})
+			First:    "id",
+			Operator: "=",
+			Second: cquery.Bind{
+				Field: "id",
+				Value: scenarioID,
+			},
+		})
 	res, err := d.newClient.Execute(query)
 	if err == sql.ErrNoRows {
 		return 0, nil
@@ -271,13 +271,13 @@ func (d SQLiteDictionary) FindEventByAlias(eventAlias string) (int64, error) {
 		Select([]interface{}{"id"}).
 		From(&cdto.BaseModel{TableName: "events"}).
 		Where(cquery.Where{
-		First:    "alias",
-		Operator: "=",
-		Second:   cquery.Bind{
-			Field: "alias",
-			Value: eventAlias,
-		},
-	})
+			First:    "alias",
+			Operator: "=",
+			Second: cquery.Bind{
+				Field: "alias",
+				Value: eventAlias,
+			},
+		})
 	res, err := d.newClient.Execute(query)
 	if err == sql.ErrNoRows {
 		return 0, nil
@@ -301,7 +301,7 @@ func (d SQLiteDictionary) FindEventBy(eventAlias string, version string) (int64,
 		Where(cquery.Where{
 			First:    "alias",
 			Operator: "=",
-			Second:   cquery.Bind{
+			Second: cquery.Bind{
 				Field: "alias",
 				Value: eventAlias,
 			},
@@ -309,7 +309,7 @@ func (d SQLiteDictionary) FindEventBy(eventAlias string, version string) (int64,
 		Where(cquery.Where{
 			First:    "installed_version",
 			Operator: "=",
-			Second:   cquery.Bind{
+			Second: cquery.Bind{
 				Field: "installed_version",
 				Value: version,
 			},
@@ -414,7 +414,7 @@ func (d SQLiteDictionary) FindRegex(regex string) (int64, error) {
 		Where(cquery.Where{
 			First:    "regex",
 			Operator: "=",
-			Second:   cquery.Bind{
+			Second: cquery.Bind{
 				Field: "regex",
 				Value: regex,
 			},
@@ -458,8 +458,9 @@ func (d SQLiteDictionary) InsertQuestionRegex(questionRegex string, questionRege
 	return res.LastInsertID(), nil
 }
 
+//GetAllRegex method retrieves all available regexs
 func (d SQLiteDictionary) GetAllRegex() (res map[int64]string, err error) {
-	rows, err := d.newClient.Execute(new(clients.Query).Select([]interface{}{"id","regex"}).From(&cdto.BaseModel{TableName: "questions_regex"}))
+	rows, err := d.newClient.Execute(new(clients.Query).Select([]interface{}{"id", "regex"}).From(&cdto.BaseModel{TableName: "questions_regex"}))
 	if err == sql.ErrNoRows {
 		return res, nil
 	} else if err != nil {
@@ -533,7 +534,7 @@ func (d SQLiteDictionary) IsMigrationAlreadyExecuted(version string) (executed b
 		Where(cquery.Where{
 			First:    "version",
 			Operator: "=",
-			Second:   cquery.Bind{
+			Second: cquery.Bind{
 				Field: "version",
 				Value: version,
 			},
@@ -634,9 +635,9 @@ func (d SQLiteDictionary) GetQuestionsByScenarioID(scenarioID int64) (result []Q
 
 	for _, item := range res.Items() {
 		result = append(result, QuestionObject{
-			ID: item.GetField("id").Value.(int64),
-			Question: item.GetField("question").Value.(string),
-			Answer: item.GetField("answer").Value.(string),
+			ID:           item.GetField("id").Value.(int64),
+			Question:     item.GetField("question").Value.(string),
+			Answer:       item.GetField("answer").Value.(string),
 			ReactionType: item.GetField("alias").Value.(string),
 		})
 	}

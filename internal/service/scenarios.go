@@ -13,7 +13,7 @@ func GenerateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error)
 	var (
 		id                 int64
 		answer             string
-		questionID           int64
+		questionID         int64
 		question           string
 		questionRegex      sql.NullString
 		questionRegexGroup sql.NullString
@@ -67,7 +67,7 @@ func RunScenario(answer dto.BaseChatMessage, step string) error {
 		AsUser:            false,
 		Ts:                time.Now(),
 		DictionaryMessage: dmAnswer,
-		OriginalMessage:   dto.BaseOriginalMessage{
+		OriginalMessage: dto.BaseOriginalMessage{
 			Text:  answer.OriginalMessage.Text,
 			User:  answer.OriginalMessage.User,
 			Files: answer.OriginalMessage.Files,

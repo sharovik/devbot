@@ -15,11 +15,11 @@ import (
 
 //Main container object
 type Main struct {
-	Config          config.Config
-	MessageClient   client.MessageClientInterface
-	BibBucketClient client.GitClientInterface
-	Dictionary      database.BaseDatabaseInterface
-	HTTPClient      client.BaseHTTPClientInterface
+	Config           config.Config
+	MessageClient    client.MessageClientInterface
+	BibBucketClient  client.GitClientInterface
+	Dictionary       database.BaseDatabaseInterface
+	HTTPClient       client.BaseHTTPClientInterface
 	MigrationService database.MigrationService
 }
 

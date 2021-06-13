@@ -39,8 +39,8 @@ type BaseDatabaseInterface interface {
 
 //QuestionObject used for proper data mapping from questions table
 type QuestionObject struct {
-	ID int64
-	Question string
-	Answer string
+	ID           int64
+	Question     string
+	Answer       string
 	ReactionType string
 }

@@ -104,7 +104,7 @@ func generateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error)
 	var (
 		id                 int64
 		answer             string
-		questionID           int64
+		questionID         int64
 		question           string
 		questionRegex      sql.NullString
 		questionRegexGroup sql.NullString
@@ -149,7 +149,7 @@ func generateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error)
 func getStopScenarioWords() []string {
 	var stopPhrases []string
 
-	for _, text := range []string {
+	for _, text := range []string{
 		"stop!",
 		"stop scenario!",
 	} {
@@ -160,6 +160,7 @@ func getStopScenarioWords() []string {
 	return stopPhrases
 }
 
+//IsScenarioStopTriggered method checks if there is stop triggered in the text
 func IsScenarioStopTriggered(text string) bool {
 	regexStr := fmt.Sprintf("(?i)%s", strings.Join(getStopScenarioWords(), "|"))
 	regex, err := regexp.Compile(regexStr)
