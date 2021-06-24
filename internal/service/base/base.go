@@ -160,6 +160,7 @@ func getStopScenarioWords() []string {
 	return stopPhrases
 }
 
+//IsScenarioStopTriggered method checks if the scenario stop action was triggered
 func IsScenarioStopTriggered(text string) bool {
 	regexStr := fmt.Sprintf("(?i)%s", strings.Join(getStopScenarioWords(), "|"))
 	regex, err := regexp.Compile(regexStr)
