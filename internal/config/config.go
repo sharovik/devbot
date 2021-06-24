@@ -49,6 +49,7 @@ type Config struct {
 	OpenConversationTimeout time.Duration
 	DatabaseConnection      string
 	DatabaseHost            string
+	DatabaseName            string
 	DatabaseUsername        string
 	DatabasePassword        string
 }
@@ -95,6 +96,9 @@ const (
 
 	//DatabasePassword env variable for database password
 	DatabasePassword = "DATABASE_PASSWORD"
+
+	//DatabaseName env variable for database name
+	DatabaseName = "DATABASE_NAME"
 
 	//BitBucketClientID the client id which is used fo oauth token generation
 	BitBucketClientID = "BITBUCKET_CLIENT_ID"
@@ -204,6 +208,7 @@ func Init() Config {
 			DatabaseHost:            os.Getenv(DatabaseHost),
 			DatabaseUsername:        os.Getenv(DatabaseUsername),
 			DatabasePassword:        os.Getenv(DatabasePassword),
+			DatabaseName:            os.Getenv(DatabaseName),
 			OpenConversationTimeout: openConversationTimeout,
 		}
 

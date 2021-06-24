@@ -11,53 +11,53 @@ import (
 
 	"os"
 
-	//Register the sqlite3 lib
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/sharovik/devbot/internal/helper"
 )
 
-//SQLiteDictionary the sqlite dictionary object
-type SQLiteDictionary struct {
+//MySQLDictionary the sqlite dictionary object
+type MySQLDictionary struct {
 	client    *sql.DB
 	newClient clients.BaseClientInterface
 	Cfg       config.Config
 }
 
 //GetClient method returns the client connection
-func (d *SQLiteDictionary) GetClient() *sql.DB {
+func (d *MySQLDictionary) GetClient() *sql.DB {
 	return d.client
 }
 
 //GetClient method returns the client connection
-func (d *SQLiteDictionary) GetNewClient() clients.BaseClientInterface {
+func (d *MySQLDictionary) GetNewClient() clients.BaseClientInterface {
 	return d.newClient
 }
 
 //InitSQLiteDatabaseConnection initialise the database connection
-func (d *SQLiteDictionary) InitSQLiteDatabaseConnection() error {
+func (d *MySQLDictionary) InitSQLiteDatabaseConnection() error {
 	if _, err := os.Stat(d.Cfg.DatabaseHost); err != nil {
 		return err
 	}
 
-	db, err := sql.Open("sqlite3", d.Cfg.DatabaseHost)
-	if err != nil {
-		return err
-	}
+	var err error
+	d.newClient, err = clients.InitClient(clients.DatabaseConfig{
+		Host:     d.Cfg.DatabaseHost,
+		Database: d.Cfg.DatabaseName,
+		Username: d.Cfg.DatabaseUsername,
+		Password: d.Cfg.DatabasePassword,
+		Type:     clients.DatabaseTypeMySQL,
+	})
 
-	d.client = db
-	d.newClient = clients.SQLiteClient{Client: db}
-	return nil
+	return err
 }
 
 //CloseDatabaseConnection method for database connection close
-func (d *SQLiteDictionary) CloseDatabaseConnection() error {
+func (d *MySQLDictionary) CloseDatabaseConnection() error {
 	return d.newClient.Disconnect()
 }
 
 //FindAnswer used for searching of message in the database
-func (d SQLiteDictionary) FindAnswer(message *dto.SlackResponseEventMessage) (dto.DictionaryMessage, error) {
+func (d MySQLDictionary) FindAnswer(message *dto.SlackResponseEventMessage) (dto.DictionaryMessage, error) {
 	var (
 		dmAnswer dto.DictionaryMessage
 		regexID  int64
@@ -87,7 +87,7 @@ func (d SQLiteDictionary) FindAnswer(message *dto.SlackResponseEventMessage) (dt
 	return dmAnswer, nil
 }
 
-func (d SQLiteDictionary) parsedByAvailableRegex(question string) (int64, error) {
+func (d MySQLDictionary) parsedByAvailableRegex(question string) (int64, error) {
 	availableRegex, err := d.GetAllRegex()
 	if err != nil {
 		return int64(0), err
@@ -104,7 +104,7 @@ func (d SQLiteDictionary) parsedByAvailableRegex(question string) (int64, error)
 }
 
 //answerByQuestionString method retrieves the answer data by selected question string
-func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID int64) (dto.DictionaryMessage, error) {
+func (d MySQLDictionary) answerByQuestionString(questionText string, regexID int64) (dto.DictionaryMessage, error) {
 	query := new(clients.Query).
 		Select([]interface{}{
 			"scenarios.id",
@@ -198,7 +198,7 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 }
 
 //InsertScenario used for scenario creation
-func (d SQLiteDictionary) InsertScenario(name string, eventID int64) (int64, error) {
+func (d MySQLDictionary) InsertScenario(name string, eventID int64) (int64, error) {
 	var model = cdto.BaseModel{
 		TableName: "scenarios",
 		Fields: []interface{}{
@@ -222,7 +222,7 @@ func (d SQLiteDictionary) InsertScenario(name string, eventID int64) (int64, err
 }
 
 //FindScenarioByID search scenario by id
-func (d SQLiteDictionary) FindScenarioByID(scenarioID int64) (int64, error) {
+func (d MySQLDictionary) FindScenarioByID(scenarioID int64) (int64, error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
 		From(&cdto.BaseModel{TableName: "scenarios"}).
@@ -249,7 +249,7 @@ func (d SQLiteDictionary) FindScenarioByID(scenarioID int64) (int64, error) {
 }
 
 //GetLastScenarioID retrieve the last scenario id
-func (d SQLiteDictionary) GetLastScenarioID() (int64, error) {
+func (d MySQLDictionary) GetLastScenarioID() (int64, error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
 		From(&cdto.BaseModel{TableName: "scenarios"}).
@@ -271,7 +271,7 @@ func (d SQLiteDictionary) GetLastScenarioID() (int64, error) {
 }
 
 //FindEventByAlias search event by alias
-func (d SQLiteDictionary) FindEventByAlias(eventAlias string) (int64, error) {
+func (d MySQLDictionary) FindEventByAlias(eventAlias string) (int64, error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
 		From(&cdto.BaseModel{TableName: "events"}).
@@ -299,7 +299,7 @@ func (d SQLiteDictionary) FindEventByAlias(eventAlias string) (int64, error) {
 }
 
 //FindEventBy search event by alias and version
-func (d SQLiteDictionary) FindEventBy(eventAlias string, version string) (int64, error) {
+func (d MySQLDictionary) FindEventBy(eventAlias string, version string) (int64, error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
 		From(&cdto.BaseModel{TableName: "events"}).
@@ -336,7 +336,7 @@ func (d SQLiteDictionary) FindEventBy(eventAlias string, version string) (int64,
 }
 
 //InsertEvent used for event creation
-func (d SQLiteDictionary) InsertEvent(alias string, version string) (int64, error) {
+func (d MySQLDictionary) InsertEvent(alias string, version string) (int64, error) {
 	var model = cdto.BaseModel{
 		TableName: "events",
 		Fields: []interface{}{
@@ -360,7 +360,7 @@ func (d SQLiteDictionary) InsertEvent(alias string, version string) (int64, erro
 }
 
 //InsertQuestion inserts the question into the database
-func (d SQLiteDictionary) InsertQuestion(question string, answer string, scenarioID int64, questionRegex string, questionRegexGroup string) (int64, error) {
+func (d MySQLDictionary) InsertQuestion(question string, answer string, scenarioID int64, questionRegex string, questionRegexGroup string) (int64, error) {
 	var (
 		regexID int64
 		err     error
@@ -412,7 +412,7 @@ func (d SQLiteDictionary) InsertQuestion(question string, answer string, scenari
 }
 
 //FindRegex search regex by regex string
-func (d SQLiteDictionary) FindRegex(regex string) (int64, error) {
+func (d MySQLDictionary) FindRegex(regex string) (int64, error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
 		From(&cdto.BaseModel{TableName: "questions_regex"}).
@@ -440,7 +440,7 @@ func (d SQLiteDictionary) FindRegex(regex string) (int64, error) {
 }
 
 //InsertQuestionRegex method insert the regex and returns the regexId. This regex can be connected to the multiple questions
-func (d SQLiteDictionary) InsertQuestionRegex(questionRegex string, questionRegexGroup string) (int64, error) {
+func (d MySQLDictionary) InsertQuestionRegex(questionRegex string, questionRegexGroup string) (int64, error) {
 	var model = cdto.BaseModel{
 		TableName: "questions_regex",
 		Fields: []interface{}{
@@ -464,7 +464,7 @@ func (d SQLiteDictionary) InsertQuestionRegex(questionRegex string, questionRege
 }
 
 //GetAllRegex method retrieves all available regexs
-func (d SQLiteDictionary) GetAllRegex() (res map[int64]string, err error) {
+func (d MySQLDictionary) GetAllRegex() (res map[int64]string, err error) {
 	rows, err := d.newClient.Execute(new(clients.Query).Select([]interface{}{"id", "regex"}).From(&cdto.BaseModel{TableName: "questions_regex"}))
 	if err == sql.ErrNoRows {
 		return res, nil
@@ -485,7 +485,7 @@ func (d SQLiteDictionary) GetAllRegex() (res map[int64]string, err error) {
 }
 
 //RunMigrations method for migrations load from specified path
-func (d SQLiteDictionary) RunMigrations(pathToFiles string) error {
+func (d MySQLDictionary) RunMigrations(pathToFiles string) error {
 	if _, err := os.Stat(pathToFiles); os.IsNotExist(err) {
 		return nil
 	}
@@ -532,7 +532,7 @@ func (d SQLiteDictionary) RunMigrations(pathToFiles string) error {
 }
 
 //IsMigrationAlreadyExecuted checks if the migration name was already executed
-func (d SQLiteDictionary) IsMigrationAlreadyExecuted(version string) (executed bool, err error) {
+func (d MySQLDictionary) IsMigrationAlreadyExecuted(version string) (executed bool, err error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
 		From(&cdto.BaseModel{TableName: "migration"}).
@@ -559,7 +559,7 @@ func (d SQLiteDictionary) IsMigrationAlreadyExecuted(version string) (executed b
 }
 
 //MarkMigrationExecuted marks the selected migration version as executed
-func (d SQLiteDictionary) MarkMigrationExecuted(version string) (err error) {
+func (d MySQLDictionary) MarkMigrationExecuted(version string) (err error) {
 	var model = cdto.BaseModel{
 		TableName: "migration",
 		Fields: []interface{}{
@@ -575,7 +575,7 @@ func (d SQLiteDictionary) MarkMigrationExecuted(version string) (err error) {
 }
 
 //InstallEvent method installs the event(if it wasn't installed before) and creates the scenario for selected event with selected question and answer
-func (d SQLiteDictionary) InstallEvent(eventName string, eventVersion string, question string, answer string, questionRegex string, questionRegexGroup string) error {
+func (d MySQLDictionary) InstallEvent(eventName string, eventVersion string, question string, answer string, questionRegex string, questionRegexGroup string) error {
 	eventID, err := d.FindEventByAlias(eventName)
 	if err != nil {
 		return err
@@ -604,7 +604,7 @@ func (d SQLiteDictionary) InstallEvent(eventName string, eventVersion string, qu
 }
 
 //GetQuestionsByScenarioID method retrieves all available questions and answers for selected scenarioID
-func (d SQLiteDictionary) GetQuestionsByScenarioID(scenarioID int64) (result []QuestionObject, err error) {
+func (d MySQLDictionary) GetQuestionsByScenarioID(scenarioID int64) (result []QuestionObject, err error) {
 	query := new(clients.Query).
 		Select([]interface{}{
 			"questions.id",

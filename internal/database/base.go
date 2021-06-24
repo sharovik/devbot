@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"github.com/sharovik/orm/clients"
 
 	"github.com/sharovik/devbot/internal/dto"
 )
@@ -13,6 +14,7 @@ const ConnectionSQLite = "sqlite"
 type BaseDatabaseInterface interface {
 	InitSQLiteDatabaseConnection() error
 	GetClient() *sql.DB
+	GetNewClient() clients.BaseClientInterface
 	CloseDatabaseConnection() error
 	FindAnswer(message *dto.SlackResponseEventMessage) (dto.DictionaryMessage, error)
 	InsertQuestion(question string, answer string, scenarioID int64, questionRegex string, questionRegexGroup string) (int64, error)
