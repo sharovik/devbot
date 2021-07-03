@@ -39,6 +39,13 @@ type BitBucketReviewer struct {
 	SlackUID string
 }
 
+//HttpClient the configuration for the http client
+type HttpClient struct {
+	RequestTimeout      int64
+	TLSHandshakeTimeout int64
+	InsecureSkipVerify  bool
+}
+
 //Config configuration object
 type Config struct {
 	appEnv                  string
@@ -51,6 +58,7 @@ type Config struct {
 	DatabaseHost            string
 	DatabaseUsername        string
 	DatabasePassword        string
+	HttpClient              HttpClient
 }
 
 //cfg variable which contains initialised Config
@@ -123,6 +131,10 @@ const (
 	//OpenConversationTimeout the life time of open conversations
 	OpenConversationTimeout = "OPEN_CONVERSATION_TIMEOUT"
 
+	HttpClientRequestTimeout      = "HTTP_CLIENT_REQUEST_TIMEOUT"
+	HttpClientTLSHandshakeTimeout = "HTTP_CLIENT_TLS_HANDSHAKE_TIMEOUT"
+	HttpClientInsecureSkipVerify  = "HTTP_CLIENT_INSECURE_SKIP_VERIFY"
+
 	defaultMainChannelAlias        = "general"
 	defaultBotName                 = "devbot"
 	defaultAppDictionary           = "slack"
@@ -178,6 +190,20 @@ func Init() Config {
 			bitBucketReleaseChannelMessageEnabled = true
 		}
 
+		var requestTimeout, tLSHandshakeTimeout int64
+		if os.Getenv(HttpClientRequestTimeout) != "" {
+			requestTimeout, _ = strconv.ParseInt(os.Getenv(HttpClientRequestTimeout), 10, 64)
+		}
+
+		if os.Getenv(HttpClientTLSHandshakeTimeout) != "" {
+			tLSHandshakeTimeout, _ = strconv.ParseInt(os.Getenv(HttpClientTLSHandshakeTimeout), 10, 64)
+		}
+
+		insecureSkipVerify := false
+		if os.Getenv(HttpClientInsecureSkipVerify) == "true" || os.Getenv(HttpClientInsecureSkipVerify) == "1" {
+			insecureSkipVerify = true
+		}
+
 		cfg = Config{
 			appEnv:        os.Getenv(appEnv),
 			AppDictionary: AppDictionary,
@@ -205,6 +231,11 @@ func Init() Config {
 			DatabaseUsername:        os.Getenv(DatabaseUsername),
 			DatabasePassword:        os.Getenv(DatabasePassword),
 			OpenConversationTimeout: openConversationTimeout,
+			HttpClient: HttpClient{
+				RequestTimeout:      requestTimeout,
+				TLSHandshakeTimeout: tLSHandshakeTimeout,
+				InsecureSkipVerify:  insecureSkipVerify,
+			},
 		}
 
 		return cfg
