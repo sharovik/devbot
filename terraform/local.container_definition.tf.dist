@@ -63,6 +63,18 @@ locals {
       {
         name  = "BITBUCKET_USER_UUID"
         value = ""
+      },
+      {
+        name  = "HTTP_CLIENT_INSECURE_SKIP_VERIFY"
+        value = "0"
+      },
+      {
+        name  = "HTTP_CLIENT_TLS_HANDSHAKE_TIMEOUT"
+        value = "7"
+      },
+      {
+        name  = "HTTP_CLIENT_REQUEST_TIMEOUT"
+        value = "25"
       }
     ]
     logConfiguration = {
