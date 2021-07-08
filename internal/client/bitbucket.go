@@ -305,7 +305,7 @@ func (b *BitBucketClient) MergePullRequest(workspace string, repositorySlug stri
 	}
 
 	b.client.SetBaseURL(DefaultBitBucketBaseAPIUrl)
-	endpoint := fmt.Sprintf("/repositories/%s/%s/pullrequests/%d/merge", workspace, repositorySlug, pullRequestID)
+	endpoint := fmt.Sprintf("/repositories/%s/%s/pullrequests/%d/merge?async=false", workspace, repositorySlug, pullRequestID)
 
 	var dtoResponse = dto.BitBucketPullRequestInfoResponse{}
 	response, statusCode, err := b.client.Post(endpoint, byteString, map[string]string{})
@@ -314,14 +314,30 @@ func (b *BitBucketClient) MergePullRequest(workspace string, repositorySlug stri
 		return dto.BitBucketPullRequestInfoResponse{}, err
 	}
 
+	//In that case the bitbucket accepts our request and the Pull-request will be merged but in async way(even if we specified async=false)
+	if statusCode == http.StatusAccepted {
+		log.Logger().
+			Debug().
+			RawJSON("response", response).
+			Int("status_code", statusCode).
+			Msg("The response with poll link received.")
+		log.Logger().FinishMessage("Merge pull-request")
+		return dtoResponse, nil
+	}
+
 	if err := json.Unmarshal(response, &dtoResponse); err != nil {
+		log.Logger().
+			AddError(err).
+			RawJSON("response", response).
+			Int("status_code", statusCode).
+			Msg("Error during the request unmarshal.")
 		log.Logger().FinishMessage("Merge pull-request")
 		return dto.BitBucketPullRequestInfoResponse{}, err
 	}
 
 	if statusCode == http.StatusBadRequest {
 		log.Logger().FinishMessage("Merge pull-request")
-		return dto.BitBucketPullRequestInfoResponse{}, errors.New(dtoResponse.Error.Message)
+		return dto.BitBucketPullRequestInfoResponse{}, errors.New(fmt.Sprintf("Bitbucket response with the error: %s", dtoResponse.Error.Message))
 	}
 
 	if statusCode == http.StatusUnauthorized {
@@ -334,15 +350,8 @@ func (b *BitBucketClient) MergePullRequest(workspace string, repositorySlug stri
 		return dto.BitBucketPullRequestInfoResponse{}, errors.New("Selected pull-request was not found :( ")
 	}
 
-	var responseObject dto.BitBucketPullRequestInfoResponse
-	err = json.Unmarshal(response, &responseObject)
-	if err != nil {
-		log.Logger().FinishMessage("Merge pull-request")
-		return dto.BitBucketPullRequestInfoResponse{}, err
-	}
-
 	log.Logger().FinishMessage("Merge pull-request")
-	return responseObject, nil
+	return dtoResponse, nil
 }
 
 //ChangePullRequestDestination changes the pull-request destination to selected one
