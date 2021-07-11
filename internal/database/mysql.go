@@ -25,7 +25,6 @@ type MySQLDictionary struct {
 }
 
 //GetClient method returns the client connection
-//@deprecated
 func (d *MySQLDictionary) GetClient() *sql.DB {
 	return d.client
 }

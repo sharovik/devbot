@@ -17,7 +17,6 @@ const (
 //BaseDatabaseInterface interface for base database client
 type BaseDatabaseInterface interface {
 	InitDatabaseConnection() error
-	//@deprecated
 	GetClient() *sql.DB
 	GetNewClient() clients.BaseClientInterface
 	CloseDatabaseConnection() error
