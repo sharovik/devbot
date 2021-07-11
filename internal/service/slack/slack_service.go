@@ -253,7 +253,7 @@ func (Service) wsConnect() (*websocket.Conn, int, error) {
 	return ws, statusCode, nil
 }
 
-//TriggerAnswer triggers the answer for selected message
+//TriggerAnswer triggers an answer for received message
 func (Service) TriggerAnswer(message *dto.SlackResponseEventMessage) error {
 	answerMessage := getPreparedAnswer(message)
 

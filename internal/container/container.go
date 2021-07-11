@@ -33,14 +33,14 @@ func (container Main) Init() Main {
 	_ = log.Init(log.Config(container.Config))
 
 	netTransport := &http.Transport{
-		TLSHandshakeTimeout: 7 * time.Second,
+		TLSHandshakeTimeout: time.Duration(container.Config.HttpClient.TLSHandshakeTimeout) * time.Second,
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: container.Config.HttpClient.InsecureSkipVerify,
 		},
 	}
 
 	httpClient := http.Client{
-		Timeout:   time.Duration(15) * time.Second,
+		Timeout:   time.Duration(container.Config.HttpClient.RequestTimeout) * time.Second,
 		Transport: netTransport,
 	}
 
