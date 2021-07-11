@@ -69,18 +69,18 @@ func (e EventStruct) Install() error {
 		Msg("Triggered event installation")
 
 	return container.C.Dictionary.InstallEvent(
-		EventName,      //We specify the event name which will be used for scenario generation
-		EventVersion,   //This will be set during the event creation
+		EventName,           //We specify the event name which will be used for scenario generation
+		EventVersion,        //This will be set during the event creation
 		"stop conversation", //Actual question, which system will wait and which will trigger our event
 		"Ok, will do it now.",
 		"(?i)(stop conversation)", //Optional field. This is regular expression which can be used for question parsing.
-		"",                 //Optional field. This is a regex group and it can be used for parsing the match group from the regexp result
+		"",                        //Optional field. This is a regex group and it can be used for parsing the match group from the regexp result
 	)
 }
 
 //Update for event update actions
 func (e EventStruct) Update() error {
-	return container.C.Dictionary.RunMigrations(migrationDirectoryPath)
+	return nil
 }
 
 func extractChannelName(text string) string {

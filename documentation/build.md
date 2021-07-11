@@ -4,7 +4,7 @@ In this documentation you can find the information about project build
 ## Build for current system
 In these instructions we assume, that you need to build this project for your current system. For build of the project you need to follow the next steps:
 
-``Watning! The following steps will work for MacOs and Linux systems``
+``Warning! The following steps will work for MacOs and Linux systems``
 1. Clone the latest version of the project to your machine
 ``` 
 git clone git@github.com:sharovik/devbot.git
@@ -13,7 +13,7 @@ git clone git@github.com:sharovik/devbot.git
 ``` 
 make build
 ```
-3. If there is no errors, you will see the next binary files
+3. If there are no errors, you will see the next binary files
 -- `./bin/slack-bot-current-system` - the slack-bot binary file which is ready for run
 -- `./scripts/install/run` - installation script
 -- `./scripts/update/run` - update script

@@ -134,7 +134,7 @@ func analyseMessage(message *dto.SlackResponseEventMessage) (dto.SlackRequestCha
 				openConversation.Variables = append(openConversation.Variables, message.Text)
 				base.CurrentConversations[message.Channel] = openConversation
 
-			//In that case we have the last questionID so that means, we need to use the last question here.
+				//In that case we have the last questionID so that means, we need to use the last question here.
 			} else {
 				dmAnswer = dto.DictionaryMessage{
 					ScenarioID:            openConversation.ScenarioID,
@@ -203,7 +203,7 @@ func analyseMessage(message *dto.SlackResponseEventMessage) (dto.SlackRequestCha
 			AsUser:            false,
 			Ts:                time.Now(),
 			DictionaryMessage: dmAnswer,
-			OriginalMessage:   dto.BaseOriginalMessage{
+			OriginalMessage: dto.BaseOriginalMessage{
 				Text:  message.Text,
 				User:  message.User,
 				Files: message.Files,

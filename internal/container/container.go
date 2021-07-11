@@ -15,11 +15,11 @@ import (
 
 //Main container object
 type Main struct {
-	Config          config.Config
-	MessageClient   client.MessageClientInterface
-	BibBucketClient client.GitClientInterface
-	Dictionary      database.BaseDatabaseInterface
-	HTTPClient      client.BaseHTTPClientInterface
+	Config           config.Config
+	MessageClient    client.MessageClientInterface
+	BibBucketClient  client.GitClientInterface
+	Dictionary       database.BaseDatabaseInterface
+	HTTPClient       client.BaseHTTPClientInterface
 	MigrationService database.MigrationService
 }
 
@@ -90,7 +90,18 @@ func (container *Main) loadDictionary() error {
 			Cfg: container.Config,
 		}
 
-		if err := dictionary.InitSQLiteDatabaseConnection(); err != nil {
+		if err := dictionary.InitDatabaseConnection(); err != nil {
+			return err
+		}
+
+		container.Dictionary = &dictionary
+		return nil
+	case database.ConnectionMySQL:
+		dictionary := database.MySQLDictionary{
+			Cfg: container.Config,
+		}
+
+		if err := dictionary.InitDatabaseConnection(); err != nil {
 			return err
 		}
 

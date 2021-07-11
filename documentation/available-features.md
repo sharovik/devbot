@@ -1,13 +1,15 @@
 # Available internal features
-Here you can see the list potential useful features for your custom event.
+Here you can see the list potential useful features of the framework, which can be useful during your custom event build.
 
 ## Table of contents
 - [BitBucket API client](#bitbucket-api-client)
 - [Slack API client](#slack-api-client)
 - [Http client](#http-client)
+- [Migrations service](migrations.md)
 - [Available helper functions](#available-helper-functions)
 - [Logger](#logger)
 - [Scenarios](scenarios.md)
+- [Database query builder](query-builder.md)
 
 ## BitBucket API client
 The client, which can be used for custom requests to the BitBucket API. The good examples of usage of that client are [bb release](https://github.com/sharovik/bitbucket-release-event) and [start pipeline](https://github.com/sharovik/bitbucket-run-pipeline) events. Feel free to check the source of these events.
@@ -113,7 +115,7 @@ if err != nil {
 }
 ```
 
-Now let's try to make a DELETE request via `Request` method
+Now let's try to make DELETE request via `Request` method
 ``` 
 //... some custom code of your event
 

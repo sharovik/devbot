@@ -1,7 +1,6 @@
 package base
 
 import (
-	"database/sql"
 	"fmt"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
@@ -100,56 +99,11 @@ func AddConversationVariable(conversation Conversation, variable string) Convers
 	return conversation
 }
 
-func generateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error) {
-	var (
-		id                 int64
-		answer             string
-		questionID           int64
-		question           string
-		questionRegex      sql.NullString
-		questionRegexGroup sql.NullString
-		alias              string
-		err                error
-	)
-
-	query := `
-		select
-		s.id,
-		q.id as question_id,
-		q.answer,
-		q.question,
-		qr.regex as question_regex,
-		qr.regex_group as question_regex_group,
-		e.alias
-		from questions q
-		join scenarios s on q.scenario_id = s.id
-		left join questions_regex qr on qr.id = q.regex_id
-		left join events e on s.event_id = e.id
-		where q.answer = ?
-`
-	err = container.C.Dictionary.GetClient().QueryRow(query, step).Scan(&id, &questionID, &answer, &question, &questionRegex, &questionRegexGroup, &alias)
-	if err == sql.ErrNoRows {
-		return dto.DictionaryMessage{}, nil
-	} else if err != nil {
-		return dto.DictionaryMessage{}, err
-	}
-
-	return dto.DictionaryMessage{
-		ScenarioID:            id,
-		Answer:                answer,
-		QuestionID:            questionID,
-		Question:              question,
-		Regex:                 questionRegex.String,
-		MainGroupIndexInRegex: questionRegexGroup.String,
-		ReactionType:          alias,
-	}, nil
-}
-
 //getStopScenarioWords method returns the stop words, which will be used for identification if we need to stop the scenario.
 func getStopScenarioWords() []string {
 	var stopPhrases []string
 
-	for _, text := range []string {
+	for _, text := range []string{
 		"stop!",
 		"stop scenario!",
 	} {

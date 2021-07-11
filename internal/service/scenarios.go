@@ -5,52 +5,101 @@ import (
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/sharovik/devbot/internal/service/base"
+	"github.com/sharovik/orm/clients"
+	cdto "github.com/sharovik/orm/dto"
+	cquery "github.com/sharovik/orm/query"
 	"time"
 )
 
 //GenerateDMAnswerForScenarioStep method generates DM object for selected scenario step
 func GenerateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error) {
-	var (
-		id                 int64
-		answer             string
-		questionID           int64
-		question           string
-		questionRegex      sql.NullString
-		questionRegexGroup sql.NullString
-		alias              string
-		err                error
-	)
+	query := new(clients.Query).
+		Select([]interface{}{
+			"scenarios.id",
+			"questions.id as question_id",
+			"questions.answer",
+			"questions.question",
+			"questions_regex.regex as question_regex",
+			"questions_regex.regex_group as question_regex_group",
+			"events.alias",
+		}).
+		From(&cdto.BaseModel{TableName: "questions"}).
+		Join(cquery.Join{
+			Target: cquery.Reference{
+				Table: "scenarios",
+				Key:   "id",
+			},
+			With: cquery.Reference{
+				Table: "questions",
+				Key:   "scenario_id",
+			},
+			Condition: "=",
+			Type:      cquery.InnerJoinType,
+		}).
+		Join(cquery.Join{
+			Target: cquery.Reference{
+				Table: "questions_regex",
+				Key:   "id",
+			},
+			With: cquery.Reference{
+				Table: "questions",
+				Key:   "regex_id",
+			},
+			Condition: "=",
+			Type:      cquery.LeftJoinType,
+		}).
+		Join(cquery.Join{
+			Target: cquery.Reference{
+				Table: "events",
+				Key:   "id",
+			},
+			With: cquery.Reference{
+				Table: "scenarios",
+				Key:   "event_id",
+			},
+			Condition: "=",
+			Type:      cquery.LeftJoinType,
+		}).Where(cquery.Where{
+		First:    "questions.answer",
+		Operator: "=",
+		Second: cquery.Bind{
+			Field: "answer",
+			Value: step,
+		},
+	})
 
-	query := `
-		select
-		s.id,
-		q.id as question_id,
-		q.answer,
-		q.question,
-		qr.regex as question_regex,
-		qr.regex_group as question_regex_group,
-		e.alias
-		from questions q
-		join scenarios s on q.scenario_id = s.id
-		left join questions_regex qr on qr.id = q.regex_id
-		left join events e on s.event_id = e.id
-		where q.answer = ?
-`
-	err = container.C.Dictionary.GetClient().QueryRow(query, step).Scan(&id, &questionID, &answer, &question, &questionRegex, &questionRegexGroup, &alias)
+	res, err := container.C.Dictionary.GetNewClient().Execute(query)
+
 	if err == sql.ErrNoRows {
 		return dto.DictionaryMessage{}, nil
 	} else if err != nil {
 		return dto.DictionaryMessage{}, err
 	}
 
+	//We take first item and use it as the result
+	item := res.Items()[0]
+
+	var (
+		r  string
+		rg string
+	)
+
+	if item.GetField("question_regex").Value != nil {
+		r = item.GetField("question_regex").Value.(string)
+	}
+
+	if item.GetField("question_regex_group").Value != nil {
+		rg = item.GetField("question_regex_group").Value.(string)
+	}
+
 	return dto.DictionaryMessage{
-		ScenarioID:            id,
-		Answer:                answer,
-		QuestionID:            questionID,
-		Question:              question,
-		Regex:                 questionRegex.String,
-		MainGroupIndexInRegex: questionRegexGroup.String,
-		ReactionType:          alias,
+		ScenarioID:            item.GetField("id").Value.(int64),
+		Answer:                item.GetField("answer").Value.(string),
+		QuestionID:            item.GetField("question_id").Value.(int64),
+		Question:              item.GetField("question").Value.(string),
+		Regex:                 r,
+		MainGroupIndexInRegex: rg,
+		ReactionType:          item.GetField("alias").Value.(string),
 	}, nil
 }
 
@@ -67,7 +116,7 @@ func RunScenario(answer dto.BaseChatMessage, step string) error {
 		AsUser:            false,
 		Ts:                time.Now(),
 		DictionaryMessage: dmAnswer,
-		OriginalMessage:   dto.BaseOriginalMessage{
+		OriginalMessage: dto.BaseOriginalMessage{
 			Text:  answer.OriginalMessage.Text,
 			User:  answer.OriginalMessage.User,
 			Files: answer.OriginalMessage.Files,
