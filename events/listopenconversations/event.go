@@ -90,5 +90,5 @@ func (e EventStruct) Install() error {
 
 //Update for event update actions
 func (e EventStruct) Update() error {
-	return container.C.Dictionary.RunMigrations(migrationDirectoryPath)
+	return nil
 }

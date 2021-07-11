@@ -26,6 +26,7 @@ type SQLiteDictionary struct {
 }
 
 //GetClient method returns the client connection
+//@deprecated
 func (d *SQLiteDictionary) GetClient() *sql.DB {
 	return d.client
 }
@@ -35,8 +36,8 @@ func (d *SQLiteDictionary) GetNewClient() clients.BaseClientInterface {
 	return d.newClient
 }
 
-//InitSQLiteDatabaseConnection initialise the database connection
-func (d *SQLiteDictionary) InitSQLiteDatabaseConnection() error {
+//InitDatabaseConnection initialise the database connection
+func (d *SQLiteDictionary) InitDatabaseConnection() error {
 	if _, err := os.Stat(d.Cfg.DatabaseHost); err != nil {
 		return err
 	}
@@ -187,9 +188,9 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 	}
 
 	return dto.DictionaryMessage{
-		ScenarioID:            item.GetField("id").Value.(int64),
+		ScenarioID:            int64(item.GetField("id").Value.(int)),
 		Answer:                item.GetField("answer").Value.(string),
-		QuestionID:            item.GetField("question_id").Value.(int64),
+		QuestionID:            int64(item.GetField("question_id").Value.(int)),
 		Question:              item.GetField("question").Value.(string),
 		Regex:                 r,
 		MainGroupIndexInRegex: rg,
@@ -267,7 +268,7 @@ func (d SQLiteDictionary) GetLastScenarioID() (int64, error) {
 	}
 
 	item := res.Items()[0]
-	return item.GetField("id").Value.(int64), nil
+	return int64(item.GetField("id").Value.(int)), nil
 }
 
 //FindEventByAlias search event by alias
@@ -295,7 +296,7 @@ func (d SQLiteDictionary) FindEventByAlias(eventAlias string) (int64, error) {
 	}
 
 	item := res.Items()[0]
-	return item.GetField("id").Value.(int64), nil
+	return int64(item.GetField("id").Value.(int)), nil
 }
 
 //FindEventBy search event by alias and version
@@ -332,7 +333,7 @@ func (d SQLiteDictionary) FindEventBy(eventAlias string, version string) (int64,
 	}
 
 	item := res.Items()[0]
-	return item.GetField("id").Value.(int64), nil
+	return int64(item.GetField("id").Value.(int)), nil
 }
 
 //InsertEvent used for event creation
@@ -436,7 +437,7 @@ func (d SQLiteDictionary) FindRegex(regex string) (int64, error) {
 	}
 
 	item := res.Items()[0]
-	return item.GetField("id").Value.(int64), nil
+	return int64(item.GetField("id").Value.(int)), nil
 }
 
 //InsertQuestionRegex method insert the regex and returns the regexId. This regex can be connected to the multiple questions
@@ -478,7 +479,7 @@ func (d SQLiteDictionary) GetAllRegex() (res map[int64]string, err error) {
 	}
 
 	for _, item := range rows.Items() {
-		res[item.GetField("id").Value.(int64)] = item.GetField("regex").Value.(string)
+		res[int64(item.GetField("id").Value.(int))] = item.GetField("regex").Value.(string)
 	}
 
 	return res, nil
@@ -640,7 +641,7 @@ func (d SQLiteDictionary) GetQuestionsByScenarioID(scenarioID int64) (result []Q
 
 	for _, item := range res.Items() {
 		result = append(result, QuestionObject{
-			ID:           item.GetField("id").Value.(int64),
+			ID:           int64(item.GetField("id").Value.(int)),
 			Question:     item.GetField("question").Value.(string),
 			Answer:       item.GetField("answer").Value.(string),
 			ReactionType: item.GetField("alias").Value.(string),

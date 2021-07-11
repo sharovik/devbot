@@ -1,16 +1,11 @@
 # Migrations
 There is a possibility to use migrations functionality in the project. This can help you to update your custom event features, play with the database of the devbot.
-
-1. Using plain sql
-For those who want to execute simple plain sql queries.
-
-2. Using available migration logic
-For those who want to use complex logic in their migrations. Such as variables or loops and etc.
+Currently, there is only one way how to trigger the migrations for your event or for project itself - using the `container.C.MigrationService` service.
 
 ### How to use
-Inside of container there is service.MigrationService injected. So you can use available functionality from that service in your event.
+Inside of container there is service.MigrationService injected. So you can use available functionality from that service in your event by simply calling `container.C.MigrationService.SetMigration(migration)`.
 
-`SetMigration` - method for preparing of your migration for execution. If you didn't set your migration using this method, then your migration will not be executed.
+`SetMigration` - method for scheduling of your migration for execution. As attribute, it receives an object type of `database.BaseMigrationInterface`
 `RunMigrations` - method will run all the migrations which were prepared for execution.
 
-Each migration should implement the `database.BaseMigrationInterface`.
+See the example in `Update` method of `events/eventslist/event.go` event.

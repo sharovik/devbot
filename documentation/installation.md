@@ -17,7 +17,7 @@ start scripts\install\install-windows-{TYPE_OF_SYSTEM}.exe
 ```
 
 ## Update script
-Once you need to update some of the events or the devbot database schema, you need to use this script for proper installation of updates
+Once you need to update some events or the devbot database schema, you need to use this script for proper installation of updates
 Run the script by using next command:
 **For MacOS and Linux**
 ``` 

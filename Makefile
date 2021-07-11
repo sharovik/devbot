@@ -54,9 +54,8 @@ create-if-not-exists-env:
 	if [ ! -f .env ]; then cp .env.example .env; fi
 
 install:
+	make create-missing-files
 	make build-installation-script-for-current-system
-	make create-if-not-exists-defined-events
-	make create-if-not-exists-env
 	./scripts/install/run
 
 update:
@@ -100,20 +99,19 @@ prepare-release:
 	make build-project-archive
 
 build:
-	make create-if-not-exists-defined-events
-	make create-if-not-exists-env
-	make refresh-events
+	make create-missing-files
 	make build-slack-bot-for-current-system
-	make build-installation-script-for-current-system
-	make build-update-script-for-current-system
 
 refresh-events:
 	./scripts/project-tools/update-events.sh
 
-build-project-cross-platform:
+create-missing-files:
 	make create-if-not-exists-defined-events
 	make create-if-not-exists-env
 	make refresh-events
+
+build-project-cross-platform:
+	make create-missing-files
 	make build-slack-bot-cross-platform
 	make build-installation-script
 	make build-update-script

@@ -7,12 +7,17 @@ import (
 	"github.com/sharovik/devbot/internal/dto"
 )
 
-//ConnectionSQLite the sqlite database connection type
-const ConnectionSQLite = "sqlite"
+const (
+	//ConnectionSQLite the sqlite database connection type
+	ConnectionSQLite = "sqlite"
+	//ConnectionMySQL the sqlite database connection type
+	ConnectionMySQL = "mysql"
+)
 
 //BaseDatabaseInterface interface for base database client
 type BaseDatabaseInterface interface {
-	InitSQLiteDatabaseConnection() error
+	InitDatabaseConnection() error
+	//@deprecated
 	GetClient() *sql.DB
 	GetNewClient() clients.BaseClientInterface
 	CloseDatabaseConnection() error
