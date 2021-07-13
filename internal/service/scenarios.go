@@ -95,7 +95,7 @@ func GenerateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error)
 	return dto.DictionaryMessage{
 		ScenarioID:            int64(item.GetField("id").Value.(int)),
 		Answer:                item.GetField("answer").Value.(string),
-		QuestionID:            int64(item.GetField("question_id").Value.(int),
+		QuestionID:            int64(item.GetField("question_id").Value.(int)),
 		Question:              item.GetField("question").Value.(string),
 		Regex:                 r,
 		MainGroupIndexInRegex: rg,
