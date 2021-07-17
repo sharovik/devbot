@@ -24,7 +24,7 @@ var (
 
 func init() {
 	cfg = config.Init()
-	_ = log.Init(log.Config{})
+	_ = log.Init(cfg.LogConfig)
 }
 
 func main() {
