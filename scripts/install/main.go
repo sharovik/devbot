@@ -23,7 +23,8 @@ var (
 )
 
 func init() {
-	_ = log.Init(cfg)
+	cfg = config.Init()
+	_ = log.Init(log.Config{})
 }
 
 func main() {
@@ -49,9 +50,6 @@ func run() error {
 		log.Logger().AddError(err).Msg("Failed check the .env file step")
 		return err
 	}
-
-	cfg = config.Init()
-	_ = log.Init(log.Config(cfg))
 
 	if err := checkIfDatabaseExists(); err != nil {
 		log.Logger().AddError(err).Msg("Database check error")
