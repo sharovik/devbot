@@ -59,7 +59,6 @@ install:
 	./scripts/install/run
 
 update:
-	make refresh-events
 	make build-update-script-for-current-system
 	./scripts/update/run
 
@@ -99,7 +98,8 @@ prepare-release:
 	make build-project-archive
 
 build:
-	make create-missing-files
+	make install
+	make update
 	make build-slack-bot-for-current-system
 
 refresh-events:
@@ -108,7 +108,6 @@ refresh-events:
 create-missing-files:
 	make create-if-not-exists-defined-events
 	make create-if-not-exists-env
-	make refresh-events
 
 build-project-cross-platform:
 	make create-missing-files

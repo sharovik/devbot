@@ -19,9 +19,6 @@ const (
 
 	helpMessage = "Write me ```stop conversation #channel-name|@username``` and I will stop any conversation which is started for it."
 
-	//The migrations folder, which can be used for event installation or for event update
-	migrationDirectoryPath = "./events/cancelscenario/migrations"
-
 	regexChannel = `(?im)(?:[<#@]|(?:&lt;))(\w+)(?:[|>]|(?:&gt;))`
 )
 

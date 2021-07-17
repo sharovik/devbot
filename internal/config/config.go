@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"fmt"
+	"github.com/sharovik/devbot/internal/log"
 	"os"
 	"strconv"
 	"strings"
@@ -60,6 +61,7 @@ type Config struct {
 	DatabaseUsername        string
 	DatabasePassword        string
 	HttpClient              HttpClient
+	LogConfig               log.Config
 }
 
 //cfg variable which contains initialised Config
@@ -138,6 +140,12 @@ const (
 	HttpClientRequestTimeout      = "HTTP_CLIENT_REQUEST_TIMEOUT"
 	HttpClientTLSHandshakeTimeout = "HTTP_CLIENT_TLS_HANDSHAKE_TIMEOUT"
 	HttpClientInsecureSkipVerify  = "HTTP_CLIENT_INSECURE_SKIP_VERIFY"
+
+	LogOutput            = "LOG_OUTPUT"
+	LogLevel             = "LOG_LEVEL"
+	LogFieldContext      = "LOG_FIELD_CONTEXT"
+	LogFieldLevelName    = "LOG_FIELD_LEVEL_NAME"
+	LogFieldErrorMessage = "LOG_FIELD_ERROR_MESSAGE"
 
 	defaultMainChannelAlias        = "general"
 	defaultBotName                 = "devbot"
@@ -241,12 +249,39 @@ func Init() Config {
 				TLSHandshakeTimeout: tLSHandshakeTimeout,
 				InsecureSkipVerify:  insecureSkipVerify,
 			},
+			LogConfig: initLogConfig(),
 		}
 
 		return cfg
 	}
 
 	return cfg
+}
+
+func initLogConfig() log.Config {
+	fieldContext := log.FieldContext
+	if "" != os.Getenv(LogFieldContext) {
+		fieldContext = os.Getenv(LogFieldContext)
+	}
+
+	fieldLevelName := log.FieldLevelName
+	if "" != os.Getenv(LogFieldLevelName) {
+		fieldLevelName = os.Getenv(LogFieldLevelName)
+	}
+
+	fieldErrorMessage := log.FieldErrorMessage
+	if "" != os.Getenv(LogFieldErrorMessage) {
+		fieldErrorMessage = os.Getenv(LogFieldErrorMessage)
+	}
+
+	return log.Config{
+		Env:               os.Getenv(appEnv),
+		Level:             os.Getenv(LogLevel),
+		Output:            os.Getenv(LogOutput),
+		FieldContext:      fieldContext,
+		FieldLevelName:    fieldLevelName,
+		FieldErrorMessage: fieldErrorMessage,
+	}
 }
 
 //IsInitialised method which retrieves current status of object

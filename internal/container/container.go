@@ -30,7 +30,7 @@ var C Main
 func (container Main) Init() Main {
 	container.Config = config.Init()
 
-	_ = log.Init(log.Config(container.Config))
+	_ = log.Init(container.Config.LogConfig)
 
 	netTransport := &http.Transport{
 		TLSHandshakeTimeout: time.Duration(container.Config.HttpClient.TLSHandshakeTimeout) * time.Second,

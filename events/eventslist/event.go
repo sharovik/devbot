@@ -19,9 +19,6 @@ const (
 
 	//EventVersion the version of the event
 	EventVersion = "1.0.1"
-
-	//The migrations folder, which can be used for event installation or for event update
-	migrationDirectoryPath = "./events/eventslist/migrations"
 )
 
 //EListEvent the struct for the event object. It will be used for initialisation of the event in defined-events.go file.

@@ -13,12 +13,18 @@ import (
 var loggerInstance LoggerInstance
 
 // Config configuration required by Logger
-type Config interface {
-	GetAppEnv() string
+type Config struct {
+	Env               string
+	Output            string
+	Level             string
+	FieldContext      string
+	FieldLevelName    string
+	FieldErrorMessage string
 }
 
 // LoggerInstance shared state
 type LoggerInstance struct {
+	config      Config
 	env         string
 	context     map[string]interface{}
 	initialized bool
@@ -30,14 +36,61 @@ const (
 	FieldLevelName    = "level_name"
 	FieldErrorMessage = "error_message"
 
-	appEnvDevelopment = "development"
-	appEnvTesting     = "testing"
+	appEnvTesting = "testing"
+
+	Dbg   = "debug"
+	Inf   = "info"
+	Err   = "error"
+	Warn  = "warn"
+	Fatal = "fatal"
+	Panic = "panic"
+
+	OutputConsole = "console"
+	OutputJson    = "json"
 )
+
+func (l *LoggerInstance) setLogLevel() {
+	switch l.config.Level {
+	case Dbg:
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		break
+	case Inf:
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		break
+	case Err:
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+		break
+	case Warn:
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+		break
+	case Fatal:
+		zerolog.SetGlobalLevel(zerolog.FatalLevel)
+		break
+	case Panic:
+		zerolog.SetGlobalLevel(zerolog.PanicLevel)
+		break
+	default:
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		break
+	}
+}
+
+func (l *LoggerInstance) getOutput() zerolog.Context {
+	switch l.config.Output {
+	case OutputConsole:
+		return log.Output(zerolog.NewConsoleWriter()).With()
+	case OutputJson:
+		return log.With()
+	}
+
+	return log.With()
+}
 
 // Init initializes the logger (required before use)
 func Init(config Config) error {
 	loggerInstance = LoggerInstance{
-		env:         config.GetAppEnv(),
+		config:      config,
+		env:         config.Env,
 		context:     make(map[string]interface{}),
 		initialized: true,
 	}
@@ -94,25 +147,25 @@ func (l *LoggerInstance) AddError(err error) *zerolog.Event {
 
 //DefaultContext method which returns Logger with default context
 func (l *LoggerInstance) DefaultContext() *zerolog.Logger {
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	l.setLogLevel()
 	var context = zerolog.Context{}
-	if l.env == appEnvTesting {
+	switch l.config.Env {
+	case appEnvTesting:
+		//For testing environment we need to disable the logs
 		context = log.Output(ioutil.Discard).With()
-	} else if l.env == appEnvDevelopment {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-		context = log.Output(zerolog.NewConsoleWriter()).With()
-	} else {
-		context = log.With()
+		break
+	default:
+		context = l.getOutput()
 	}
 
 	zerolog.TimestampFieldName = "@timestamp"
-	zerolog.LevelFieldName = FieldLevelName
-	zerolog.ErrorFieldName = FieldErrorMessage
+	zerolog.LevelFieldName = l.config.FieldLevelName
+	zerolog.ErrorFieldName = l.config.FieldErrorMessage
 	zerolog.TimeFieldFormat = "2006-01-02T15:04:05.000000"
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 
 	logger := context.
-		Interface(FieldContext, l.context).
+		Interface(l.config.FieldContext, l.context).
 		Logger()
 
 	return &logger
