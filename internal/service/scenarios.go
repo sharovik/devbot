@@ -76,6 +76,10 @@ func GenerateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error)
 		return dto.DictionaryMessage{}, err
 	}
 
+	if len(res.Items()) == 0 {
+		return dto.DictionaryMessage{}, nil
+	}
+
 	//We take first item and use it as the result
 	item := res.Items()[0]
 
