@@ -24,7 +24,7 @@ func TestGetCurrentConversations(t *testing.T) {
 	CurrentConversations["_test_channel_"] = Conversation{
 		ScenarioID:         0,
 		ScenarioQuestionID: 0,
-		LastQuestion:       dto.BaseChatMessage{
+		LastQuestion: dto.BaseChatMessage{
 			Channel:           "_test_channel_",
 			Text:              "Testing",
 			AsUser:            false,
@@ -37,7 +37,7 @@ func TestGetCurrentConversations(t *testing.T) {
 	CurrentConversations["_test_channel2_"] = Conversation{
 		ScenarioID:         0,
 		ScenarioQuestionID: 0,
-		LastQuestion:       dto.BaseChatMessage{
+		LastQuestion: dto.BaseChatMessage{
 			Channel:           "_test_channel2_",
 			Text:              "Testing",
 			AsUser:            false,

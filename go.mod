@@ -9,6 +9,8 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.2+incompatible
 	github.com/pkg/errors v0.8.1
 	github.com/rs/zerolog v1.14.3
-	github.com/stretchr/testify v1.4.0
+	github.com/sharovik/orm v1.0.9
+	github.com/stretchr/testify v1.7.0
 	golang.org/x/net v0.0.0-20191116160921-f9c825593386
+	gopkg.in/yaml.v2 v2.2.2 // indirect
 )

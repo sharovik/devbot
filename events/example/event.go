@@ -19,9 +19,6 @@ const (
 	EventVersion = "1.0.1"
 
 	helpMessage = "Ask me `who are you?` and you will see the answer."
-
-	//The migrations folder, which can be used for event installation or for event update
-	migrationDirectoryPath = "./events/example/migrations"
 )
 
 //ExmplEvent the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
@@ -71,5 +68,5 @@ func (e ExmplEvent) Install() error {
 
 //Update for event update actions
 func (e ExmplEvent) Update() error {
-	return container.C.Dictionary.RunMigrations(migrationDirectoryPath)
+	return nil
 }

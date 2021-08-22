@@ -15,11 +15,11 @@ import (
 
 //Main container object
 type Main struct {
-	Config          config.Config
-	MessageClient   client.MessageClientInterface
-	BibBucketClient client.GitClientInterface
-	Dictionary      database.BaseDatabaseInterface
-	HTTPClient      client.BaseHTTPClientInterface
+	Config           config.Config
+	MessageClient    client.MessageClientInterface
+	BibBucketClient  client.GitClientInterface
+	Dictionary       database.BaseDatabaseInterface
+	HTTPClient       client.BaseHTTPClientInterface
 	MigrationService database.MigrationService
 }
 
@@ -30,17 +30,17 @@ var C Main
 func (container Main) Init() Main {
 	container.Config = config.Init()
 
-	_ = log.Init(log.Config(container.Config))
+	_ = log.Init(container.Config.LogConfig)
 
 	netTransport := &http.Transport{
-		TLSHandshakeTimeout: 7 * time.Second,
+		TLSHandshakeTimeout: time.Duration(container.Config.HttpClient.TLSHandshakeTimeout) * time.Second,
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: container.Config.HttpClient.InsecureSkipVerify,
 		},
 	}
 
 	httpClient := http.Client{
-		Timeout:   time.Duration(15) * time.Second,
+		Timeout:   time.Duration(container.Config.HttpClient.RequestTimeout) * time.Second,
 		Transport: netTransport,
 	}
 
@@ -90,7 +90,18 @@ func (container *Main) loadDictionary() error {
 			Cfg: container.Config,
 		}
 
-		if err := dictionary.InitSQLiteDatabaseConnection(); err != nil {
+		if err := dictionary.InitDatabaseConnection(); err != nil {
+			return err
+		}
+
+		container.Dictionary = &dictionary
+		return nil
+	case database.ConnectionMySQL:
+		dictionary := database.MySQLDictionary{
+			Cfg: container.Config,
+		}
+
+		if err := dictionary.InitDatabaseConnection(); err != nil {
 			return err
 		}
 

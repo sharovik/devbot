@@ -2,17 +2,23 @@ package database
 
 import (
 	"database/sql"
+	"github.com/sharovik/orm/clients"
 
 	"github.com/sharovik/devbot/internal/dto"
 )
 
-//ConnectionSQLite the sqlite database connection type
-const ConnectionSQLite = "sqlite"
+const (
+	//ConnectionSQLite the sqlite database connection type
+	ConnectionSQLite = "sqlite"
+	//ConnectionMySQL the sqlite database connection type
+	ConnectionMySQL = "mysql"
+)
 
 //BaseDatabaseInterface interface for base database client
 type BaseDatabaseInterface interface {
-	InitSQLiteDatabaseConnection() error
+	InitDatabaseConnection() error
 	GetClient() *sql.DB
+	GetNewClient() clients.BaseClientInterface
 	CloseDatabaseConnection() error
 	FindAnswer(message *dto.SlackResponseEventMessage) (dto.DictionaryMessage, error)
 	InsertQuestion(question string, answer string, scenarioID int64, questionRegex string, questionRegexGroup string) (int64, error)
@@ -39,8 +45,8 @@ type BaseDatabaseInterface interface {
 
 //QuestionObject used for proper data mapping from questions table
 type QuestionObject struct {
-	ID int64
-	Question string
-	Answer string
+	ID           int64
+	Question     string
+	Answer       string
 	ReactionType string
 }

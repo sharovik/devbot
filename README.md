@@ -1,7 +1,7 @@
 # devbot
 [![Gitter](https://badges.gitter.im/devbot-tool/community.svg)](https://gitter.im/devbot-tool/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-This is a free, opensource chatbot framework, based on GoLang. It can help you to write a custom chatbot, which can help you to automate some of your routine processes.
+This is a free, opensource chat-bot framework, based on GoLang. Using this framework you can se tup a custom bot, which can execute the commands you need.
 
 ## Table of contents
 - [How to run](#how-to-run)
@@ -22,9 +22,10 @@ This is a free, opensource chatbot framework, based on GoLang. It can help you t
 
 ### Run from pre-compiled binary files
 This is the fastest way of the project setup.
-1. [Download latest version](https://github.com/sharovik/devbot/releases/latest) of project archive
-2. Unpack it somewhere in your machine
-3. Run the bot by using next command:
+1. [Clone the latest version](https://github.com/sharovik/devbot/releases/latest)
+2. Go to project directory
+3. Run `make build` - to build chatbot binary for your system
+4. Start the bot:
 **For MacOS and Linux**
 ``` 
 ./bin/slack-bot-{YOUR_SYSTEM}
@@ -34,10 +35,9 @@ For windows
 start bin\slack-bot-windows-{TYPE_OF_SYSTEM}.exe
 ```
 
-### Run after project build
-Before run, please make sure you follow build instructions, which [you can find here](documentation/build.md).
+**Note! Before the project build, please see the instructions, [you can find the instructions here](documentation/build.md)**
 
-Once project build was finished, please run the following command
+Once project build finished, please run the following command
 **For MacOS and Linux**
 ``` 
 ./bin/slack-bot-current-system
@@ -58,10 +58,11 @@ docker build . -t devbot-dock
 docker run --env-file=.env devbot-dock
 ```
 
-``Before run, make sure you created .env file and setup the credentials``
+**Before run, make sure you created .env file and setup the credentials**
 
 ### Example of output
-If you did everything right, you should see something like this:
+If you did everything right, after project start you should see something like this:
+
 ![Demo start slack-bot](documentation/images/start-slack-bot.gif)
 
 ## Help triggers
@@ -82,11 +83,11 @@ Each event should have `--help` feature. So, once you don't know how to use sele
 - [BitBucket run pipeline event](https://github.com/sharovik/bitbucket-run-pipeline)
 
 ## Authors
-
 * **Pavel Simzicov** - *Initial work* - [sharovik](https://github.com/sharovik)
 
 ### Vendors used
 * github.com/joho/godotenv - for env files loading
+* github.com/sharovik/orm - the ORM for database queries
 * github.com/karalabe/xgo - for cross platform build
 * github.com/karupanerura/go-mock-http-response - for http responses mocking in tests
 * github.com/mattn/go-sqlite3 - for sqlite connection
@@ -96,4 +97,4 @@ Each event should have `--help` feature. So, once you don't know how to use sele
 * golang.org/x/net - for websocket connection
 
 ## License
-This project is licensed under the BSD License - see the LICENSE.md file for details
+This project licensed under the BSD License - see the [LICENSE.md](LICENSE.md) file for details
