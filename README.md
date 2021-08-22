@@ -12,10 +12,12 @@ If bot don't know how to answer, he will try to find potential events using the 
 
 ### Current installed events
 Ask bot `events list` to see the list of available events. This is useful, when you don't know which event what command have.
+
 ![events-list](documentation/images/events-list.png)
 
 ### Help of event
 Each event should have `--help` feature. So, once you don't know how to use selected event, please type `--help` after the event command
+
 ![usage-help-command](documentation/images/new-answer-help.png)
 
 ### Example of scenario
