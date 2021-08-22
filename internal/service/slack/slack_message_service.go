@@ -1,6 +1,8 @@
 package slack
 
 import (
+	"fmt"
+	"github.com/sharovik/devbot/events"
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/devbot/internal/service/base"
@@ -305,14 +307,14 @@ func refreshPreparedMessages() {
 func prepareAnswer(message *dto.SlackResponseEventMessage, dm dto.DictionaryMessage) (dto.SlackRequestChatPostMessage, error) {
 	log.Logger().StartMessage("Answer prepare")
 
-	var answer = defaultAnswer
-	if dm.Answer != "" {
-		answer = dm.Answer
+	//If we don't have any answer, we trigger the event for unknown question
+	if dm.Answer == "" {
+		return triggerUnknownAnswerScenario(message)
 	}
 
 	responseMessage := dto.SlackRequestChatPostMessage{
 		Channel:         message.Channel,
-		Text:            answer,
+		Text:            dm.Answer,
 		AsUser:          true,
 		Ts:              time.Now(),
 		OriginalMessage: *message,
@@ -320,4 +322,70 @@ func prepareAnswer(message *dto.SlackResponseEventMessage, dm dto.DictionaryMess
 
 	log.Logger().FinishMessage("Answer prepare")
 	return responseMessage, nil
+}
+
+func triggerUnknownAnswerScenario(message *dto.SlackResponseEventMessage) (answer dto.SlackRequestChatPostMessage, err error) {
+	message.Text = fmt.Sprintf("similar questions %s", message.Text)
+	return dto.SlackRequestChatPostMessage{
+		Channel:         message.Channel,
+		Text:            "Hmmm",
+		AsUser:          true,
+		Ts:              time.Now(),
+		OriginalMessage: *message,
+		DictionaryMessage: dto.DictionaryMessage{
+			ReactionType: "unknownquestion",
+		},
+	}, nil
+}
+
+//TriggerAnswer triggers an answer for received message
+func TriggerAnswer(message *dto.SlackResponseEventMessage) error {
+	answerMessage := getPreparedAnswer(message)
+
+	if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
+		log.Logger().AddError(err).Msg("Failed to send prepared answers")
+		return err
+	}
+
+	if answerMessage.DictionaryMessage.ReactionType == "" || events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType] == nil {
+		log.Logger().Warn().
+			Interface("answer", answerMessage).
+			Msg("Reaction type wasn't found")
+		return nil
+	}
+
+	activeConversation := base.GetConversation(message.Channel)
+	if activeConversation.ScenarioID != int64(0) && !activeConversation.EventReadyToBeExecuted {
+		log.Logger().Info().
+			Interface("conversation", activeConversation).
+			Msg("This conversation isn't finished yet, so event cannot be executed.")
+		return nil
+	}
+
+	go func() {
+		answer, err := events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType].Execute(dto.BaseChatMessage{
+			Channel:           answerMessage.Channel,
+			Text:              answerMessage.Text,
+			AsUser:            answerMessage.AsUser,
+			Ts:                answerMessage.Ts,
+			DictionaryMessage: answerMessage.DictionaryMessage,
+			OriginalMessage: dto.BaseOriginalMessage{
+				Text:  answerMessage.OriginalMessage.Text,
+				User:  answerMessage.OriginalMessage.User,
+				Files: answerMessage.OriginalMessage.Files,
+			},
+		})
+		if err != nil {
+			log.Logger().AddError(err).Msg("Failed to execute the event")
+		}
+
+		if answer.Text != "" {
+			answerMessage.Text = answer.Text
+			if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
+				log.Logger().AddError(err).Msg("Failed to send post-answer for selected event")
+			}
+		}
+	}()
+
+	return nil
 }

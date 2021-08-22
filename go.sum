@@ -12,6 +12,7 @@ github.com/karalabe/xgo v0.0.0-20191115072854-c5ccff8648a7/go.mod h1:iYGcTYIPUvE
 github.com/karupanerura/go-mock-http-response v0.0.0-20171201120521-7c242a447d45 h1:XSik/ETzj52cVbZcv7tJuUFX14XzvRX0te26UaKY0Aw=
 github.com/karupanerura/go-mock-http-response v0.0.0-20171201120521-7c242a447d45/go.mod h1:FULZ2B7LE0CUYtI8XLMYxI58AF9M6MTg6nWmZvWoFHQ=
 github.com/mattn/go-sqlite3 v1.14.6/go.mod h1:NyWgC/yNuGj7Q9rpYnZvas74GogHl5/Z4A/KQRfk6bU=
+github.com/mattn/go-sqlite3 v1.14.8/go.mod h1:NyWgC/yNuGj7Q9rpYnZvas74GogHl5/Z4A/KQRfk6bU=
 github.com/mattn/go-sqlite3 v2.0.2+incompatible h1:qzw9c2GNT8UFrgWNDhCTqRqYUSmu/Dav/9Z58LGpk7U=
 github.com/mattn/go-sqlite3 v2.0.2+incompatible/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
@@ -31,6 +32,8 @@ github.com/sharovik/orm v1.0.7 h1:dsS9q6+/HxrwJ190mJndXvVRrIDI2umrWUhCUmKQIRI=
 github.com/sharovik/orm v1.0.7/go.mod h1:2efzVrck7A/hTPY1ifv1ihMeUhj07DPVacCD3HZLatA=
 github.com/sharovik/orm v1.0.8 h1:wtpBU6TvINfshHqPZfIcxAzwx/7vAac86YT5yS9+0/U=
 github.com/sharovik/orm v1.0.8/go.mod h1:2efzVrck7A/hTPY1ifv1ihMeUhj07DPVacCD3HZLatA=
+github.com/sharovik/orm v1.0.9 h1:yZcSxfZpQH1H+pmwO96iqyIwBLA9qzYoKHEP9g+TvjU=
+github.com/sharovik/orm v1.0.9/go.mod h1:6ZVsRAIu/AiZKTuf/u+LMbe8hwmtj4AQBkmo7BJbCrs=
 github.com/stretchr/objx v0.1.0 h1:4G4v2dO3VZwixGIRoQ5Lfboy6nUhCyYzaqnIAPPhYs4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJyk=
