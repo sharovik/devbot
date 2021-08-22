@@ -25,6 +25,12 @@ func (m InstallMigration) GetName() string {
 func (m InstallMigration) Execute() error {
 	client := container.C.Dictionary.GetNewClient()
 
+	q := new(clients.Query).Select([]interface{}{"*"}).From(&database_dto.MigrationModel)
+	if _, err := client.Execute(q); err == nil {
+		//We already have triggered the schema setup
+		return nil
+	}
+
 	if err := createSchema(client); err != nil {
 		return err
 	}

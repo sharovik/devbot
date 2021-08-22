@@ -60,6 +60,8 @@ install:
 
 update:
 	make build-update-script-for-current-system
+
+update-events:
 	./scripts/update/run
 
 create-project-build-dirs:
