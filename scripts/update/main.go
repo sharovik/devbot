@@ -16,6 +16,7 @@ const (
 var (
 	m   = []database.BaseMigrationInterface{
 		migrations.ExampleMigration{},
+		migrations.EventsTriggersHistoryMigration{},
 	}
 )
 

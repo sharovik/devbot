@@ -23,9 +23,10 @@ func (m RemoveUniqueIndexMigration) Execute() error {
 	client := container.C.Dictionary.GetNewClient()
 
 	q := new(clients.Query).
-		Alter(&database_dto.QuestionsModel).DropIndex(dto.Index{
-		Name:   "questions_question_uindex",
-	})
+		Alter(&database_dto.QuestionsModel).
+		DropIndex(dto.Index{
+			Name: "questions_question_uindex",
+		})
 	_, err := client.Execute(q)
 	if err != nil {
 		return err

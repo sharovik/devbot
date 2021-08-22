@@ -18,8 +18,6 @@ const (
 	eventTypeMessage             = "message"
 	eventTypeDesktopNotification = "desktop_notification"
 	eventTypeFileShared          = "file_shared"
-
-	defaultAnswer = "Sorry, I don't have answer for that :("
 )
 
 var (

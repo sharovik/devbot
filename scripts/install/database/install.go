@@ -52,6 +52,32 @@ func createSchema(client clients.BaseClientInterface) error {
 		return errors.Wrap(err, fmt.Sprintf("Failed to create %s table", database_dto.EventModel.GetTableName()))
 	}
 
+	//Create events table
+	q = new(clients.Query).
+		Create(&database_dto.EventTriggerHistoryModel).
+		AddIndex(dto.Index{
+			Name:   "user_id_index",
+			Target: database_dto.EventTriggerHistoryModel.GetTableName(),
+			Key:    "user_id",
+			Unique: false,
+		}).
+		AddForeignKey(dto.ForeignKey{
+			Name: "event_id",
+			Target: cquery.Reference{
+				Table: database_dto.EventModel.GetTableName(),
+				Key:   "id",
+			},
+			With: cquery.Reference{
+				Table: database_dto.EventTriggerHistoryModel.GetTableName(),
+				Key:   "event_id",
+			},
+			OnDelete: dto.CascadeAction,
+			OnUpdate: dto.NoActionAction,
+		})
+	if _, err := client.Execute(q); err != nil {
+		return errors.Wrap(err, fmt.Sprintf("Failed to create %s table", database_dto.EventTriggerHistoryModel.GetTableName()))
+	}
+
 	//Create migrations table
 	q = new(clients.Query).
 		Create(&database_dto.MigrationModel).

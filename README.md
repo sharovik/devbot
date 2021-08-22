@@ -1,7 +1,34 @@
 # devbot
 [![Gitter](https://badges.gitter.im/devbot-tool/community.svg)](https://gitter.im/devbot-tool/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-This is a free, opensource chat-bot framework, based on GoLang. Using this framework you can se tup a custom bot, which can execute the commands you need.
+This is a free, opensource chat-bot framework, based on GoLang. Using this framework you can set-up a custom bot, which can execute the commands you need.
+
+## Features out of the box
+Here is the list of current events, which comes out of the box.
+
+### Unknown question
+If bot don't know how to answer, he will try to find potential events using the words from your question
+![question-options](documentation/images/possible-options.png)
+
+### Current installed events
+Ask bot `events list` to see the list of available events. This is useful, when you don't know which event what command have.
+![events-list](documentation/images/events-list.png)
+
+### Help of event
+Each event should have `--help` feature. So, once you don't know how to use selected event, please type `--help` after the event command
+![usage-help-command](documentation/images/new-answer-help.png)
+
+### Example of scenario
+There is an example event, which you can use as skeleton for your custom scenarios
+![example-scenario](documentation/images/example-scenario.png)
+
+### List open conversations
+You can always control open conversations
+![show-open-conversations](documentation/images/show-open-conversations.png)
+
+### Stop conversation
+You always can stop open conversations
+![stop-open-conversations](documentation/images/stop-conversation.png)
 
 ## Table of contents
 - [How to run](#how-to-run)
@@ -65,19 +92,7 @@ If you did everything right, after project start you should see something like t
 
 ![Demo start slack-bot](documentation/images/start-slack-bot.gif)
 
-## Help triggers
-You can always ask bot to help you, if you don't know what kind of features currently are available or if you need detailed help regarding to the event.
-Please ask bot `help` for more details.
-
-### Current installed events
-Ask bot `events list` to see the list of available events. This is useful, when you don't know which event what command have.
-![events-list](documentation/images/events-list.png)
-
-### Help of event
-Each event should have `--help` feature. So, once you don't know how to use selected event, please type `--help` after the event command
-![usage-help-command](documentation/images/new-answer-help.png)
-
-## Events available for installation
+## Custom events available for installation
 - [WordPress theme generation event](https://github.com/sharovik/themer-wordpress-event)
 - [BitBucket release event](https://github.com/sharovik/bitbucket-release-event)
 - [BitBucket run pipeline event](https://github.com/sharovik/bitbucket-run-pipeline)
