@@ -1,7 +1,7 @@
 # devbot
 [![Gitter](https://badges.gitter.im/devbot-tool/community.svg)](https://gitter.im/devbot-tool/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-This is a free, opensource chatbot framework, based on GoLang. Using this framework you can se tup a custom bot, which can execute the commands you need.
+This is a free, opensource chat-bot framework, based on GoLang. Using this framework you can se tup a custom bot, which can execute the commands you need.
 
 ## Table of contents
 - [How to run](#how-to-run)
