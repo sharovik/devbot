@@ -2,10 +2,10 @@ package slack
 
 import (
 	"fmt"
-	"github.com/sharovik/devbot/events"
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/devbot/internal/service/base"
+	"github.com/sharovik/devbot/internal/service/history"
 	"regexp"
 	"time"
 
@@ -122,6 +122,7 @@ func analyseMessage(message *dto.SlackResponseEventMessage) (dto.SlackRequestCha
 				//We get the last question object from the scenario and we use it as the answer
 				dmAnswer = dto.DictionaryMessage{
 					ScenarioID:            openConversation.ScenarioID,
+					EventID:            openConversation.ScenarioID,
 					Question:              scenarioNextQuestion.Question,
 					QuestionID:            scenarioNextQuestion.ID,
 					Regex:                 "",
@@ -138,6 +139,7 @@ func analyseMessage(message *dto.SlackResponseEventMessage) (dto.SlackRequestCha
 			} else {
 				dmAnswer = dto.DictionaryMessage{
 					ScenarioID:            openConversation.ScenarioID,
+					EventID:               openConversation.EventID,
 					Question:              scenarioNextQuestion.Question,
 					QuestionID:            scenarioNextQuestion.ID,
 					Regex:                 "",
@@ -173,6 +175,7 @@ func analyseMessage(message *dto.SlackResponseEventMessage) (dto.SlackRequestCha
 	if IsScenarioStopTriggered {
 		dmAnswer = dto.DictionaryMessage{
 			ScenarioID:            0,
+			EventID:               0,
 			Answer:                "Ok, no more questions!",
 			QuestionID:            0,
 			Question:              message.Text,
@@ -307,7 +310,29 @@ func prepareAnswer(message *dto.SlackResponseEventMessage, dm dto.DictionaryMess
 
 	//If we don't have any answer, we trigger the event for unknown question
 	if dm.Answer == "" {
-		return triggerUnknownAnswerScenario(message)
+		if !container.C.Config.LearningEnabled {
+			return triggerUnknownAnswerScenario(message)
+		}
+
+		//@todo trigger learn scenario
+	}
+
+	//We will trigger the event history save in case when we don't have open conversation
+	//or when we do have open conversation, but it is time to trigger the event execution
+	//so we can store all variables
+	if 0 == base.GetConversation(message.Channel).ScenarioID || base.GetConversation(message.Channel).EventReadyToBeExecuted {
+		history.RememberEventExecution(dto.BaseChatMessage{
+			Channel:           message.Channel,
+			Text:              message.Text,
+			AsUser:            true,
+			Ts:                time.Now(),
+			DictionaryMessage: dm,
+			OriginalMessage: dto.BaseOriginalMessage{
+				Text:  message.Text,
+				User:  message.User,
+				Files: message.Files,
+			},
+		})
 	}
 
 	responseMessage := dto.SlackRequestChatPostMessage{
@@ -345,7 +370,7 @@ func TriggerAnswer(message *dto.SlackResponseEventMessage) error {
 		return err
 	}
 
-	if answerMessage.DictionaryMessage.ReactionType == "" || events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType] == nil {
+	if answerMessage.DictionaryMessage.ReactionType == "" || container.C.DefinedEvents[answerMessage.DictionaryMessage.ReactionType] == nil {
 		log.Logger().Warn().
 			Interface("answer", answerMessage).
 			Msg("Reaction type wasn't found")
@@ -361,7 +386,7 @@ func TriggerAnswer(message *dto.SlackResponseEventMessage) error {
 	}
 
 	go func() {
-		answer, err := events.DefinedEvents.Events[answerMessage.DictionaryMessage.ReactionType].Execute(dto.BaseChatMessage{
+		msg := dto.BaseChatMessage{
 			Channel:           answerMessage.Channel,
 			Text:              answerMessage.Text,
 			AsUser:            answerMessage.AsUser,
@@ -372,7 +397,8 @@ func TriggerAnswer(message *dto.SlackResponseEventMessage) error {
 				User:  answerMessage.OriginalMessage.User,
 				Files: answerMessage.OriginalMessage.Files,
 			},
-		})
+		}
+		answer, err := container.C.DefinedEvents[answerMessage.DictionaryMessage.ReactionType].Execute(msg)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Failed to execute the event")
 		}

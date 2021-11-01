@@ -3,6 +3,7 @@ package container
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/sharovik/devbot/internal/dto"
 	"net/http"
 	"time"
 
@@ -13,6 +14,19 @@ import (
 	"github.com/sharovik/devbot/internal/log"
 )
 
+//DefinedEvent the interface for events
+//@todo: move to the better place.
+type DefinedEvent interface {
+	//The main execution method, which will run the actual functionality for the event
+	Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error)
+
+	//The installation method, which will executes the installation parts of the event
+	Install() error
+
+	//The update method, which will update the application to use new version of this event
+	Update() error
+}
+
 //Main container object
 type Main struct {
 	Config           config.Config
@@ -21,6 +35,7 @@ type Main struct {
 	Dictionary       database.BaseDatabaseInterface
 	HTTPClient       client.BaseHTTPClientInterface
 	MigrationService database.MigrationService
+	DefinedEvents    map[string]DefinedEvent
 }
 
 //C container variable
@@ -33,14 +48,14 @@ func (container Main) Init() Main {
 	_ = log.Init(container.Config.LogConfig)
 
 	netTransport := &http.Transport{
-		TLSHandshakeTimeout: time.Duration(container.Config.HttpClient.TLSHandshakeTimeout) * time.Second,
+		TLSHandshakeTimeout: time.Duration(container.Config.HTTPClient.TLSHandshakeTimeout) * time.Second,
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: container.Config.HttpClient.InsecureSkipVerify,
+			InsecureSkipVerify: container.Config.HTTPClient.InsecureSkipVerify,
 		},
 	}
 
 	httpClient := http.Client{
-		Timeout:   time.Duration(container.Config.HttpClient.RequestTimeout) * time.Second,
+		Timeout:   time.Duration(container.Config.HTTPClient.RequestTimeout) * time.Second,
 		Transport: netTransport,
 	}
 

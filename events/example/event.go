@@ -2,6 +2,7 @@ package example
 
 import (
 	"fmt"
+	"github.com/sharovik/devbot/internal/database"
 
 	"github.com/sharovik/devbot/internal/helper"
 
@@ -56,14 +57,18 @@ func (e ExmplEvent) Install() error {
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	return container.C.Dictionary.InstallEvent(
-		EventName,      //We specify the event name which will be used for scenario generation
-		EventVersion,   //This will be set during the event creation
-		"who are you?", //Actual question, which system will wait and which will trigger our event
-		fmt.Sprintf("Hello, my name is %s", container.C.Config.SlackConfig.BotName), //Answer which will be used by the bot
-		"(?i)who are you?", //Optional field. This is regular expression which can be used for question parsing.
-		"",                 //Optional field. This is a regex group and it can be used for parsing the match group from the regexp result
-	)
+	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
+		EventName:    EventName,
+		EventVersion: EventVersion,
+		Questions:    []database.Question{
+			{
+				Question:      "who are you?",
+				Answer:        fmt.Sprintf("Hello, my name is %s", container.C.Config.SlackConfig.BotName),
+				QuestionRegex: "(?i)who are you?",
+				QuestionGroup: "",
+			},
+		},
+	})
 }
 
 //Update for event update actions

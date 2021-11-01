@@ -2,7 +2,7 @@ package migrations
 
 import (
 	"github.com/sharovik/devbot/internal/container"
-	"github.com/sharovik/devbot/internal/dto/database_dto"
+	"github.com/sharovik/devbot/internal/dto/databasedto"
 	"github.com/sharovik/orm/clients"
 	"github.com/sharovik/orm/dto"
 )
@@ -23,7 +23,7 @@ func (m RemoveUniqueIndexMigration) Execute() error {
 	client := container.C.Dictionary.GetNewClient()
 
 	q := new(clients.Query).
-		Alter(&database_dto.QuestionsModel).
+		Alter(&databasedto.QuestionsModel).
 		DropIndex(dto.Index{
 			Name: "questions_question_uindex",
 		})
@@ -33,9 +33,9 @@ func (m RemoveUniqueIndexMigration) Execute() error {
 	}
 
 	q = new(clients.Query).
-		Alter(&database_dto.QuestionsModel).AddIndex(dto.Index{
+		Alter(&databasedto.QuestionsModel).AddIndex(dto.Index{
 		Name:   "questions_question_uindex",
-		Target: database_dto.QuestionsModel.GetTableName(),
+		Target: databasedto.QuestionsModel.GetTableName(),
 		Key:    "question",
 		Unique: false,
 	})

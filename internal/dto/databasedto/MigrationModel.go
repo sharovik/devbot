@@ -1,27 +1,18 @@
-package database_dto
+package databasedto
 
 import "github.com/sharovik/orm/dto"
 
-type EventTriggerHistoryStruct struct {
+type MigrationStruct struct {
 	TableName  string
 	PrimaryKey dto.ModelField
 	Fields     []interface{}
 }
 
-var EventTriggerHistoryModel = dto.BaseModel{
-	TableName: "events_triggers_history",
+var MigrationModel = dto.BaseModel{
+	TableName: "migration",
 	Fields: []interface{}{
 		dto.ModelField{
-			Name:  "event_id",
-			Type:  dto.IntegerColumnType,
-		},
-		dto.ModelField{
-			Name:  "user_id",
-			Type:  dto.VarcharColumnType,
-			Length: 255,
-		},
-		dto.ModelField{
-			Name:  "command",
+			Name:  "version",
 			Type:  dto.VarcharColumnType,
 			Length: 255,
 		},
@@ -34,15 +25,15 @@ var EventTriggerHistoryModel = dto.BaseModel{
 	},
 }
 
-func (m *EventTriggerHistoryStruct) SetTableName(name string) {
+func (m *MigrationStruct) SetTableName(name string) {
 	m.TableName = name
 }
 
-func (m EventTriggerHistoryStruct) GetTableName() string {
+func (m MigrationStruct) GetTableName() string {
 	return m.TableName
 }
 
-func (m EventTriggerHistoryStruct) GetColumns() []interface{} {
+func (m MigrationStruct) GetColumns() []interface{} {
 	var columns []interface{}
 
 	if m.GetPrimaryKey() != (dto.ModelField{IsPrimaryKey: true}) {
@@ -59,11 +50,11 @@ func (m EventTriggerHistoryStruct) GetColumns() []interface{} {
 	return columns
 }
 
-func (m *EventTriggerHistoryStruct) AddModelField(field dto.ModelField) {
+func (m *MigrationStruct) AddModelField(field dto.ModelField) {
 	m.Fields = append(m.GetColumns(), field)
 }
 
-func (m EventTriggerHistoryStruct) GetField(name string) dto.ModelField {
+func (m MigrationStruct) GetField(name string) dto.ModelField {
 	for _, field := range m.GetColumns() {
 		switch v := field.(type) {
 		case dto.ModelField:
@@ -76,7 +67,7 @@ func (m EventTriggerHistoryStruct) GetField(name string) dto.ModelField {
 	return dto.ModelField{}
 }
 
-func (m *EventTriggerHistoryStruct) SetField(name string, value interface{}) {
+func (m *MigrationStruct) SetField(name string, value interface{}) {
 	var columns []interface{}
 	for _, field := range m.GetColumns() {
 		switch v := field.(type) {
@@ -95,12 +86,28 @@ func (m *EventTriggerHistoryStruct) SetField(name string, value interface{}) {
 	m.Fields = columns
 }
 
-func (m EventTriggerHistoryStruct) GetPrimaryKey() dto.ModelField {
+func (m MigrationStruct) GetPrimaryKey() dto.ModelField {
 	m.PrimaryKey.IsPrimaryKey = true
 	return m.PrimaryKey
 }
 
-func (m *EventTriggerHistoryStruct) SetPrimaryKey(field dto.ModelField) {
+func (m *MigrationStruct) SetPrimaryKey(field dto.ModelField) {
 	field.IsPrimaryKey = true
 	m.PrimaryKey = field
+}
+
+func (m *MigrationStruct) RemoveModelField(field string) {
+	var columns []interface{}
+	for _, f := range m.Fields {
+		switch v := f.(type) {
+		case dto.ModelField:
+			if field == v.Name {
+				continue
+			}
+		}
+
+		columns = append(columns, f)
+	}
+
+	m.Fields = columns
 }

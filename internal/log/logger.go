@@ -46,7 +46,7 @@ const (
 	Panic = "panic"
 
 	OutputConsole = "console"
-	OutputJson    = "json"
+	OutputJSON    = "json"
 )
 
 func (l *LoggerInstance) setLogLevel() {
@@ -79,7 +79,7 @@ func (l *LoggerInstance) getOutput() zerolog.Context {
 	switch l.config.Output {
 	case OutputConsole:
 		return log.Output(zerolog.NewConsoleWriter()).With()
-	case OutputJson:
+	case OutputJSON:
 		return log.With()
 	}
 

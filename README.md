@@ -32,6 +32,10 @@ You can always control open conversations
 You always can stop open conversations
 ![stop-open-conversations](documentation/images/stop-conversation.png)
 
+### Repeat last event
+When you have triggered already the event, let's say, "staging deployment" and you need to re-deploy. You can ask bot to repeat the previous scenario you triggered in that channel.
+![repeat-scenario](documentation/images/repeat-event.png)
+
 ## Table of contents
 - [How to run](#how-to-run)
 - [Prerequisites](documentation/prerequisites.md)

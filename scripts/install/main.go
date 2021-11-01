@@ -2,9 +2,12 @@ package main
 
 import (
 	"flag"
+	"github.com/sharovik/devbot/internal/dto/databasedto"
+	"github.com/sharovik/devbot/internal/service/definedevents"
+	"github.com/sharovik/orm/clients"
+	"github.com/sharovik/orm/dto"
 	"os"
 
-	"github.com/sharovik/devbot/events"
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/database"
@@ -36,12 +39,28 @@ func main() {
 }
 
 func triggerMigrations() error {
-	for _, migration := range m {
-		err := migration.Execute()
-		if err != nil {
-			return err
-		}
+	//Create migrations table
+	q := new(clients.Query).
+		Create(&databasedto.MigrationModel).
+		IfNotExists().
+		AddIndex(dto.Index{
+			Name:   "migration_version_uindex",
+			Target: databasedto.MigrationModel.GetTableName(),
+			Key:    "version",
+			Unique: true,
+		})
+	if _, err := container.C.Dictionary.GetNewClient().Execute(q); err != nil {
+		log.Logger().AddError(err).Msg("Failed to create migration table. Already exists?")
 	}
+
+	for _, migration := range m {
+		container.C.MigrationService.SetMigration(migration)
+	}
+
+	if err := container.C.MigrationService.RunMigrations(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -58,6 +77,7 @@ func run() error {
 
 	eventAlias := parseEventAlias()
 	container.C = container.C.Init()
+	definedevents.InitializeDefinedEvents()
 
 	err := triggerMigrations()
 	if err != nil {
@@ -68,7 +88,7 @@ func run() error {
 	if eventAlias != "" {
 		log.Logger().Info().Msg("Event alias cannot be empty")
 
-		if events.DefinedEvents.Events[eventAlias] == nil {
+		if container.C.DefinedEvents[eventAlias] == nil {
 			log.Logger().Info().Msg("Event is not defined in the defined-events")
 			return nil
 		}
@@ -84,7 +104,7 @@ func run() error {
 			return nil
 		}
 
-		if err := events.DefinedEvents.Events[eventAlias].Install(); err != nil {
+		if err := container.C.DefinedEvents[eventAlias].Install(); err != nil {
 			log.Logger().AddError(err).Str("event_name", eventAlias).Msg("Failed to install the event.")
 		}
 
@@ -97,7 +117,7 @@ func run() error {
 	}
 
 	log.Logger().Debug().Msg("Trying to install all defined events if it's possible")
-	for eventAlias, event := range events.DefinedEvents.Events {
+	for eventAlias, event := range container.C.DefinedEvents {
 
 		eventID, err := container.C.Dictionary.FindEventByAlias(eventAlias)
 		if err != nil {

@@ -3,7 +3,7 @@ package eventslist
 import (
 	"fmt"
 	"github.com/sharovik/devbot/internal/database"
-	"github.com/sharovik/devbot/internal/dto/database_dto"
+	"github.com/sharovik/devbot/internal/dto/databasedto"
 	"github.com/sharovik/orm/clients"
 	"github.com/sharovik/orm/query"
 
@@ -44,26 +44,26 @@ func (e EListEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, e
 
 	q := new(clients.Query).
 		Select([]interface{}{"events.id", "events.alias", "questions.question"}).
-		From(&database_dto.EventModel).
+		From(&databasedto.EventModel).
 		Join(query.Join{
 			Target: query.Reference{
-				Table: database_dto.ScenariosModel.GetTableName(),
+				Table: databasedto.ScenariosModel.GetTableName(),
 				Key:   "event_id",
 			},
 			With: query.Reference{
-				Table: database_dto.EventModel.GetTableName(),
-				Key:   database_dto.EventModel.GetPrimaryKey().Name,
+				Table: databasedto.EventModel.GetTableName(),
+				Key:   databasedto.EventModel.GetPrimaryKey().Name,
 			},
 			Condition: "=",
 		}).
 		Join(query.Join{
 			Target: query.Reference{
-				Table: database_dto.QuestionsModel.GetTableName(),
+				Table: databasedto.QuestionsModel.GetTableName(),
 				Key:   "scenario_id",
 			},
 			With: query.Reference{
-				Table: database_dto.ScenariosModel.GetTableName(),
-				Key:   database_dto.ScenariosModel.GetPrimaryKey().Name,
+				Table: databasedto.ScenariosModel.GetTableName(),
+				Key:   databasedto.ScenariosModel.GetPrimaryKey().Name,
 			},
 			Condition: "=",
 		}).
@@ -98,14 +98,18 @@ func (e EListEvent) Install() error {
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	return container.C.Dictionary.InstallEvent(
-		EventName,                                      //We specify the event name which will be used for scenario generation
-		EventVersion,                                   //This will be set during the event creation
-		"events list",                                  //Actual question, which system will wait and which will trigger our event
-		"Just a sec, I will prepare the list for you.", //Answer which will be used by the bot
-		"(?i)events list",                              //Optional field. This is regular expression which can be used for question parsing.
-		"",                                             //Optional field. This is a regex group and it can be used for parsing the match group from the regexp result
-	)
+	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
+		EventName:    EventName,
+		EventVersion: EventVersion,
+		Questions:    []database.Question{
+			{
+				Question:      "events list",
+				Answer:        "Just a sec, I will prepare the list for you.",
+				QuestionRegex: "(?i)events list",
+				QuestionGroup: "",
+			},
+		},
+	})
 }
 
 //Update for event update actions
