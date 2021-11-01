@@ -45,8 +45,8 @@ When you have triggered already the event, let's say, "staging deployment" and y
 - [How to build scenario](documentation/scenarios.md)
 - [Migrations](documentation/migrations.md)
 - [Available events](documentation/available-features.md)
-- [Events available for installation](#events-available-for-installation)
-- [How to add new questions into the database](documentation/dictionary.md)
+- [Events available for installation](#custom-events-available-for-installation)
+- [How to add new questions into the database](documentation/dictionary.md) - this part deprecated and soon will be improved
 - [Project build](documentation/build.md)
 - [Authors](#authors)
 - [License](#license)
