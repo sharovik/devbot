@@ -111,13 +111,13 @@ func lastExecutedEvent(message dto.BaseChatMessage) (databasedto.EventTriggerHis
 	item, err := container.C.Dictionary.GetNewClient().Execute(new(clients.Query).
 		Select([]interface{}{}).From(&databasedto.EventTriggerHistoryModel).
 		Where(query.Where{
-		First:    "channel",
-		Operator: "=",
-		Second:   query.Bind{
-			Field: "channel",
-			Value: message.Channel,
-		},
-	}).Where(query.Where{
+			First:    "channel",
+			Operator: "=",
+			Second:   query.Bind{
+				Field: "channel",
+				Value: message.Channel,
+			},
+		}).Where(query.Where{
 		First:    "user",
 		Operator: "=",
 		Second:   query.Bind{
@@ -192,27 +192,54 @@ func triggerScenario(item databasedto.EventTriggerHistoryStruct) (dto.BaseChatMe
 		return dto.BaseChatMessage{}, err
 	}
 
-	variables := strings.Split(item.GetField("variables").Value.(string), history.VariablesSeparator)
-	channel := item.GetField("channel").Value.(string)
-	for _, variable := range variables {
-		base.AddConversation(channel, int64(item.GetField("last_question_id").Value.(int)), dto.BaseChatMessage{
-			Channel: channel,
-			Text:    item.GetField("command").Value.(string),
-			AsUser:  false,
-			Ts:      time.Now(),
-			DictionaryMessage: dto.DictionaryMessage{
-				ScenarioID:   int64(item.GetField("scenario_id").Value.(int)),
-				Question:     item.GetField("command").Value.(string),
-				QuestionID:   int64(item.GetField("last_question_id").Value.(int)),
-				EventID:      int64(item.GetField("event_id").Value.(int)),
-				ReactionType: eventAlias,
-			},
-			OriginalMessage: dto.BaseOriginalMessage{},
-		}, variable)
+	var (
+		variables []string
+		channel = item.GetField("channel").Value.(string)
+	)
+	if "" != item.GetField("variables").Value.(string) {
+		variables = strings.Split(item.GetField("variables").Value.(string), history.VariablesSeparator)
 
+		for _, variable := range variables {
+			base.AddConversation(channel, int64(item.GetField("last_question_id").Value.(int)), dto.BaseChatMessage{
+				Channel: channel,
+				Text:    item.GetField("command").Value.(string),
+				AsUser:  false,
+				Ts:      time.Now(),
+				DictionaryMessage: dto.DictionaryMessage{
+					ScenarioID:   int64(item.GetField("scenario_id").Value.(int)),
+					Question:     item.GetField("command").Value.(string),
+					QuestionID:   int64(item.GetField("last_question_id").Value.(int)),
+					EventID:      int64(item.GetField("event_id").Value.(int)),
+					ReactionType: eventAlias,
+				},
+				OriginalMessage: dto.BaseOriginalMessage{},
+			}, variable)
+
+		}
+
+		answer, err := container.C.DefinedEvents[eventAlias].Execute(base.GetConversation(channel).LastQuestion)
+		base.DeleteConversation(channel)
+
+		return answer, err
 	}
 
-	answer, err := container.C.DefinedEvents[eventAlias].Execute(base.GetConversation(channel).LastQuestion)
+	answer, err := container.C.DefinedEvents[eventAlias].Execute(dto.BaseChatMessage{
+		Channel:           channel,
+		Text:              item.GetField("command").Value.(string),
+		AsUser:            false,
+		Ts:                time.Time{},
+		DictionaryMessage: dto.DictionaryMessage{
+			ScenarioID:            int64(item.GetField("scenario_id").Value.(int)),
+			Question:              "",
+			QuestionID:            int64(item.GetField("last_question_id").Value.(int)),
+			EventID:               int64(item.GetField("event_id").Value.(int)),
+		},
+		OriginalMessage:   dto.BaseOriginalMessage{
+			Text:  item.GetField("command").Value.(string),
+			User:  item.GetField("user").Value.(string),
+			Files: nil,
+		},
+	})
 	base.DeleteConversation(channel)
 
 	return answer, err
