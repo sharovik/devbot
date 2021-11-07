@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/sharovik/devbot/internal/container"
-	"github.com/sharovik/devbot/internal/dto/database_dto"
+	"github.com/sharovik/devbot/internal/dto/databasedto"
 	"github.com/sharovik/orm/clients"
 	"github.com/sharovik/orm/dto"
 	"github.com/sharovik/orm/query"
@@ -27,28 +27,29 @@ func (m EventsTriggersHistoryMigration) Execute() error {
 
 	//Create events table
 	q := new(clients.Query).
-		Create(&database_dto.EventTriggerHistoryModel).
+		Create(&databasedto.EventTriggerHistoryModel).
+		IfNotExists().
 		AddIndex(dto.Index{
-			Name:   "user_id_index",
-			Target: database_dto.EventTriggerHistoryModel.GetTableName(),
-			Key:    "user_id",
+			Name:   "user_index",
+			Target: databasedto.EventTriggerHistoryModel.GetTableName(),
+			Key:    "user",
 			Unique: false,
 		}).
 		AddForeignKey(dto.ForeignKey{
 			Name: "event_id",
 			Target: query.Reference{
-				Table: database_dto.EventModel.GetTableName(),
+				Table: databasedto.EventModel.GetTableName(),
 				Key:   "id",
 			},
 			With: query.Reference{
-				Table: database_dto.EventTriggerHistoryModel.GetTableName(),
+				Table: databasedto.EventTriggerHistoryModel.GetTableName(),
 				Key:   "event_id",
 			},
 			OnDelete: dto.CascadeAction,
 			OnUpdate: dto.NoActionAction,
 		})
 	if _, err := client.Execute(q); err != nil {
-		return errors.Wrap(err, fmt.Sprintf("Failed to create %s table", database_dto.EventTriggerHistoryModel.GetTableName()))
+		return errors.Wrap(err, fmt.Sprintf("Failed to create %s table", databasedto.EventTriggerHistoryModel.GetTableName()))
 	}
 
 	return nil

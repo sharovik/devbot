@@ -2,7 +2,7 @@ package examplescenario
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
+	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/devbot/internal/service/base"
 	"regexp"
@@ -126,25 +126,25 @@ func (e EventStruct) Install() error {
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	if err := container.C.Dictionary.InstallEvent(
-		EventName,               //We specify the event name which will be used for scenario generation
-		EventVersion,            //This will be set during the event creation
-		"write a message",       //Actual question, which system will wait and which will trigger our event
-		stepMessage,             //Answer which will be used by the bot
-		"(?i)(write a message)", //Optional field. This is regular expression which can be used for question parsing.
-		"",                      //Optional field. This is a regex group and it can be used for parsing the match group from the regexp result
-	); err != nil {
+	if err := container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
+		EventName:    EventName,
+		EventVersion: EventVersion,
+		Questions:    []database.Question{
+			{
+				Question:      "write a message",
+				Answer:        stepMessage,
+				QuestionRegex: "(?i)(write a message)",
+				QuestionGroup: "",
+			},
+			{
+				Question:      "",
+				Answer:        stepChannel,
+				QuestionRegex: "(?i)(write a message)",
+				QuestionGroup: "",
+			},
+		},
+	}); err != nil {
 		return err
-	}
-
-	scenarioID, err := container.C.Dictionary.GetLastScenarioID()
-	if err != nil {
-		return err
-	}
-
-	_, err = container.C.Dictionary.InsertQuestion("", stepChannel, scenarioID, "", "")
-	if err != nil {
-		return errors.Wrap(err, err.Error())
 	}
 
 	return nil

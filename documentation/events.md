@@ -19,12 +19,16 @@ This feature will help you to improve the skills of your bot. With it you are ab
 ![base-event-diagram](images/base-event-scheme.png)
 
 ## Event setup
-* create your event directory in `events` directory. Ex: `events/my-brand-new-event`
-* create in your new directory file with name `my-event`. There is no black magic inside the naming, we just introduce the structured way of how to define the event files.
-* create the logic for your new event struct object and make sure that this logic is compatible with the interface `events.Event`, which you can find this interface here `events/1/main-event.go:3`
-* add your object to the "map" of the events `events.DefinedEvents` in init method of defined-events.go file 
-```DefinedEvents.Events["CUSTOM_EVENT"] = your_package.Event```
-* add to the dictionary, message regex by which your event will be triggered
+* create your event directory in `events` directory. Ex: `events/mybrandnewevent`
+* create in your new directory file with name `event.go`. There is no black magic inside the naming, we just introduce the structured way of how to define the event files.
+* create the logic for your new event struct object and make sure this logic is compatible with the interface `container.DefinedEvent`
+* add your object to the "map" of the events `events.DefinedEvents` in the `defined-events.go` file 
+```go
+var DefinedEvents = map[string]container.DefinedEvent{
+    //...
+	mybrandnewevent.EventName: mybrandnewevent.Event,
+}
+```
 
 ## Example
 Now let's take a deep dive into custom event creation and create a custom event.
@@ -34,7 +38,7 @@ You need to specify the folder name without spaces. There should not be dashes o
 Let's call it `example` and create this example folder in the `events` folder.
 
 ### The code
-There is a [Base event interface](../events/base/base-event.go) which defines the structure of each event. So, let's create our custom event using this base interface definition:
+There is a [Base DefinedEvent interface](../internal/container/container.go) which defines the structure of each event. So, let's create our custom event using this base interface definition:
 ```go
 package example
 
@@ -56,9 +60,6 @@ const (
 	EventVersion = "1.0.1"
 
     helpMessage = "Ask me `who are you?` and you will see the answer."
-
-    //The migrations folder, which can be used for event installation or for event update
-	migrationDirectoryPath = "./events/example/migrations"
 )
 
 //ExmplEvent the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
@@ -96,27 +97,35 @@ func (e ExmplEvent) Install() error {
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	return container.C.Dictionary.InstallEvent(
-		EventName,                                                                   //We specify the event name which will be used for scenario generation
-		EventVersion,                                                                //This will be set during the event creation
-		"who are you?",                                                              //Actual question, which system will wait and which will trigger our event
-		fmt.Sprintf("Hello, my name is %s", container.C.Config.SlackConfig.BotName), //Answer which will be used by the bot
-		"",                                                                          //Optional field. This is regular expression which can be used for question parsing.
-		"",                                                                          //Optional field. This is a regex group and it can be used for parsing the match group from the regexp result
-	)
+	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
+        EventName:    EventName,
+        EventVersion: EventVersion,
+        Questions:    []database.Question{
+            {
+                Question:      "who are you?",
+                Answer:        fmt.Sprintf("Hello, my name is %s", container.C.Config.SlackConfig.BotName),
+                QuestionRegex: "(?i)who are you?",
+                QuestionGroup: "",
+            },
+        },
+    })
 }
 
 //Update for event update actions
 func (e ExmplEvent) Update() error {
-	return container.C.Dictionary.RunMigrations(migrationDirectoryPath)
+	for _, migration := range m {
+		container.C.MigrationService.SetMigration(migration)
+	}
+
+	return container.C.MigrationService.RunMigrations()
 }
 ```
 
 ### Result
-#### With empty text message in the Execute method
+#### With empty text message in Execute method
 ![empty text message](images/example-event-text-empty.png)
 
-#### With the filled text message in the Execute method
+#### With the filled text message in Execute method
 ![with text message](images/example-event-with-text.png)
 
 ### Source code

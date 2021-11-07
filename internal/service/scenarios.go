@@ -16,6 +16,7 @@ func GenerateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error)
 	query := new(clients.Query).
 		Select([]interface{}{
 			"scenarios.id",
+			"scenarios.event_id",
 			"questions.id as question_id",
 			"questions.answer",
 			"questions.question",
@@ -98,6 +99,7 @@ func GenerateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error)
 
 	return dto.DictionaryMessage{
 		ScenarioID:            int64(item.GetField("id").Value.(int)),
+		EventID:               int64(item.GetField("event_id").Value.(int)),
 		Answer:                item.GetField("answer").Value.(string),
 		QuestionID:            int64(item.GetField("question_id").Value.(int)),
 		Question:              item.GetField("question").Value.(string),

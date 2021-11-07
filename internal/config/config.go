@@ -40,8 +40,8 @@ type BitBucketReviewer struct {
 	SlackUID string
 }
 
-//HttpClient the configuration for the http client
-type HttpClient struct {
+//HTTPClient the configuration for the http client
+type HTTPClient struct {
 	RequestTimeout      int64
 	TLSHandshakeTimeout int64
 	InsecureSkipVerify  bool
@@ -51,6 +51,7 @@ type HttpClient struct {
 type Config struct {
 	appEnv                  string
 	AppDictionary           string
+	LearningEnabled         bool
 	SlackConfig             SlackConfig
 	BitBucketConfig         BitBucketConfig
 	initialised             bool
@@ -60,7 +61,7 @@ type Config struct {
 	DatabaseName            string
 	DatabaseUsername        string
 	DatabasePassword        string
-	HttpClient              HttpClient
+	HTTPClient              HTTPClient
 	LogConfig               log.Config
 }
 
@@ -137,9 +138,12 @@ const (
 	//OpenConversationTimeout the life time of open conversations
 	OpenConversationTimeout = "OPEN_CONVERSATION_TIMEOUT"
 
-	HttpClientRequestTimeout      = "HTTP_CLIENT_REQUEST_TIMEOUT"
-	HttpClientTLSHandshakeTimeout = "HTTP_CLIENT_TLS_HANDSHAKE_TIMEOUT"
-	HttpClientInsecureSkipVerify  = "HTTP_CLIENT_INSECURE_SKIP_VERIFY"
+	HTTPClientRequestTimeout      = "HTTP_CLIENT_REQUEST_TIMEOUT"
+	HTTPClientTLSHandshakeTimeout = "HTTP_CLIENT_TLS_HANDSHAKE_TIMEOUT"
+	HTTPClientInsecureSkipVerify  = "HTTP_CLIENT_INSECURE_SKIP_VERIFY"
+
+	//LearningEnabled enables or disables the teaching. If enabled, the bot will try to ask the teacher users how to react on that message
+	LearningEnabled = "ENABLE_TEACHING"
 
 	LogOutput            = "LOG_OUTPUT"
 	LogLevel             = "LOG_LEVEL"
@@ -203,22 +207,28 @@ func Init() Config {
 		}
 
 		var requestTimeout, tLSHandshakeTimeout int64
-		if os.Getenv(HttpClientRequestTimeout) != "" {
-			requestTimeout, _ = strconv.ParseInt(os.Getenv(HttpClientRequestTimeout), 10, 64)
+		if os.Getenv(HTTPClientRequestTimeout) != "" {
+			requestTimeout, _ = strconv.ParseInt(os.Getenv(HTTPClientRequestTimeout), 10, 64)
 		}
 
-		if os.Getenv(HttpClientTLSHandshakeTimeout) != "" {
-			tLSHandshakeTimeout, _ = strconv.ParseInt(os.Getenv(HttpClientTLSHandshakeTimeout), 10, 64)
+		if os.Getenv(HTTPClientTLSHandshakeTimeout) != "" {
+			tLSHandshakeTimeout, _ = strconv.ParseInt(os.Getenv(HTTPClientTLSHandshakeTimeout), 10, 64)
 		}
 
 		insecureSkipVerify := false
-		if os.Getenv(HttpClientInsecureSkipVerify) == "true" || os.Getenv(HttpClientInsecureSkipVerify) == "1" {
+		if os.Getenv(HTTPClientInsecureSkipVerify) == "true" || os.Getenv(HTTPClientInsecureSkipVerify) == "1" {
 			insecureSkipVerify = true
 		}
 
+		isLearningEnabled := false
+		if os.Getenv(LearningEnabled) == "true" || os.Getenv(LearningEnabled) == "1" {
+			isLearningEnabled = true
+		}
+
 		cfg = Config{
-			appEnv:        os.Getenv(appEnv),
-			AppDictionary: AppDictionary,
+			appEnv:          os.Getenv(appEnv),
+			AppDictionary:   AppDictionary,
+			LearningEnabled: isLearningEnabled,
 			SlackConfig: SlackConfig{
 				BaseURL:          os.Getenv(SlackEnvBaseURL),
 				OAuthToken:       os.Getenv(SlackEnvOAuthToken),
@@ -244,7 +254,7 @@ func Init() Config {
 			DatabasePassword:        os.Getenv(DatabasePassword),
 			DatabaseName:            os.Getenv(DatabaseName),
 			OpenConversationTimeout: openConversationTimeout,
-			HttpClient: HttpClient{
+			HTTPClient: HTTPClient{
 				RequestTimeout:      requestTimeout,
 				TLSHandshakeTimeout: tLSHandshakeTimeout,
 				InsecureSkipVerify:  insecureSkipVerify,

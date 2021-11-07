@@ -1,4 +1,4 @@
-package database_dto
+package databasedto
 
 import "github.com/sharovik/orm/dto"
 
@@ -99,4 +99,20 @@ func (m EventsStruct) GetPrimaryKey() dto.ModelField {
 func (m *EventsStruct) SetPrimaryKey(field dto.ModelField) {
 	field.IsPrimaryKey = true
 	m.PrimaryKey = field
+}
+
+func (m *EventsStruct) RemoveModelField(field string) {
+	var columns []interface{}
+	for _, f := range m.Fields {
+		switch v := f.(type) {
+		case dto.ModelField:
+			if field == v.Name {
+				continue
+			}
+		}
+
+		columns = append(columns, f)
+	}
+
+	m.Fields = columns
 }

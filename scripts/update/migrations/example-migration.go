@@ -2,7 +2,7 @@ package migrations
 
 import (
 	"github.com/sharovik/devbot/internal/container"
-	"github.com/sharovik/devbot/internal/dto/database_dto"
+	"github.com/sharovik/devbot/internal/dto/databasedto"
 	"github.com/sharovik/orm/clients"
 	"github.com/sharovik/orm/query"
 )
@@ -23,8 +23,8 @@ func (m ExampleMigration) Execute() error {
 	client := container.C.Dictionary.GetNewClient()
 
 	q := new(clients.Query).
-		Select(database_dto.MigrationModel.GetColumns()).
-		From(&database_dto.MigrationModel).
+		Select(databasedto.MigrationModel.GetColumns()).
+		From(&databasedto.MigrationModel).
 		Where(query.Where{
 			First:    "1",
 			Operator: "=",

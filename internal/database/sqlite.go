@@ -31,7 +31,7 @@ func (d *SQLiteDictionary) GetClient() *sql.DB {
 	return d.client
 }
 
-//GetClient method returns the client connection
+//GetNewClient method returns the client connection
 func (d *SQLiteDictionary) GetNewClient() clients.BaseClientInterface {
 	return d.newClient
 }
@@ -109,6 +109,7 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 	query := new(clients.Query).
 		Select([]interface{}{
 			"scenarios.id",
+			"scenarios.event_id",
 			"questions.id as question_id",
 			"questions.answer",
 			"questions.question",
@@ -189,6 +190,7 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 
 	return dto.DictionaryMessage{
 		ScenarioID:            int64(item.GetField("id").Value.(int)),
+		EventID:            int64(item.GetField("event_id").Value.(int)),
 		Answer:                item.GetField("answer").Value.(string),
 		QuestionID:            int64(item.GetField("question_id").Value.(int)),
 		Question:              item.GetField("question").Value.(string),
@@ -649,4 +651,9 @@ func (d SQLiteDictionary) GetQuestionsByScenarioID(scenarioID int64) (result []Q
 	}
 
 	return result, nil
+}
+
+//InstallNewEventScenario the method for installing of the new event scenario
+func (d SQLiteDictionary) InstallNewEventScenario(scenario NewEventScenario) error {
+	return installNewEventScenario(&d, scenario)
 }

@@ -19,7 +19,9 @@ type ServiceInterface interface {
 //Conversation the conversation object which contains the information about the scenario selected for the conversation and the last question asked by the customer.
 type Conversation struct {
 	ScenarioID             int64
+	EventID                int64
 	ScenarioQuestionID     int64
+	Question               string
 	EventReadyToBeExecuted bool
 	LastQuestion           dto.BaseChatMessage
 	ReactionType           string
@@ -37,19 +39,20 @@ func GetCurrentConversations() map[string]Conversation {
 
 //AddConversation method adds the new conversation to the list of open conversations. This will be used for scenarios build
 func AddConversation(channel string, questionID int64, message dto.BaseChatMessage, variable string) {
-	updatedConversation := Conversation{}
+	updatedConversation := Conversation{
+		ScenarioID:         message.DictionaryMessage.ScenarioID,
+		EventID:            message.DictionaryMessage.EventID,
+		Question:           message.Text,
+		ScenarioQuestionID: questionID,
+		LastQuestion:       message,
+		ReactionType:       message.DictionaryMessage.ReactionType,
+	}
+
 	if CurrentConversations[channel].ScenarioID != int64(0) {
 		updatedConversation = CurrentConversations[channel]
 		updatedConversation.ScenarioQuestionID = questionID
 		updatedConversation.LastQuestion = message
 		updatedConversation.ReactionType = message.DictionaryMessage.ReactionType
-	} else {
-		updatedConversation = Conversation{
-			ScenarioID:         message.DictionaryMessage.ScenarioID,
-			ScenarioQuestionID: questionID,
-			LastQuestion:       message,
-			ReactionType:       message.DictionaryMessage.ReactionType,
-		}
 	}
 
 	updatedConversation = AddConversationVariable(updatedConversation, variable)
