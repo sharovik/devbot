@@ -71,7 +71,7 @@ func (container Main) Init() Main {
 	slackClient := client.SlackClient{
 		Client:     &httpClient,
 		BaseURL:    container.Config.SlackConfig.BaseURL,
-		OAuthToken: container.Config.SlackConfig.OAuthToken,
+		OAuthToken: container.Config.SlackConfig.WebAPIOAuthToken,
 	}
 
 	container.HTTPClient = &client.HTTPClient{

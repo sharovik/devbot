@@ -1,12 +1,16 @@
 package slack
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"strings"
-
+	"github.com/sharovik/devbot/internal/client"
 	"github.com/sharovik/devbot/internal/config"
+	"github.com/sharovik/devbot/internal/service/analiser"
 	"github.com/sharovik/devbot/internal/service/base"
+	"net/http"
+	"strings"
+	"time"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
@@ -14,20 +18,11 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-//Service struct of slack service
-type Service struct {
+//EventsApiService struct of slack service
+type EventsApiService struct {
 }
 
-//S slack service object
-var S base.ServiceInterface = Service{}
-
-func InitService() {
-	if !container.C.Config.SlackConfig.LegacyBot {
-		S = EventsApiService{}
-	}
-}
-
-func (Service) fetchMainChannelID() error {
+func (EventsApiService) fetchMainChannelID() error {
 	availableChannels, statusCode, err := container.C.MessageClient.GetConversationsList()
 	if err != nil {
 		log.Logger().AddError(err).Int("status_code", statusCode).Msg("Failed conversations list fetching")
@@ -54,7 +49,7 @@ func (Service) fetchMainChannelID() error {
 	return nil
 }
 
-func (Service) fetchBotUserID() error {
+func (EventsApiService) fetchBotUserID() error {
 	availableUsers, statusCode, err := container.C.MessageClient.GetUsersList()
 	if err != nil {
 		log.Logger().AddError(err).Int("status_code", statusCode).Msg("Failed conversations list fetching")
@@ -82,7 +77,7 @@ func (Service) fetchBotUserID() error {
 }
 
 //BeforeWSConnectionStart runs methods before the WS connection start
-func (s Service) BeforeWSConnectionStart() error {
+func (s EventsApiService) BeforeWSConnectionStart() error {
 	if container.C.Config.SlackConfig.MainChannelID == "" {
 		log.Logger().Info().Msg("Main channel ID wasn't specified. Trying to fetch main channel from API")
 		if err := s.fetchMainChannelID(); err != nil {
@@ -110,7 +105,7 @@ func (s Service) BeforeWSConnectionStart() error {
 }
 
 //InitWebSocketReceiver method for initialization of websocket receiver
-func (s Service) InitWebSocketReceiver() error {
+func (s EventsApiService) InitWebSocketReceiver() error {
 	if err := s.BeforeWSConnectionStart(); err != nil {
 		log.Logger().AddError(err).Msg("Failed to prepare service for WS connection")
 		return err
@@ -124,10 +119,11 @@ func (s Service) InitWebSocketReceiver() error {
 
 	var (
 		event   interface{}
-		message dto.SlackResponseEventMessage
 	)
 
 	for {
+		var message dto.SlackResponseEventApiMessage
+
 		//Receive message
 		err = websocket.JSON.Receive(ws, &event)
 		if err != nil {
@@ -148,11 +144,30 @@ func (s Service) InitWebSocketReceiver() error {
 			return err
 		}
 
+		if message.Type == "hello" {
+			continue
+		}
+
+		log.Logger().Debug().
+			RawJSON("message_body", str).
+			Str("envelope_id", message.EnvelopeID).
+			Msg("Received event message")
+
+		if err := acknowledge(ws, message.EnvelopeID); err != nil {
+			log.Logger().AddError(err).
+				RawJSON("message_body", str).
+				Str("envelope_id", message.EnvelopeID).
+				Msg("Failed to acknowledge the message")
+
+			return err
+		}
+
 		if !isValidMessage(MessageAttributes{
-			Type:    message.Type,
-			Channel: message.Channel,
-			Text:    message.Text,
-			User:    message.User,
+			Type:    message.Payload.Event.Type,
+			Channel: message.Payload.Event.Channel,
+			Text:    message.Payload.Event.Text,
+			User:    message.Payload.Event.User,
+			BotID:   message.Payload.Event.BotID,
 		}) {
 			continue
 		}
@@ -165,74 +180,91 @@ func (s Service) InitWebSocketReceiver() error {
 	}
 }
 
+func acknowledge(ws *websocket.Conn, envelopeId string) error {
+	res := dto.SlackRequestAcknowledge{
+		EnvelopeID: envelopeId,
+	}
+
+	log.Logger().Debug().
+		Str("envelope_id", envelopeId).
+		Msg("Acknowledge event message")
+
+	return websocket.JSON.Send(ws, res)
+}
+
 //ProcessMessage processes the message from the WS connection
-func (s Service) ProcessMessage(msg interface{}) error {
-	message := msg.(*dto.SlackResponseEventMessage)
+func (s EventsApiService) ProcessMessage(msg interface{}) error {
+	message := msg.(*dto.SlackResponseEventApiMessage)
 	log.Logger().Debug().
 		Str("type", message.Type).
-		Str("text", message.Text).
-		Str("team", message.Team).
-		Str("source_team", message.SourceTeam).
-		Str("ts", message.Ts).
-		Str("user", message.User).
-		Str("channel", message.Channel).
+		Str("text", message.Payload.Event.Text).
+		Str("team", message.Payload.Event.Team).
+		Str("ts", message.Payload.Event.Ts).
+		Str("user", message.Payload.Event.User).
+		Str("channel", message.Payload.Event.Channel).
 		Msg("Message received")
 
 	//We need to trim the message before all checks
-	message.Text = strings.TrimSpace(message.Text)
+	message.Payload.Event.Text = strings.TrimSpace(message.Payload.Event.Text)
 
-	switch message.Type {
-	case eventTypeDesktopNotification:
-		if !isAnswerWasPrepared(message.Channel) {
-			log.Logger().Warn().
-				Interface("message_object", message).
-				Msg("Answer wasn't prepared")
-			return nil
-		}
+	dmAnswer, err := analiser.GetDmAnswer(analiser.Message{
+		Channel: message.Payload.Event.Channel,
+		User:    message.Payload.Event.User,
+		Text:    message.Payload.Event.Text,
+	})
 
-		if err := TriggerAnswer(message.Channel); err != nil {
-			log.Logger().AddError(err).Msg("Failed trigger the answer")
-			return err
-		}
-	default:
-		m, dmAnswer, err := analyseMessage(message)
-		if err != nil {
-			log.Logger().AddError(err).Msg("Failed to analyse received message")
-			return err
-		}
-
-		emptyDmMessage := dto.DictionaryMessage{}
-		if dmAnswer == emptyDmMessage {
-			log.Logger().Debug().
-				Str("type", message.Type).
-				Str("text", message.Text).
-				Str("team", message.Team).
-				Str("source_team", message.SourceTeam).
-				Str("ts", message.Ts).
-				Str("user", message.User).
-				Str("channel", message.Channel).
-				Msg("No answer found for the received message")
-		} else {
-			//We put a dictionary message into our message object,
-			// so later we can identify what kind of reaction will be executed
-			m.DictionaryMessage = dmAnswer
-		}
-
-		//We need to put this message into our small queue,
-		//because we need to make sure if we received our notification.
-		readyToAnswer(m)
+	m, err := prepareAnswer(&dto.SlackResponseEventMessage{
+		Channel:      message.Payload.Event.Channel,
+		ClientMsgID:  message.Payload.Event.ClientMsgID,
+		DisplayAsBot: false,
+		EventTs:      message.Payload.Event.EventTs,
+		Files:        nil,
+		Team:         message.Payload.Event.Team,
+		Text:         message.Payload.Event.Text,
+		Ts:           message.Payload.Event.Ts,
+		Type:         message.Payload.Event.Type,
+		User:         message.Payload.Event.User,
+	}, dmAnswer)
+	if err != nil {
+		log.Logger().AddError(err).Msg("Failed to analyse received message")
+		return err
 	}
 
-	openConversation := base.GetConversation(message.Channel)
+	emptyDmMessage := dto.DictionaryMessage{}
+	if dmAnswer == emptyDmMessage {
+		log.Logger().Debug().
+			Str("type", message.Payload.Event.Type).
+			Str("text", message.Payload.Event.Text).
+			Str("team", message.Payload.Event.Team).
+			Str("ts", message.Payload.Event.Ts).
+			Str("user", message.Payload.Event.User).
+			Str("channel", message.Payload.Event.Channel).
+			Msg("No answer found for the received message")
+	} else {
+		//We put a dictionary message into our message object,
+		// so later we can identify what kind of reaction will be executed
+		m.DictionaryMessage = dmAnswer
+	}
+
+	//We need to put this message into our small queue,
+	//because we need to make sure if we received our notification.
+	readyToAnswer(m)
+
+	if err := TriggerAnswer(message.Payload.Event.Channel); err != nil {
+		log.Logger().AddError(err).Msg("Failed trigger the answer")
+		return err
+	}
+
+	openConversation := base.GetConversation(message.Payload.Event.Channel)
 	if openConversation.ScenarioID != 0 {
-		isChannelMessage, err := IsChannelID(message.Channel)
+		isChannelMessage, err := IsChannelID(message.Payload.Event.Channel)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Error received during channel ID check")
 			return err
 		}
 
 		if isChannelMessage {
-			return TriggerAnswer(message.Channel)
+			return TriggerAnswer(message.Payload.Event.Channel)
 		}
 	}
 
@@ -240,9 +272,29 @@ func (s Service) ProcessMessage(msg interface{}) error {
 	return nil
 }
 
+func getWSClient() client.SlackClient {
+	netTransport := &http.Transport{
+		TLSHandshakeTimeout: time.Duration(container.C.Config.HTTPClient.TLSHandshakeTimeout) * time.Second,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: container.C.Config.HTTPClient.InsecureSkipVerify,
+		},
+	}
+
+	httpClient := http.Client{
+		Timeout:   time.Duration(container.C.Config.HTTPClient.RequestTimeout) * time.Second,
+		Transport: netTransport,
+	}
+
+	return client.SlackClient{
+		Client:     &httpClient,
+		BaseURL:    container.C.Config.SlackConfig.BaseURL,
+		OAuthToken: container.C.Config.SlackConfig.OAuthToken,
+	}
+}
+
 //wsConnect method for receiving of websocket URL which we will use for our connection
-func (Service) wsConnect() (*websocket.Conn, int, error) {
-	response, statusCode, err := container.C.MessageClient.Get("/rtm.connect")
+func (EventsApiService) wsConnect() (*websocket.Conn, int, error) {
+	response, statusCode, err := getWSClient().Post("/apps.connections.open", []byte{})
 	if err != nil {
 		log.Logger().AddError(err).RawJSON("response", response).Int("status_code", statusCode).Msg("Failed send message")
 		return &websocket.Conn{}, statusCode, err
@@ -257,7 +309,7 @@ func (Service) wsConnect() (*websocket.Conn, int, error) {
 		return &websocket.Conn{}, statusCode, errors.New(dtoResponse.Error)
 	}
 
-	ws, err := websocket.Dial(dtoResponse.URL, "", "https://api.slack.com/")
+	ws, err := websocket.Dial(dtoResponse.URL, "", "https://slack.com/api")
 
 	return ws, statusCode, nil
 }

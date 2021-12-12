@@ -58,7 +58,7 @@ func (d *SQLiteDictionary) CloseDatabaseConnection() error {
 }
 
 //FindAnswer used for searching of message in the database
-func (d SQLiteDictionary) FindAnswer(message *dto.SlackResponseEventMessage) (dto.DictionaryMessage, error) {
+func (d SQLiteDictionary) FindAnswer(message string) (dto.DictionaryMessage, error) {
 	var (
 		dmAnswer dto.DictionaryMessage
 		regexID  int64
@@ -66,19 +66,19 @@ func (d SQLiteDictionary) FindAnswer(message *dto.SlackResponseEventMessage) (dt
 	)
 
 	//We do that because it can be that we can parse this question by available regex. If so, it will help main query to find the answer for this message
-	regexID, err = d.parsedByAvailableRegex(message.Text)
+	regexID, err = d.parsedByAvailableRegex(message)
 	if err != nil {
 		return dto.DictionaryMessage{}, err
 	}
 
-	dmAnswer, err = d.answerByQuestionString(message.Text, regexID)
+	dmAnswer, err = d.answerByQuestionString(message, regexID)
 	if err != nil {
 		return dto.DictionaryMessage{}, err
 	}
 
 	//Finally we parse data by using selected regex in our question
 	if dmAnswer.Regex != "" {
-		matches := helper.FindMatches(dmAnswer.Regex, message.Text)
+		matches := helper.FindMatches(dmAnswer.Regex, message)
 
 		if len(matches) != 0 && dmAnswer.MainGroupIndexInRegex != "" && matches[dmAnswer.MainGroupIndexInRegex] != "" {
 			dmAnswer.Answer = fmt.Sprintf(dmAnswer.Answer, matches[dmAnswer.MainGroupIndexInRegex])

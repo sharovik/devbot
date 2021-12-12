@@ -16,10 +16,12 @@ import (
 type SlackConfig struct {
 	BaseURL          string
 	OAuthToken       string
+	WebAPIOAuthToken string
 	BotUserID        string
 	BotName          string
 	MainChannelAlias string
 	MainChannelID    string
+	LegacyBot        bool
 }
 
 //BitBucketConfig struct for bitbucket config
@@ -81,6 +83,9 @@ const (
 	//SlackEnvUserID env variable for slack user ID
 	SlackEnvUserID = "SLACK_USER_ID"
 
+	//SlackLegacy env variable for slack legacy bot mode
+	SlackLegacy = "SLACK_LEGACY_BOT"
+
 	//SlackEnvMainChannelID env variable for slack main channel ID
 	SlackEnvMainChannelID = "SLACK_MAIN_CHANNEL_ID"
 
@@ -95,6 +100,9 @@ const (
 
 	//SlackEnvOAuthToken env variable for slack oauth token
 	SlackEnvOAuthToken = "SLACK_OAUTH_TOKEN"
+
+	//SlackEnvWebAPIOAuthToken env variable for slack web api oauth token.
+	SlackEnvWebAPIOAuthToken = "SLACK_WEB_API_OAUTH_TOKEN"
 
 	//DatabaseConnection env variable for database connection type
 	DatabaseConnection = "DATABASE_CONNECTION"
@@ -225,17 +233,25 @@ func Init() Config {
 			isLearningEnabled = true
 		}
 
+		slackOAuthToken := os.Getenv(SlackEnvOAuthToken)
+		slackWebAPIOAuthToken := os.Getenv(SlackEnvWebAPIOAuthToken)
+		if slackWebAPIOAuthToken == "" {
+			slackWebAPIOAuthToken = slackOAuthToken
+		}
+
 		cfg = Config{
 			appEnv:          os.Getenv(appEnv),
 			AppDictionary:   AppDictionary,
 			LearningEnabled: isLearningEnabled,
 			SlackConfig: SlackConfig{
 				BaseURL:          os.Getenv(SlackEnvBaseURL),
-				OAuthToken:       os.Getenv(SlackEnvOAuthToken),
+				OAuthToken:       slackOAuthToken,
+				WebAPIOAuthToken: slackWebAPIOAuthToken,
 				MainChannelAlias: mainChannelAlias,
 				MainChannelID:    os.Getenv(SlackEnvMainChannelID),
 				BotUserID:        os.Getenv(SlackEnvUserID),
 				BotName:          BotName,
+				LegacyBot:        getBoolValue(SlackLegacy),
 			},
 			BitBucketConfig: BitBucketConfig{
 				ClientID:                     os.Getenv(BitBucketClientID),
@@ -348,4 +364,13 @@ func PrepareBitBucketReviewers(reviewers string) []BitBucketReviewer {
 	}
 
 	return result
+}
+
+func getBoolValue(field string) bool {
+	res := false
+	if os.Getenv(field) == "true" || os.Getenv(field) == "1" {
+		res = true
+	}
+
+	return res
 }
