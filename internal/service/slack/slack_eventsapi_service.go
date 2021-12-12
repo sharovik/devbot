@@ -218,6 +218,7 @@ func (s EventsApiService) ProcessMessage(msg interface{}) error {
 		ClientMsgID:  message.Payload.Event.ClientMsgID,
 		DisplayAsBot: false,
 		EventTs:      message.Payload.Event.EventTs,
+		ThreadTS:     message.Payload.Event.ThreadTS,
 		Files:        nil,
 		Team:         message.Payload.Event.Team,
 		Text:         message.Payload.Event.Text,

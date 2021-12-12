@@ -27,9 +27,10 @@ type SlackResponseEventApiMessage struct {
 				Type string `json:"type"`
 			} `json:"blocks"`
 			Channel     string `json:"channel"`
-			BotID     string `json:"bot_id"`
+			BotID       string `json:"bot_id"`
 			ClientMsgID string `json:"client_msg_id"`
 			EventTs     string `json:"event_ts"`
+			ThreadTS    string `json:"thread_ts"`
 			Team        string `json:"team"`
 			Text        string `json:"text"`
 			Ts          string `json:"ts"`

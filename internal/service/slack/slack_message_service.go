@@ -282,6 +282,7 @@ func prepareAnswer(message *dto.SlackResponseEventMessage, dm dto.DictionaryMess
 	responseMessage := dto.SlackRequestChatPostMessage{
 		Channel:         message.Channel,
 		Text:            dm.Answer,
+		ThreadTS:        message.ThreadTS,
 		AsUser:          true,
 		Ts:              time.Now(),
 		OriginalMessage: *message,
