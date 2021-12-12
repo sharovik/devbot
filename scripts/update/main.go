@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
-	"github.com/sharovik/devbot/events"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/log"
+	"github.com/sharovik/devbot/internal/service/definedevents"
 	"github.com/sharovik/devbot/scripts/update/migrations"
 )
 
@@ -16,6 +16,8 @@ const (
 var (
 	m   = []database.BaseMigrationInterface{
 		migrations.ExampleMigration{},
+		migrations.EventsTriggersHistoryMigration{},
+		migrations.UpdateEventsTriggersHistoryMigration{},
 	}
 )
 
@@ -29,6 +31,7 @@ func main() {
 
 func run() error {
 	container.C = container.C.Init()
+	definedevents.InitializeDefinedEvents()
 	if err := runMigrations(); err != nil {
 		log.Logger().AddError(err).Msg("Failed to run migrations")
 		return err
@@ -37,12 +40,12 @@ func run() error {
 	eventAlias := parseEventAlias()
 
 	if eventAlias != "" {
-		if events.DefinedEvents.Events[eventAlias] == nil {
+		if container.C.DefinedEvents[eventAlias] == nil {
 			log.Logger().Info().Msg("Event is not defined in the defined-events")
 			return nil
 		}
 
-		if err := events.DefinedEvents.Events[eventAlias].Update(); err != nil {
+		if err := container.C.DefinedEvents[eventAlias].Update(); err != nil {
 			log.Logger().Info().Msg("Failed to update the event. Error:" + err.Error())
 			return err
 		}
@@ -52,7 +55,7 @@ func run() error {
 	}
 
 	log.Logger().Debug().Msg("Trying to update all defined events if it's possible")
-	for eventAlias, event := range events.DefinedEvents.Events {
+	for eventAlias, event := range container.C.DefinedEvents {
 		if err := event.Update(); err != nil {
 			log.Logger().AddError(err).Str("event_alias", eventAlias).Msg("Failed to update the event.")
 		}

@@ -51,7 +51,8 @@ func (s MigrationService) RunMigrations() error {
 
 		s.Logger.Info().Str("migration_name", migration.GetName()).Msg("Running migration")
 		if err := migration.Execute(); err != nil {
-			return err
+			log.Logger().AddError(err).Str("migration_name", migration.GetName()).Msg("Failed to execute the migration")
+			continue
 		}
 
 		if err := s.Dictionary.MarkMigrationExecuted(migration.GetName()); err != nil {

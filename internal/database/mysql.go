@@ -3,7 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"github.com/sharovik/devbot/internal/dto/database_dto"
+	"github.com/sharovik/devbot/internal/dto/databasedto"
 	"github.com/sharovik/orm/clients"
 	cdto "github.com/sharovik/orm/dto"
 	cquery "github.com/sharovik/orm/query"
@@ -29,7 +29,7 @@ func (d *MySQLDictionary) GetClient() *sql.DB {
 	return d.client
 }
 
-//GetClient method returns the client connection
+//GetNewClient method returns the client connection
 func (d *MySQLDictionary) GetNewClient() clients.BaseClientInterface {
 	return d.newClient
 }
@@ -105,6 +105,7 @@ func (d MySQLDictionary) answerByQuestionString(questionText string, regexID int
 	query := new(clients.Query).
 		Select([]interface{}{
 			"scenarios.id",
+			"scenarios.event_id",
 			"questions.id as question_id",
 			"questions.answer",
 			"questions.question",
@@ -185,6 +186,7 @@ func (d MySQLDictionary) answerByQuestionString(questionText string, regexID int
 
 	return dto.DictionaryMessage{
 		ScenarioID:            int64(item.GetField("id").Value.(int)),
+		EventID:               int64(item.GetField("event_id").Value.(int)),
 		Answer:                item.GetField("answer").Value.(string),
 		QuestionID:            int64(item.GetField("question_id").Value.(int)),
 		Question:              item.GetField("question").Value.(string),
@@ -252,7 +254,7 @@ func (d MySQLDictionary) GetLastScenarioID() (int64, error) {
 			Name: "id",
 			Type: cdto.IntegerColumnType,
 		}}).
-		From(&database_dto.ScenariosModel).
+		From(&databasedto.ScenariosModel).
 		OrderBy("id", cquery.OrderDirectionDesc).
 		Limit(cquery.Limit{From: 0, To: 1})
 	res, err := d.newClient.Execute(query)
@@ -468,7 +470,7 @@ func (d MySQLDictionary) InsertQuestionRegex(questionRegex string, questionRegex
 
 //GetAllRegex method retrieves all available regexs
 func (d MySQLDictionary) GetAllRegex() (res map[int64]string, err error) {
-	rows, err := d.newClient.Execute(new(clients.Query).Select(database_dto.QuestionsRegexModel.GetColumns()).From(&cdto.BaseModel{TableName: "questions_regex"}))
+	rows, err := d.newClient.Execute(new(clients.Query).Select(databasedto.QuestionsRegexModel.GetColumns()).From(&cdto.BaseModel{TableName: "questions_regex"}))
 	if err == sql.ErrNoRows {
 		return res, nil
 	} else if err != nil {
@@ -651,4 +653,9 @@ func (d MySQLDictionary) GetQuestionsByScenarioID(scenarioID int64) (result []Qu
 	}
 
 	return result, nil
+}
+
+//InstallNewEventScenario the method for installing of the new event scenario
+func (d MySQLDictionary) InstallNewEventScenario(scenario NewEventScenario) error {
+	return installNewEventScenario(&d, scenario)
 }

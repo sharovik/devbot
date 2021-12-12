@@ -1,4 +1,4 @@
-## Dictionary
+## Dictionary [DEPRECATED]
 This is the functionality by which the DevBot understand what kind of the event he need to trigger for your message.
 
 ## Table of contents

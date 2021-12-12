@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/sharovik/devbot/internal/service/definedevents"
 	"os"
 	"path"
 	"runtime"
@@ -20,6 +21,7 @@ func init() {
 	_ = os.Chdir(dir)
 
 	container.C = container.C.Init()
+	definedevents.InitializeDefinedEvents()
 }
 
 const (

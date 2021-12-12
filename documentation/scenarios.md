@@ -52,99 +52,32 @@ Below you can see how the example of how the scenario processing looks like
 ![scenario-message-processing](images/scenario-message-processing.png)
 
 ## Installation of scenario
-Each scenario with multiple questions and answers should have not less then 2 questions, otherwise it **will not be handled** as scenario, but as a simple question.
+Each scenario with multiple questions and answers should have not less than 2 questions, otherwise it **will not be handled** as scenario, but as a simple question.
 So for installation you will need to create the initial question and answer first and then, based on created scenario ID, connect to it one or more questions.
 
 Here you can see the example of Install method for your custom event, where we install the scenario
 
 ```go
 //Install method for installation of event
-func (e EventStruct) Install() error {
+func (e ExmplEvent) Install() error {
 	log.Logger().Debug().
 		Str("event_name", EventName).
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	if err := container.C.Dictionary.InstallEvent(
-		EventName,      //We specify the event name which will be used for scenario generation
-		EventVersion,   //This will be set during the event creation
-		"write a message", //Actual question, which system will wait and which will trigger our event
-		"What I need to write?", //Answer which will be used by the bot
-		"(?i)(write a message)", //Optional field. This is regular expression which can be used for question parsing.
-		"", //Optional field. This is a regex group and it can be used for parsing the match group from the regexp result
-	); err != nil {
-		return err
-	}
-
-    //We get the last scenario ID which was inserted now
-	scenarioID, err := container.C.Dictionary.GetLastScenarioID()
-	if err != nil {
-		return err
-	}
-
-    //We attach new question to existing scenario. As you can see here, the second question is without `question` attribute
-	_, err = container.C.Dictionary.InsertQuestion("", "Where I need to post this message? If it's channel, the channel should be public.", scenarioID, "", "")
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
+        EventName:    EventName,
+        EventVersion: EventVersion,
+        Questions:    []database.Question{
+            {
+                Question:      "who are you?",
+                Answer:        fmt.Sprintf("Hello, my name is %s", container.C.Config.SlackConfig.BotName),
+                QuestionRegex: "(?i)who are you?",
+                QuestionGroup: "",
+            },
+        },
+    })
 }
 ```
 
-## Example of event Execute method
-Here you can see the example of the Execute method, which will be triggered once the scenario answers were received.
-The example was taken from `evemts/examplescenario` folder, where you can see the full code-base
-
-```go
-//Execute method which is called by message processor
-func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
-
-    //... help code block here ...
-
-    //We get the conversation based on the channel name
-	currentConversation := base.GetConversation(message.Channel)
-
-    //How many questions you define for your scenario, that many data will be set in variables of your Conversation.
-    //In our case we have only 2 questions, so we will use 2 variables
-	whatToWrite := ""
-	whereToWrite := ""
-
-    //If we don't have all variables for our conversation, that means, we didn't received answers for all questions of our scenario
-	if len(currentConversation.Variables) != 2 {
-        message.Text = "Not all variables are defined."
-
-        //We remove this conversation from the memory, because it is expired. You must do this, otherwise bot will think that this conversation is still opened.
-        base.DeleteConversation(message.Channel)
-        return message, nil
-	}
-
-    //Here we fill up our variables
-    if currentConversation.Variables[0] != "" {
-        whatToWrite = removeCurrentUserFromTheMessage(currentConversation.Variables[0])
-    }
-
-    if currentConversation.Variables[1] != "" {
-        whereToWrite = extractChannelName(currentConversation.Variables[1])
-
-        if whereToWrite == "" {
-            message.Text = "Something went wrong and I can't parse properly the channel name."
-            base.DeleteConversation(message.Channel)
-            return message, nil
-        }
-    }
-
-	//... Some logic with this variables here ...
-
-	//This answer will be show once the event get triggered.
-	//Leave message.Text empty, once you need to not show the message, once this event get triggered.
-	message.Text = "Done"
-
-	//We remove this conversation from the memory, because it is expired. You must do this, otherwise bot will think that this conversation is still opened.
-	base.DeleteConversation(message.Channel)
-	return message, nil
-}
-```
-
-## Example of custom scenario event
-You can find the example in the project folder `events/examplescenario`
+As you can see, in the `database.NewEventScenario` struct you can define multiple questions, which will be connected to a one scenario.

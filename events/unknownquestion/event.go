@@ -3,6 +3,7 @@ package unknownquestion
 import (
 	"database/sql"
 	"fmt"
+	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/orm/clients"
 	cdto "github.com/sharovik/orm/dto"
@@ -122,14 +123,18 @@ func (e EventStruct) Install() error {
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	return container.C.Dictionary.InstallEvent(
-		EventName,      //We specify the event name which will be used for scenario generation
-		EventVersion,   //This will be set during the event creation
-		"similar questions", //Actual question, which system will wait and which will trigger our event
-		"", //Answer which will be used by the bot
-		"(?im)similar questions", //Optional field. This is regular expression which can be used for question parsing.
-		"",                 //Optional field. This is a regex group and it can be used for parsing the match group from the regexp result
-	)
+	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
+		EventName:    EventName,
+		EventVersion: EventVersion,
+		Questions:    []database.Question{
+			{
+				Question:      "similar questions",
+				Answer:        "",
+				QuestionRegex: "(?im)similar questions",
+				QuestionGroup: "",
+			},
+		},
+	})
 }
 
 //Update for event update actions

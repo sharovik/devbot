@@ -1,25 +1,25 @@
-package database_dto
+package databasedto
 
 import "github.com/sharovik/orm/dto"
 
-type ScenariosStruct struct {
+type QuestionsRegexStruct struct {
 	TableName  string
 	PrimaryKey dto.ModelField
 	Fields     []interface{}
 }
 
-var ScenariosModel = dto.BaseModel{
-	TableName: "scenarios",
+var QuestionsRegexModel = dto.BaseModel{
+	TableName: "questions_regex",
 	Fields: []interface{}{
 		dto.ModelField{
-			Name:  "name",
+			Name:  "regex",
 			Type:  dto.VarcharColumnType,
 			Length: 255,
 		},
 		dto.ModelField{
-			Name:  "event_id",
-			Type:  dto.IntegerColumnType,
-			IsNullable: true,
+			Name:  "regex_group",
+			Type:  dto.VarcharColumnType,
+			Length: 255,
 		},
 	},
 	PrimaryKey: dto.ModelField{
@@ -30,15 +30,15 @@ var ScenariosModel = dto.BaseModel{
 	},
 }
 
-func (m *ScenariosStruct) SetTableName(name string) {
+func (m *QuestionsRegexStruct) SetTableName(name string) {
 	m.TableName = name
 }
 
-func (m ScenariosStruct) GetTableName() string {
+func (m QuestionsRegexStruct) GetTableName() string {
 	return m.TableName
 }
 
-func (m ScenariosStruct) GetColumns() []interface{} {
+func (m QuestionsRegexStruct) GetColumns() []interface{} {
 	var columns []interface{}
 
 	if m.GetPrimaryKey() != (dto.ModelField{IsPrimaryKey: true}) {
@@ -55,11 +55,11 @@ func (m ScenariosStruct) GetColumns() []interface{} {
 	return columns
 }
 
-func (m *ScenariosStruct) AddModelField(field dto.ModelField) {
+func (m *QuestionsRegexStruct) AddModelField(field dto.ModelField) {
 	m.Fields = append(m.GetColumns(), field)
 }
 
-func (m ScenariosStruct) GetField(name string) dto.ModelField {
+func (m QuestionsRegexStruct) GetField(name string) dto.ModelField {
 	for _, field := range m.GetColumns() {
 		switch v := field.(type) {
 		case dto.ModelField:
@@ -72,7 +72,7 @@ func (m ScenariosStruct) GetField(name string) dto.ModelField {
 	return dto.ModelField{}
 }
 
-func (m *ScenariosStruct) SetField(name string, value interface{}) {
+func (m *QuestionsRegexStruct) SetField(name string, value interface{}) {
 	var columns []interface{}
 	for _, field := range m.GetColumns() {
 		switch v := field.(type) {
@@ -91,12 +91,28 @@ func (m *ScenariosStruct) SetField(name string, value interface{}) {
 	m.Fields = columns
 }
 
-func (m ScenariosStruct) GetPrimaryKey() dto.ModelField {
+func (m QuestionsRegexStruct) GetPrimaryKey() dto.ModelField {
 	m.PrimaryKey.IsPrimaryKey = true
 	return m.PrimaryKey
 }
 
-func (m *ScenariosStruct) SetPrimaryKey(field dto.ModelField) {
+func (m *QuestionsRegexStruct) SetPrimaryKey(field dto.ModelField) {
 	field.IsPrimaryKey = true
 	m.PrimaryKey = field
+}
+
+func (m *QuestionsRegexStruct) RemoveModelField(field string) {
+	var columns []interface{}
+	for _, f := range m.Fields {
+		switch v := f.(type) {
+		case dto.ModelField:
+			if field == v.Name {
+				continue
+			}
+		}
+
+		columns = append(columns, f)
+	}
+
+	m.Fields = columns
 }

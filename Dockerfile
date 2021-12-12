@@ -17,8 +17,7 @@ COPY . .
 RUN apk add --no-cache bash && apk add --no-cache make && apk add build-base && apk add --no-cache git
 
 RUN make vendor
-RUN make build-slack-bot-for-current-system
-RUN make install
+RUN make build
 
 # Command to run when starting the container
 ENTRYPOINT ["./bin/slack-bot-current-system"]

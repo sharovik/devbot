@@ -41,6 +41,9 @@ type BaseDatabaseInterface interface {
 	//Should be used for your custom event installation. This will create a new event row in the database if previously this row wasn't
 	//exists and insert new scenario for specified question and answer
 	InstallEvent(eventName string, eventVersion string, question string, answer string, questionRegex string, questionRegexGroup string) error
+
+	//InstallNewEventScenario the method will be used for the new better way of scenario installation
+	InstallNewEventScenario(scenario NewEventScenario) error
 }
 
 //QuestionObject used for proper data mapping from questions table
@@ -49,4 +52,47 @@ type QuestionObject struct {
 	Question     string
 	Answer       string
 	ReactionType string
+}
+
+//NewEventScenario the object can be used for the new event scenario installation
+type NewEventScenario struct {
+	EventName string
+	EventVersion string
+	Questions []Question
+}
+
+//Question the scenario question
+type Question struct {
+	Question string
+	Answer string
+	QuestionRegex string
+	QuestionGroup string
+}
+
+func installNewEventScenario(d BaseDatabaseInterface, scenario NewEventScenario) error {
+	eventID, err := d.FindEventByAlias(scenario.EventName)
+	if err != nil {
+		return err
+	}
+
+	if eventID == 0 {
+		eventID, err = d.InsertEvent(scenario.EventName, scenario.EventVersion)
+		if err != nil {
+			return err
+		}
+	}
+
+	scenarioID, err := d.InsertScenario(scenario.EventName, eventID)
+	if err != nil {
+		return err
+	}
+
+	for _, q := range scenario.Questions {
+		_, err = d.InsertQuestion(q.Question, q.Answer, scenarioID, q.QuestionRegex, q.QuestionRegex)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -14,7 +14,7 @@ CMD:=$(patsubst cmd/%/main.go,%,$(shell find cmd -type f -name 'main.go'))
 LDFLAGS=-ldflags="-s -w"
 
 vendor:
-	if [ ! -d "vendor" ] || [ -z "$(shell ls -A vendor)" ]; then go mod vendor; fi
+	go mod vendor
 
 build-slack-bot-cross-platform:
 	env CGO_ENABLED=1 xgo --targets=darwin/*,linux/amd64,linux/386,windows/* --dest ./$(PROJECT_BUILD_DIR)/$(BIN_DIR)/ --out slack-bot ./cmd/slack-bot
@@ -60,8 +60,9 @@ install:
 
 update:
 	make build-update-script-for-current-system
+	make run-update
 
-update-events:
+run-update:
 	./scripts/update/run
 
 create-project-build-dirs:
