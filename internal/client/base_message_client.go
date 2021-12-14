@@ -2,7 +2,6 @@ package client
 
 import (
 	"github.com/sharovik/devbot/internal/dto"
-	"golang.org/x/net/websocket"
 )
 
 //MessageClientInterface interface for slack client
@@ -16,7 +15,6 @@ type MessageClientInterface interface {
 	//Methods for slackAPI endpoints
 	GetConversationsList() (dto.SlackResponseConversationsList, int, error)
 	GetUsersList() (dto.SlackResponseUsersList, int, error)
-	SendMessageToWs(*websocket.Conn, dto.SlackRequestEventMessage) error
 
 	//PM messages
 	SendMessage(dto.SlackRequestChatPostMessage) (dto.SlackResponseChatPostMessage, int, error)

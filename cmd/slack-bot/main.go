@@ -35,6 +35,8 @@ var (
 )
 
 func run() error {
+	slack.InitService()
+
 	for {
 		if err := slack.S.InitWebSocketReceiver(); err != nil {
 			log.Logger().AddError(err).Msg("Error received during application run")

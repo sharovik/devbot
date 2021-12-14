@@ -14,13 +14,19 @@ const (
 	ConnectionMySQL = "mysql"
 )
 
+type Message struct {
+	Channel string
+	User string
+	Text string
+}
+
 //BaseDatabaseInterface interface for base database client
 type BaseDatabaseInterface interface {
 	InitDatabaseConnection() error
 	GetClient() *sql.DB
 	GetNewClient() clients.BaseClientInterface
 	CloseDatabaseConnection() error
-	FindAnswer(message *dto.SlackResponseEventMessage) (dto.DictionaryMessage, error)
+	FindAnswer(message string) (dto.DictionaryMessage, error)
 	InsertQuestion(question string, answer string, scenarioID int64, questionRegex string, questionRegexGroup string) (int64, error)
 	InsertScenario(name string, eventID int64) (int64, error)
 	FindScenarioByID(scenarioID int64) (int64, error)

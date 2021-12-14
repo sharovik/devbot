@@ -5,16 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/sharovik/devbot/internal/dto"
+	"github.com/sharovik/devbot/internal/log"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
-	"sync/atomic"
-
-	"github.com/sharovik/devbot/internal/dto"
-	"github.com/sharovik/devbot/internal/log"
-	"golang.org/x/net/websocket"
 )
 
 //SlackClient client for slack api calls
@@ -218,14 +215,6 @@ func (client SlackClient) Put(endpoint string, body []byte) ([]byte, int, error)
 //Get method for GET http requests
 func (client SlackClient) Get(endpoint string) ([]byte, int, error) {
 	return client.Request(http.MethodGet, client.generateAPIUrl(endpoint), []byte(``))
-}
-
-//SendMessageToWs sends message to selected WebSocket EventsAPI
-func (client SlackClient) SendMessageToWs(ws *websocket.Conn, m dto.SlackRequestEventMessage) error {
-	log.Logger().Debug().Interface("message", m).Msg("Send message to EventsAPI")
-	var counter uint64
-	m.ID = atomic.AddUint64(&counter, 1)
-	return websocket.JSON.Send(ws, m)
 }
 
 //SendMessage method for post message send through simple API request

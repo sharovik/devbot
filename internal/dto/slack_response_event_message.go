@@ -20,6 +20,7 @@ type SlackResponseEventMessage struct {
 	ClientMsgID  string         `json:"client_msg_id"`
 	DisplayAsBot bool           `json:"display_as_bot"`
 	EventTs      string         `json:"event_ts"`
+	ThreadTS     string         `json:"thread_ts"`
 	Files        []File         `json:"files"`
 	SourceTeam   string         `json:"source_team"`
 	Team         string         `json:"team"`

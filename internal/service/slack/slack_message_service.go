@@ -14,66 +14,10 @@ import (
 	"github.com/sharovik/devbot/internal/log"
 )
 
-const (
-	eventTypeMessage             = "message"
-	eventTypeDesktopNotification = "desktop_notification"
-	eventTypeFileShared          = "file_shared"
-)
+var messagesReceived     = map[string]dto.SlackRequestChatPostMessage{}
 
-var (
-	messagesReceived     = map[string]dto.SlackRequestChatPostMessage{}
-	acceptedMessageTypes = map[string]string{
-		eventTypeMessage:             eventTypeMessage,
-		eventTypeDesktopNotification: eventTypeDesktopNotification,
-		eventTypeFileShared:          eventTypeFileShared,
-	}
-)
-
-func isValidMessage(message *dto.SlackResponseEventMessage) bool {
-	if message.Type == eventTypeDesktopNotification {
-		if messagesReceived[message.Channel].Channel == "" {
-			log.Logger().Debug().Str("type", message.Type).Msg("We received desktop notification, but answer wasn't prepared before.")
-			return false
-		}
-
-		return true
-	}
-
-	if acceptedMessageTypes[message.Type] == "" {
-		log.Logger().Debug().Str("type", message.Type).Msg("Skip message check for this message type")
-		return false
-	}
-
-	if message.Channel == "" {
-		log.Logger().Debug().Msg("Message channel cannot be empty")
-		return false
-	}
-
-	if isGlobalAlertTriggered(message.Text) {
-		log.Logger().Debug().Msg("The global alert is triggered. Skipping.")
-		return false
-	}
-
-	if message.User == container.C.Config.SlackConfig.BotUserID {
-		log.Logger().Debug().Msg("This message is from our bot user")
-		return false
-	}
-
-	return true
-}
-
-func getPreparedAnswer(message *dto.SlackResponseEventMessage) dto.SlackRequestChatPostMessage {
-	return messagesReceived[message.Channel]
-}
-
-func isGlobalAlertTriggered(text string) bool {
-	re, err := regexp.Compile(`(?i)(\<\!(here|channel)\>)`)
-	if err != nil {
-		log.Logger().AddError(err).Msg("Failed to parse global alert text part")
-		return false
-	}
-
-	return re.MatchString(text)
+func getPreparedAnswer(channel string) dto.SlackRequestChatPostMessage {
+	return messagesReceived[channel]
 }
 
 func answerToMessage(m dto.SlackRequestChatPostMessage) error {
@@ -185,7 +129,7 @@ func analyseMessage(message *dto.SlackResponseEventMessage) (dto.SlackRequestCha
 		}
 		base.DeleteConversation(message.Channel)
 	} else {
-		dmAnswer, err = container.C.Dictionary.FindAnswer(message)
+		dmAnswer, err = container.C.Dictionary.FindAnswer(message.Text)
 		if err != nil {
 			return dto.SlackRequestChatPostMessage{}, dto.DictionaryMessage{}, err
 		}
@@ -255,8 +199,8 @@ func readyToAnswer(message dto.SlackRequestChatPostMessage) {
 	messagesReceived[message.Channel] = message
 }
 
-func isAnswerWasPrepared(message *dto.SlackResponseEventMessage) bool {
-	return messagesReceived[message.Channel].Channel != ""
+func isAnswerWasPrepared(channel string) bool {
+	return messagesReceived[channel].Channel != ""
 }
 
 //SendAnswerForReceivedMessage method which sends the answer by specific message
@@ -338,6 +282,7 @@ func prepareAnswer(message *dto.SlackResponseEventMessage, dm dto.DictionaryMess
 	responseMessage := dto.SlackRequestChatPostMessage{
 		Channel:         message.Channel,
 		Text:            dm.Answer,
+		ThreadTS:        message.ThreadTS,
 		AsUser:          true,
 		Ts:              time.Now(),
 		OriginalMessage: *message,
@@ -362,8 +307,8 @@ func triggerUnknownAnswerScenario(message *dto.SlackResponseEventMessage) (answe
 }
 
 //TriggerAnswer triggers an answer for received message
-func TriggerAnswer(message *dto.SlackResponseEventMessage) error {
-	answerMessage := getPreparedAnswer(message)
+func TriggerAnswer(channel string) error {
+	answerMessage := getPreparedAnswer(channel)
 
 	if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
 		log.Logger().AddError(err).Msg("Failed to send prepared answers")
@@ -377,7 +322,7 @@ func TriggerAnswer(message *dto.SlackResponseEventMessage) error {
 		return nil
 	}
 
-	activeConversation := base.GetConversation(message.Channel)
+	activeConversation := base.GetConversation(channel)
 	if activeConversation.ScenarioID != int64(0) && !activeConversation.EventReadyToBeExecuted {
 		log.Logger().Info().
 			Interface("conversation", activeConversation).
