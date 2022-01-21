@@ -298,6 +298,7 @@ func triggerUnknownAnswerScenario(message *dto.SlackResponseEventMessage) (answe
 		Channel:         message.Channel,
 		Text:            "Hmmm",
 		AsUser:          true,
+		ThreadTS:        message.ThreadTS,
 		Ts:              time.Now(),
 		OriginalMessage: *message,
 		DictionaryMessage: dto.DictionaryMessage{
