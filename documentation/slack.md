@@ -14,6 +14,8 @@ Below you can see more detailed instruction:
 4. Install your application to the workspace
 5. After installation, please go to `OAuth & Permissions` page and take the token from `Bot User OAuth Token` and add it to `SLACK_WEB_API_OAUTH_TOKEN` variable.
 6. Switch `SLACK_LEGACY_BOT` to `false` for enabling the new way of websocket connection.
+7. Enable send messages from `Direct messages Tab`
+![enable messages](images/slack-home-messages.png)
 As the result you should set the next variables:
 ```
 SLACK_OAUTH_TOKEN=
