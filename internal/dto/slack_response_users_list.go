@@ -17,6 +17,7 @@ type Profile struct {
 	AlwaysActive          bool        `json:"always_active"`
 	FirstName             string      `json:"first_name"`
 	LastName              string      `json:"last_name"`
+	Email              	  string      `json:"email"`
 	Image24               string      `json:"image_24"`
 	Image32               string      `json:"image_32"`
 	Image48               string      `json:"image_48"`

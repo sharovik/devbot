@@ -19,6 +19,7 @@ oauth_config:
       - im:write
       - mpim:history
       - users:read
+      - users:read.email
       - chat:write.public
       - im:read
       - mpim:read
