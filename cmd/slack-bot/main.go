@@ -2,9 +2,6 @@ package main
 
 import (
 	"github.com/sharovik/devbot/internal/service/definedevents"
-	"os"
-	"path"
-	"runtime"
 	"time"
 
 	"github.com/sharovik/devbot/internal/config"
@@ -15,11 +12,6 @@ import (
 )
 
 func init() {
-	//We switch pointer to the root directory for control the path from which we need to generate test-data file-paths
-	_, filename, _, _ := runtime.Caller(0)
-	dir := path.Join(path.Dir(filename), "../../")
-	_ = os.Chdir(dir)
-
 	container.C = container.C.Init()
 	definedevents.InitializeDefinedEvents()
 }
