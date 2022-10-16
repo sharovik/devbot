@@ -20,20 +20,13 @@ import (
 
 //SQLiteDictionary the sqlite dictionary object
 type SQLiteDictionary struct {
-	client    *sql.DB
-	newClient clients.BaseClientInterface
-	Cfg       config.Config
+	client clients.BaseClientInterface
+	Cfg    config.Config
 }
 
-//GetClient method returns the client connection
-//@deprecated
-func (d *SQLiteDictionary) GetClient() *sql.DB {
+//GetDBClient method returns the client connection
+func (d *SQLiteDictionary) GetDBClient() clients.BaseClientInterface {
 	return d.client
-}
-
-//GetNewClient method returns the client connection
-func (d *SQLiteDictionary) GetNewClient() clients.BaseClientInterface {
-	return d.newClient
 }
 
 //InitDatabaseConnection initialise the database connection
@@ -47,14 +40,13 @@ func (d *SQLiteDictionary) InitDatabaseConnection() error {
 		return err
 	}
 
-	d.client = db
-	d.newClient = clients.SQLiteClient{Client: db}
+	d.client = clients.SQLiteClient{Client: db}
 	return nil
 }
 
 //CloseDatabaseConnection method for database connection close
 func (d *SQLiteDictionary) CloseDatabaseConnection() error {
-	return d.newClient.Disconnect()
+	return d.client.Disconnect()
 }
 
 //FindAnswer used for searching of message in the database
@@ -160,7 +152,7 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 		OrderBy("questions.id", cquery.OrderDirectionAsc).
 		Limit(cquery.Limit{From: 0, To: 1})
 
-	res, err := d.newClient.Execute(query)
+	res, err := d.client.Execute(query)
 
 	if err == sql.ErrNoRows {
 		return dto.DictionaryMessage{}, nil
@@ -190,7 +182,7 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 
 	return dto.DictionaryMessage{
 		ScenarioID:            int64(item.GetField("id").Value.(int)),
-		EventID:            int64(item.GetField("event_id").Value.(int)),
+		EventID:               int64(item.GetField("event_id").Value.(int)),
 		Answer:                item.GetField("answer").Value.(string),
 		QuestionID:            int64(item.GetField("question_id").Value.(int)),
 		Question:              item.GetField("question").Value.(string),
@@ -216,7 +208,7 @@ func (d SQLiteDictionary) InsertScenario(name string, eventID int64) (int64, err
 		},
 	}
 
-	res, err := d.newClient.Execute(new(clients.Query).Insert(&model))
+	res, err := d.client.Execute(new(clients.Query).Insert(&model))
 	if err != nil {
 		return 0, err
 	}
@@ -237,7 +229,7 @@ func (d SQLiteDictionary) FindScenarioByID(scenarioID int64) (int64, error) {
 				Value: scenarioID,
 			},
 		})
-	res, err := d.newClient.Execute(query)
+	res, err := d.client.Execute(query)
 	if err == sql.ErrNoRows {
 		return 0, nil
 	} else if err != nil {
@@ -258,7 +250,7 @@ func (d SQLiteDictionary) GetLastScenarioID() (int64, error) {
 		From(&cdto.BaseModel{TableName: "scenarios"}).
 		OrderBy("id", cquery.OrderDirectionDesc).
 		Limit(cquery.Limit{From: 0, To: 1})
-	res, err := d.newClient.Execute(query)
+	res, err := d.client.Execute(query)
 	if err == sql.ErrNoRows {
 		return 0, nil
 	} else if err != nil {
@@ -286,7 +278,7 @@ func (d SQLiteDictionary) FindEventByAlias(eventAlias string) (int64, error) {
 				Value: eventAlias,
 			},
 		})
-	res, err := d.newClient.Execute(query)
+	res, err := d.client.Execute(query)
 	if err == sql.ErrNoRows {
 		return 0, nil
 	} else if err != nil {
@@ -323,7 +315,7 @@ func (d SQLiteDictionary) FindEventBy(eventAlias string, version string) (int64,
 			},
 			Type: cquery.WhereOrType,
 		})
-	res, err := d.newClient.Execute(query)
+	res, err := d.client.Execute(query)
 	if err == sql.ErrNoRows {
 		return 0, nil
 	} else if err != nil {
@@ -354,7 +346,7 @@ func (d SQLiteDictionary) InsertEvent(alias string, version string) (int64, erro
 		},
 	}
 
-	res, err := d.newClient.Execute(new(clients.Query).Insert(&model))
+	res, err := d.client.Execute(new(clients.Query).Insert(&model))
 	if err != nil {
 		return 0, err
 	}
@@ -406,7 +398,7 @@ func (d SQLiteDictionary) InsertQuestion(question string, answer string, scenari
 		},
 	}
 
-	res, err := d.newClient.Execute(new(clients.Query).Insert(&model))
+	res, err := d.client.Execute(new(clients.Query).Insert(&model))
 	if err != nil {
 		return 0, err
 	}
@@ -427,7 +419,7 @@ func (d SQLiteDictionary) FindRegex(regex string) (int64, error) {
 				Value: regex,
 			},
 		})
-	res, err := d.newClient.Execute(query)
+	res, err := d.client.Execute(query)
 	if err == sql.ErrNoRows {
 		return 0, nil
 	} else if err != nil {
@@ -458,7 +450,7 @@ func (d SQLiteDictionary) InsertQuestionRegex(questionRegex string, questionRege
 		},
 	}
 
-	res, err := d.newClient.Execute(new(clients.Query).Insert(&model))
+	res, err := d.client.Execute(new(clients.Query).Insert(&model))
 	if err != nil {
 		return 0, err
 	}
@@ -468,7 +460,7 @@ func (d SQLiteDictionary) InsertQuestionRegex(questionRegex string, questionRege
 
 //GetAllRegex method retrieves all available regexs
 func (d SQLiteDictionary) GetAllRegex() (res map[int64]string, err error) {
-	rows, err := d.newClient.Execute(new(clients.Query).Select([]interface{}{"id", "regex"}).From(&cdto.BaseModel{TableName: "questions_regex"}))
+	rows, err := d.client.Execute(new(clients.Query).Select([]interface{}{"id", "regex"}).From(&cdto.BaseModel{TableName: "questions_regex"}))
 	if err == sql.ErrNoRows {
 		return res, nil
 	} else if err != nil {
@@ -505,7 +497,7 @@ func (d SQLiteDictionary) RunMigrations(pathToFiles string) error {
 		return err
 	}
 
-	var db = d.GetClient()
+	var db = d.GetDBClient().GetClient()
 	for file, filePath := range files {
 		migrationData, err := ioutil.ReadFile(filePath)
 		if err != nil {
@@ -547,7 +539,7 @@ func (d SQLiteDictionary) IsMigrationAlreadyExecuted(version string) (executed b
 				Value: version,
 			},
 		})
-	rows, err := d.newClient.Execute(query)
+	rows, err := d.client.Execute(query)
 	if err == sql.ErrNoRows {
 		return false, nil
 	} else if err != nil {
@@ -573,7 +565,7 @@ func (d SQLiteDictionary) MarkMigrationExecuted(version string) (err error) {
 		},
 	}
 
-	_, err = d.newClient.Execute(new(clients.Query).Insert(&model))
+	_, err = d.client.Execute(new(clients.Query).Insert(&model))
 	return
 }
 
@@ -634,7 +626,7 @@ func (d SQLiteDictionary) GetQuestionsByScenarioID(scenarioID int64) (result []Q
 			Second:   cquery.Bind{Field: "scenarios.id", Value: scenarioID},
 		}).
 		OrderBy("questions.id", cquery.OrderDirectionAsc)
-	res, err := d.newClient.Execute(query)
+	res, err := d.client.Execute(query)
 	if err == sql.ErrNoRows {
 		return result, nil
 	} else if err != nil {

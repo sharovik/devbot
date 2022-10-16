@@ -23,9 +23,6 @@ const (
 
 	helpMessage = "Ask me `write a message` and you will see the answer."
 
-	//The migrations folder, which can be used for event installation or for event update
-	migrationDirectoryPath = "./events/examplescenario/migrations"
-
 	regexChannel = `(?im)(?:[<#@]|(?:&lt;))(\w+)(?:[|>]|(?:&gt;))`
 
 	stepMessage = "What I need to write?"
@@ -129,7 +126,7 @@ func (e EventStruct) Install() error {
 	if err := container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
 		EventName:    EventName,
 		EventVersion: EventVersion,
-		Questions:    []database.Question{
+		Questions: []database.Question{
 			{
 				Question:      "write a message",
 				Answer:        stepMessage,

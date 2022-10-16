@@ -59,7 +59,7 @@ func RememberEventExecution(msg dto.BaseChatMessage) {
 		},
 	}
 
-	c := container.C.Dictionary.GetNewClient()
+	c := container.C.Dictionary.GetDBClient()
 
 	if _, err := c.Execute(new(clients.Query).Insert(&item)); err != nil {
 		log.Logger().AddError(err).Msg("Failed to insert a log entry into events history table")

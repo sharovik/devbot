@@ -20,7 +20,7 @@ func (m RemoveUniqueIndexMigration) GetName() string {
 }
 
 func (m RemoveUniqueIndexMigration) Execute() error {
-	client := container.C.Dictionary.GetNewClient()
+	client := container.C.Dictionary.GetDBClient()
 
 	q := new(clients.Query).
 		Alter(&databasedto.QuestionsModel).

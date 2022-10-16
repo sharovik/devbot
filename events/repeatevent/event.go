@@ -108,26 +108,26 @@ func lastExecutedEvent(message dto.BaseChatMessage) (databasedto.EventTriggerHis
 		return databasedto.EventTriggerHistoryStruct{}, err
 	}
 
-	item, err := container.C.Dictionary.GetNewClient().Execute(new(clients.Query).
+	item, err := container.C.Dictionary.GetDBClient().Execute(new(clients.Query).
 		Select([]interface{}{}).From(&databasedto.EventTriggerHistoryModel).
 		Where(query.Where{
 			First:    "channel",
 			Operator: "=",
-			Second:   query.Bind{
+			Second: query.Bind{
 				Field: "channel",
 				Value: message.Channel,
 			},
 		}).Where(query.Where{
 		First:    "user",
 		Operator: "=",
-		Second:   query.Bind{
+		Second: query.Bind{
 			Field: "user",
 			Value: message.OriginalMessage.User,
 		},
 	}).Where(query.Where{
 		First:    "event_id",
 		Operator: "<>",
-		Second:   query.Bind{
+		Second: query.Bind{
 			Field: "event_id",
 			Value: currentEventID,
 		},
@@ -145,15 +145,15 @@ func lastExecutedEvent(message dto.BaseChatMessage) (databasedto.EventTriggerHis
 	}
 
 	model := databasedto.EventTriggerHistoryStruct{
-		TableName:  databasedto.EventTriggerHistoryModel.GetTableName(),
+		TableName: databasedto.EventTriggerHistoryModel.GetTableName(),
 	}
 
 	for _, field := range item.Items()[0].GetColumns() {
 		switch f := field.(type) {
 		case cdto.ModelField:
 			model.AddModelField(cdto.ModelField{
-				Name:          f.Name,
-				Value:         f.Value,
+				Name:  f.Name,
+				Value: f.Value,
 			})
 			break
 		default:
@@ -166,11 +166,11 @@ func lastExecutedEvent(message dto.BaseChatMessage) (databasedto.EventTriggerHis
 }
 
 func getEventAliasById(eventID int) (string, error) {
-	item, err := container.C.Dictionary.GetNewClient().Execute(new(clients.Query).
+	item, err := container.C.Dictionary.GetDBClient().Execute(new(clients.Query).
 		Select([]interface{}{"alias"}).From(&databasedto.EventModel).Where(query.Where{
 		First:    "id",
 		Operator: "=",
-		Second:   query.Bind{
+		Second: query.Bind{
 			Field: "id",
 			Value: eventID,
 		},
@@ -194,7 +194,7 @@ func triggerScenario(item databasedto.EventTriggerHistoryStruct) (dto.BaseChatMe
 
 	var (
 		variables []string
-		channel = item.GetField("channel").Value.(string)
+		channel   = item.GetField("channel").Value.(string)
 	)
 	if "" != item.GetField("variables").Value.(string) {
 		variables = strings.Split(item.GetField("variables").Value.(string), history.VariablesSeparator)
@@ -224,17 +224,17 @@ func triggerScenario(item databasedto.EventTriggerHistoryStruct) (dto.BaseChatMe
 	}
 
 	answer, err := container.C.DefinedEvents[eventAlias].Execute(dto.BaseChatMessage{
-		Channel:           channel,
-		Text:              item.GetField("command").Value.(string),
-		AsUser:            false,
-		Ts:                time.Time{},
+		Channel: channel,
+		Text:    item.GetField("command").Value.(string),
+		AsUser:  false,
+		Ts:      time.Time{},
 		DictionaryMessage: dto.DictionaryMessage{
-			ScenarioID:            int64(item.GetField("scenario_id").Value.(int)),
-			Question:              "",
-			QuestionID:            int64(item.GetField("last_question_id").Value.(int)),
-			EventID:               int64(item.GetField("event_id").Value.(int)),
+			ScenarioID: int64(item.GetField("scenario_id").Value.(int)),
+			Question:   "",
+			QuestionID: int64(item.GetField("last_question_id").Value.(int)),
+			EventID:    int64(item.GetField("event_id").Value.(int)),
 		},
-		OriginalMessage:   dto.BaseOriginalMessage{
+		OriginalMessage: dto.BaseOriginalMessage{
 			Text:  item.GetField("command").Value.(string),
 			User:  item.GetField("user").Value.(string),
 			Files: nil,

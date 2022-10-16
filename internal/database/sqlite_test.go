@@ -36,7 +36,7 @@ func TestSQLiteDictionary_InitDatabaseConnection(t *testing.T) {
 	err := dictionary.InitDatabaseConnection()
 
 	assert.Error(t, err)
-	assert.Empty(t, dictionary.client)
+	assert.Empty(t, dictionary.client.GetClient())
 
 	cfg.DatabaseHost = testSQLiteDatabasePath
 	dictionary.Cfg = cfg
@@ -44,7 +44,7 @@ func TestSQLiteDictionary_InitDatabaseConnection(t *testing.T) {
 	err = dictionary.InitDatabaseConnection()
 	assert.NoError(t, err)
 
-	defer dictionary.client.Close()
+	defer dictionary.client.Disconnect()
 
 	checkIfDataCanBeReturned(t)
 	dropTestTables(t)
@@ -73,13 +73,13 @@ func checkIfDataCanBeReturned(t *testing.T) {
 	drop table if exists foo;
 	create table foo (id integer not null primary key, name text);
 	`
-	_, err := dictionary.client.Exec(sqlStmt)
+	_, err := dictionary.client.GetClient().Exec(sqlStmt)
 	assert.NoError(t, err)
 
-	_, err = dictionary.client.Exec("insert into foo(id, name) values(1, 'foo'), (2, 'bar'), (3, 'baz')")
+	_, err = dictionary.client.GetClient().Exec("insert into foo(id, name) values(1, 'foo'), (2, 'bar'), (3, 'baz')")
 	assert.NoError(t, err)
 
-	rows, err := dictionary.client.Query("select id, name from foo where id = 1")
+	rows, err := dictionary.client.GetClient().Query("select id, name from foo where id = 1")
 	assert.NoError(t, err)
 	defer rows.Close()
 
@@ -98,7 +98,7 @@ func checkIfDataCanBeReturned(t *testing.T) {
 	assert.NoError(t, err)
 
 	sqlStmt = `drop table if exists foo;`
-	_, err = dictionary.client.Exec(sqlStmt)
+	_, err = dictionary.client.GetClient().Exec(sqlStmt)
 	assert.NoError(t, err)
 }
 
@@ -120,12 +120,8 @@ func TestSQLiteDictionary_FindAnswer(t *testing.T) {
 	}
 
 	for question, answer := range goodCases {
-		msg := dto.SlackResponseEventMessage{
-			Text: question,
-		}
-
 		var dmAnswer dto.DictionaryMessage
-		dmAnswer, err = dictionary.FindAnswer(&msg)
+		dmAnswer, err = dictionary.FindAnswer(question)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, dmAnswer)
 		assert.Equal(t, answer, dmAnswer.Answer, question)
@@ -138,12 +134,8 @@ func TestSQLiteDictionary_FindAnswer(t *testing.T) {
 	}
 
 	for question := range badCases {
-		msg := dto.SlackResponseEventMessage{
-			Text: question,
-		}
-
 		var dmAnswer dto.DictionaryMessage
-		dmAnswer, err = dictionary.FindAnswer(&msg)
+		dmAnswer, err = dictionary.FindAnswer(question)
 		assert.Empty(t, dmAnswer, question)
 	}
 
@@ -527,7 +519,7 @@ func upTestTables(t *testing.T) {
 	`
 
 	for _, query := range availableTables {
-		_, err := dictionary.client.Exec(query)
+		_, err := dictionary.client.GetClient().Exec(query)
 		if err != nil {
 			assert.NoError(t, err)
 		}
@@ -535,7 +527,7 @@ func upTestTables(t *testing.T) {
 }
 
 func insertTestData(t *testing.T) {
-	_, err := dictionary.client.Exec(`
+	_, err := dictionary.client.GetClient().Exec(`
 	INSERT INTO events (id, alias) VALUES (1, 'hello');
 	INSERT INTO questions (id, question, answer, scenario_id, regex_id) VALUES (1, 'Hello', 'Hello', 1, 1);
 	INSERT INTO questions (id, question, answer, scenario_id, regex_id) VALUES (2, 'Say hello to John', 'Hello %s', 1, 2);
@@ -551,7 +543,7 @@ func insertTestData(t *testing.T) {
 
 func dropTestTables(t *testing.T) {
 	for tableName := range availableTables {
-		_, err := dictionary.client.Exec("drop table if exists " + tableName)
+		_, err := dictionary.client.GetClient().Exec("drop table if exists " + tableName)
 		if err != nil {
 			assert.NoError(t, err)
 		}

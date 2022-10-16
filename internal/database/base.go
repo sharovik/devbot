@@ -1,7 +1,6 @@
 package database
 
 import (
-	"database/sql"
 	"github.com/sharovik/orm/clients"
 
 	"github.com/sharovik/devbot/internal/dto"
@@ -16,15 +15,14 @@ const (
 
 type Message struct {
 	Channel string
-	User string
-	Text string
+	User    string
+	Text    string
 }
 
 //BaseDatabaseInterface interface for base database client
 type BaseDatabaseInterface interface {
 	InitDatabaseConnection() error
-	GetClient() *sql.DB
-	GetNewClient() clients.BaseClientInterface
+	GetDBClient() clients.BaseClientInterface
 	CloseDatabaseConnection() error
 	FindAnswer(message string) (dto.DictionaryMessage, error)
 	InsertQuestion(question string, answer string, scenarioID int64, questionRegex string, questionRegexGroup string) (int64, error)
@@ -39,12 +37,12 @@ type BaseDatabaseInterface interface {
 	GetAllRegex() (map[int64]string, error)
 	GetQuestionsByScenarioID(scenarioID int64) (result []QuestionObject, err error)
 
-	//Should be used for custom event migrations loading
+	//RunMigrations Should be used for custom event migrations loading
 	RunMigrations(path string) error
 	IsMigrationAlreadyExecuted(name string) (bool, error)
 	MarkMigrationExecuted(name string) error
 
-	//Should be used for your custom event installation. This will create a new event row in the database if previously this row wasn't
+	//InstallEvent Should be used for your custom event installation. This will create a new event row in the database if previously this row wasn't
 	//exists and insert new scenario for specified question and answer
 	InstallEvent(eventName string, eventVersion string, question string, answer string, questionRegex string, questionRegexGroup string) error
 
@@ -62,15 +60,15 @@ type QuestionObject struct {
 
 //NewEventScenario the object can be used for the new event scenario installation
 type NewEventScenario struct {
-	EventName string
+	EventName    string
 	EventVersion string
-	Questions []Question
+	Questions    []Question
 }
 
 //Question the scenario question
 type Question struct {
-	Question string
-	Answer string
+	Question      string
+	Answer        string
 	QuestionRegex string
 	QuestionGroup string
 }

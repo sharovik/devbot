@@ -19,18 +19,12 @@ import (
 
 //MySQLDictionary the sqlite dictionary object
 type MySQLDictionary struct {
-	client    *sql.DB
 	newClient clients.BaseClientInterface
 	Cfg       config.Config
 }
 
-//GetClient method returns the client connection
-func (d *MySQLDictionary) GetClient() *sql.DB {
-	return d.client
-}
-
-//GetNewClient method returns the client connection
-func (d *MySQLDictionary) GetNewClient() clients.BaseClientInterface {
+//GetDBClient method returns the client connection
+func (d *MySQLDictionary) GetDBClient() clients.BaseClientInterface {
 	return d.newClient
 }
 
@@ -507,7 +501,7 @@ func (d MySQLDictionary) RunMigrations(pathToFiles string) error {
 		return err
 	}
 
-	var db = d.GetClient()
+	var db = d.GetDBClient().GetClient()
 	for file, filePath := range files {
 		migrationData, err := ioutil.ReadFile(filePath)
 		if err != nil {

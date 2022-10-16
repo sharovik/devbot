@@ -99,7 +99,7 @@ func generateDmForConversation(message Message, openConversation base.Conversati
 	//In other cases we do as we did before
 	scenarioNextQuestion := getNextQuestion(openConversation, questions)
 
-	//if we have 0 as ID, then that means we didn't found next question, so we can try to execute the event and have a look what will be
+	//if we have 0 as ID - we execute the scenario
 	if scenarioNextQuestion.ID == int64(0) {
 		//We mark the scenario, to be executed
 		openConversation = base.MarkAsReadyEventToBeExecuted(openConversation)

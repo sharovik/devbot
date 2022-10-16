@@ -23,7 +23,7 @@ func (m UpdateEventsTriggersHistoryMigration) GetName() string {
 }
 
 func (m UpdateEventsTriggersHistoryMigration) Execute() error {
-	client := container.C.Dictionary.GetNewClient()
+	client := container.C.Dictionary.GetDBClient()
 
 	q := new(clients.Query).Drop(&databasedto.EventTriggerHistoryModel)
 	if _, err := client.Execute(q); err != nil {

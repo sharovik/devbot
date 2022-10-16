@@ -69,7 +69,7 @@ func GenerateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error)
 		},
 	})
 
-	res, err := container.C.Dictionary.GetNewClient().Execute(query)
+	res, err := container.C.Dictionary.GetDBClient().Execute(query)
 
 	if err == sql.ErrNoRows {
 		return dto.DictionaryMessage{}, nil

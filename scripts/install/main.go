@@ -49,7 +49,7 @@ func triggerMigrations() error {
 			Key:    "version",
 			Unique: true,
 		})
-	if _, err := container.C.Dictionary.GetNewClient().Execute(q); err != nil {
+	if _, err := container.C.Dictionary.GetDBClient().Execute(q); err != nil {
 		log.Logger().AddError(err).Msg("Failed to create migration table. Already exists?")
 	}
 

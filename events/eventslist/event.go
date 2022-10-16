@@ -40,7 +40,7 @@ var (
 func (e EListEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
 	//This answer will be show once the event get triggered.
 	//Leave message.Text empty, once you need to not show the message, once this event get triggered.
-	c := container.C.Dictionary.GetNewClient()
+	c := container.C.Dictionary.GetDBClient()
 
 	q := new(clients.Query).
 		Select([]interface{}{"events.id", "events.alias", "questions.question"}).
@@ -101,7 +101,7 @@ func (e EListEvent) Install() error {
 	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
 		EventName:    EventName,
 		EventVersion: EventVersion,
-		Questions:    []database.Question{
+		Questions: []database.Question{
 			{
 				Question:      "events list",
 				Answer:        "Just a sec, I will prepare the list for you.",

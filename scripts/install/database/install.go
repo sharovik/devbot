@@ -23,7 +23,7 @@ func (m InstallMigration) GetName() string {
 }
 
 func (m InstallMigration) Execute() error {
-	client := container.C.Dictionary.GetNewClient()
+	client := container.C.Dictionary.GetDBClient()
 
 	if err := createSchema(client); err != nil {
 		return err

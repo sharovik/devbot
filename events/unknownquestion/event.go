@@ -81,7 +81,7 @@ func implodeDatabaseResults(items []cdto.ModelInterface) string {
 
 func findResults(words []string) []string {
 	var (
-		foundResults       []string
+		foundResults    []string
 		processedEvents = map[string]string{}
 	)
 	for _, word := range words {
@@ -126,7 +126,7 @@ func (e EventStruct) Install() error {
 	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
 		EventName:    EventName,
 		EventVersion: EventVersion,
-		Questions:    []database.Question{
+		Questions: []database.Question{
 			{
 				Question:      "similar questions",
 				Answer:        "",
@@ -194,21 +194,21 @@ func findPotentialEvents(text string) (result []cdto.ModelInterface, err error) 
 		}).Where(cquery.Where{
 		First:    "questions.answer",
 		Operator: "LIKE",
-		Type: cquery.WhereOrType,
-		Second: `"%`+text+`%"`,
+		Type:     cquery.WhereOrType,
+		Second:   `"%` + text + `%"`,
 	}).Where(cquery.Where{
 		First:    "questions.question",
 		Operator: "LIKE",
-		Type: cquery.WhereOrType,
-		Second: `"%`+text+`%"`,
+		Type:     cquery.WhereOrType,
+		Second:   `"%` + text + `%"`,
 	}).Where(cquery.Where{
 		First:    "events.alias",
 		Operator: "LIKE",
-		Type: cquery.WhereOrType,
-		Second: `"%`+text+`%"`,
+		Type:     cquery.WhereOrType,
+		Second:   `"%` + text + `%"`,
 	}).GroupBy("events.id")
 
-	res, err := container.C.Dictionary.GetNewClient().Execute(query)
+	res, err := container.C.Dictionary.GetDBClient().Execute(query)
 	if err == sql.ErrNoRows {
 		return result, nil
 	} else if err != nil {
