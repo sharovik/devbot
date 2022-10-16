@@ -18,6 +18,15 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+const slackAPIOrigin = "https://slack.com/api"
+
+//S slack service object
+var S base.ServiceInterface
+
+func InitService() {
+	S = EventsApiService{}
+}
+
 //EventsApiService struct of slack service
 type EventsApiService struct {
 }
@@ -118,7 +127,7 @@ func (s EventsApiService) InitWebSocketReceiver() error {
 	}
 
 	var (
-		event   interface{}
+		event interface{}
 	)
 
 	for {
@@ -286,16 +295,22 @@ func getWSClient() client.SlackClient {
 		Transport: netTransport,
 	}
 
-	return client.SlackClient{
-		Client:     &httpClient,
-		BaseURL:    container.C.Config.SlackConfig.BaseURL,
-		OAuthToken: container.C.Config.SlackConfig.OAuthToken,
+	c := client.HTTPClient{
+		Client: &httpClient,
 	}
+
+	c.SetOauthToken(container.C.Config.SlackConfig.OAuthToken)
+	c.SetBaseURL(container.C.Config.SlackConfig.BaseURL)
+
+	sc := client.SlackClient{}
+	sc.HttpClient = &c
+
+	return sc
 }
 
 //wsConnect method for receiving of websocket URL which we will use for our connection
 func (EventsApiService) wsConnect() (*websocket.Conn, int, error) {
-	response, statusCode, err := getWSClient().Post("/apps.connections.open", []byte{})
+	response, statusCode, err := getWSClient().HttpClient.Post("/apps.connections.open", []byte{}, map[string]string{})
 	if err != nil {
 		log.Logger().AddError(err).RawJSON("response", response).Int("status_code", statusCode).Msg("Failed send message")
 		return &websocket.Conn{}, statusCode, err
@@ -310,7 +325,7 @@ func (EventsApiService) wsConnect() (*websocket.Conn, int, error) {
 		return &websocket.Conn{}, statusCode, errors.New(dtoResponse.Error)
 	}
 
-	ws, err := websocket.Dial(dtoResponse.URL, "", "https://slack.com/api")
+	ws, err := websocket.Dial(dtoResponse.URL, "", slackAPIOrigin)
 
 	return ws, statusCode, nil
 }

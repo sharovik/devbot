@@ -79,13 +79,13 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 		}
 	}
 
-	_, _, err = container.C.MessageClient.SendMessage(dto.SlackRequestChatPostMessage{
+	_, _, err = container.C.MessageClient.SendMessageV2(dto.BaseChatMessage{
 		Channel:           whereToWrite,
 		Text:              whatToWrite,
 		AsUser:            true,
 		Ts:                time.Now(),
 		DictionaryMessage: dto.DictionaryMessage{},
-		OriginalMessage:   dto.SlackResponseEventMessage{},
+		OriginalMessage:   dto.BaseOriginalMessage{},
 	})
 
 	if err != nil {

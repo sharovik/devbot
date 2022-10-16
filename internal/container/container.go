@@ -67,18 +67,21 @@ func (container Main) Init() Main {
 		ClientSecret: container.Config.BitBucketConfig.ClientSecret,
 	})
 	container.BibBucketClient = &bitBucketClient
-
-	slackClient := client.SlackClient{
-		Client:     &httpClient,
-		BaseURL:    container.Config.SlackConfig.BaseURL,
-		OAuthToken: container.Config.SlackConfig.WebAPIOAuthToken,
-	}
-
 	container.HTTPClient = &client.HTTPClient{
 		Client: &httpClient,
 	}
 
-	container.MessageClient = slackClient
+	c := client.HTTPClient{
+		Client: &httpClient,
+	}
+
+	c.SetOauthToken(container.Config.SlackConfig.WebAPIOAuthToken)
+	c.SetBaseURL(container.Config.SlackConfig.BaseURL)
+
+	sc := client.SlackClient{}
+	sc.HttpClient = &c
+
+	container.MessageClient = sc
 	if err := container.loadDictionary(); err != nil {
 		panic(err)
 	}

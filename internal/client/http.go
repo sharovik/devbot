@@ -66,7 +66,7 @@ func (client *HTTPClient) SetBaseURL(baseURL string) {
 	client.BaseURL = baseURL
 }
 
-//BasicAuth retrieves the encode string for basic auth
+//BasicAuth retrieves encode string for basic auth
 func (client HTTPClient) BasicAuth(username string, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password)))
 }
@@ -74,7 +74,7 @@ func (client HTTPClient) BasicAuth(username string, password string) string {
 //Request method for API requests
 //
 //This method accepts parameters:
-//method - the method of request. Ex: POST, GET, PUT, DELETE and etc
+//method - the method of request. Ex: POST, GET, PUT, DELETE, and etc
 //endpoint - endpoint to which we should do a request
 //body - it's a request body. Accepted types of body: string, url.Values(for form_data requests), byte
 //headers - request headers
@@ -117,6 +117,21 @@ func (client HTTPClient) Request(method string, endpoint string, body interface{
 			return nil, 0, err
 		}
 		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	case bytes.Buffer:
+		log.Logger().Debug().
+			Str("endpoint", endpoint).
+			Str("method", method).
+			Interface("body", body).
+			Msg("Endpoint call")
+
+		buff := body.(bytes.Buffer)
+		request, err = http.NewRequest(method, endpoint, &buff)
+		if err != nil {
+			log.Logger().AddError(err).Msg("Error during the request generation")
+			log.Logger().FinishMessage("Http request")
+			return nil, 0, err
+		}
+		request.Header.Set("Content-Type", "multipart/form-data")
 	default:
 		log.Logger().Debug().
 			Str("endpoint", endpoint).
@@ -143,7 +158,7 @@ func (client HTTPClient) Request(method string, endpoint string, body interface{
 	resp, errorResponse := client.Client.Do(request)
 
 	if resp == nil {
-		err = errors.New("Response cannot be null ")
+		err = errors.New("ResponseInterface cannot be null ")
 		errMsg := err.Error()
 		if errorResponse != nil {
 			errMsg = errorResponse.Error()

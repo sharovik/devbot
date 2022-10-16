@@ -57,9 +57,15 @@ type File struct {
 
 //BaseOriginalMessage original message interface which will be used for identification of base original message object
 type BaseOriginalMessage struct {
-	Text  string
-	User  string
-	Files []File
+	Text        string
+	User        string
+	Files       []File
+	Channel     string
+	ClientMsgID string
+	EventTs     string
+	ThreadTS    string
+	Ts          string
+	Type        string
 }
 
 //BaseChatMessage the chat message which will be retrieved from websocket api
@@ -70,8 +76,10 @@ type BaseChatMessage struct {
 	//The text of the message, which was received from the channel. Example: Hello bot
 	Text string
 
-	//This is an optional value which is used currently for slack messages.
+	//This is an optional value which is used currently for messages.
 	AsUser bool
+
+	ThreadTS string
 
 	//The message timestamp. When it was received
 	Ts time.Time
