@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto/databasedto"
@@ -27,7 +28,7 @@ func (m EventsTriggersHistoryMigration) Execute() error {
 
 	//Create events table
 	q := new(clients.Query).
-		Create(&databasedto.EventTriggerHistoryModel).
+		Create(databasedto.EventTriggerHistoryModel).
 		IfNotExists().
 		AddIndex(dto.Index{
 			Name:   "user_index",

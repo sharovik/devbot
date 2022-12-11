@@ -4,10 +4,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/sharovik/devbot/internal/service/definedevents"
 	"os"
 	"path"
 	"runtime"
+
+	"github.com/sharovik/devbot/internal/service/definedevents"
 
 	"github.com/sharovik/devbot/internal/container"
 )
@@ -41,7 +42,11 @@ func init() {
 	dir := path.Join(path.Dir(filename), "../../")
 	_ = os.Chdir(dir)
 
-	container.C = container.C.Init()
+	cnt, err := container.Init()
+	if err != nil {
+		panic(err)
+	}
+	container.C = cnt
 	definedevents.InitializeDefinedEvents()
 }
 
@@ -92,7 +97,7 @@ func main() {
 
 	//In that step we have valid scenarioId and eventId. It means that we can proceed with question creation
 	var questionId int64
-	questionId, err = container.C.Dictionary.InsertQuestion(question, answer, scenarioId, questionRegex, questionRegexGroup)
+	questionId, err = container.C.Dictionary.InsertQuestion(question, answer, scenarioId, questionRegex, questionRegexGroup, false)
 	if err != nil {
 		panic(err)
 	}

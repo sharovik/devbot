@@ -1,33 +1,25 @@
 package analiser
 
 import (
+	"time"
+
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/devbot/internal/log"
 	"github.com/sharovik/devbot/internal/service/base"
-	"time"
 )
 
-type PreparedAnswer struct {
-	Channel  string
-	dmAnswer dto.DictionaryMessage
-	Text     string
-}
-
+//Message the message object, from which we will generate the dto.DictionaryMessage
 type Message struct {
 	Channel string
 	User    string
 	Text    string
 }
 
-func GetDmAnswer(message Message) (dto.DictionaryMessage, error) {
-	var (
-		err      error
-		dmAnswer dto.DictionaryMessage
-	)
-
+//GetDmAnswer retrieves the Dictionary Message Answer
+func GetDmAnswer(message Message) (dmAnswer dto.DictionaryMessage, err error) {
 	//Now we need to check if there was already opened conversation for this channel
 	//If so, then we need to get the Answer from this scenario
 	openConversation := base.GetConversation(message.Channel)
@@ -44,12 +36,14 @@ func GetDmAnswer(message Message) (dto.DictionaryMessage, error) {
 			MainGroupIndexInRegex: "",
 			ReactionType:          "text",
 		}
-		base.DeleteConversation(message.Channel)
+		base.FinaliseConversation(message.Channel)
 
 		return dmAnswer, nil
 	}
 
 	if openConversation.ScenarioID != 0 {
+		setAnswerToVariable(message.Text, &openConversation)
+
 		return generateDmForConversation(message, openConversation)
 	}
 
@@ -58,7 +52,7 @@ func GetDmAnswer(message Message) (dto.DictionaryMessage, error) {
 		return dto.DictionaryMessage{}, err
 	}
 
-	questions, err := container.C.Dictionary.GetQuestionsByScenarioID(dmAnswer.ScenarioID)
+	questions, err := getVariableQuestionsByScenarioID(dmAnswer.ScenarioID)
 	//if we don't have an error here, then we can proceed with the questions preparing for scenarios
 	if err != nil {
 		log.Logger().AddError(err).Msg("Failed to get the list of question by the scenarioID")
@@ -67,7 +61,8 @@ func GetDmAnswer(message Message) (dto.DictionaryMessage, error) {
 	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.Text)
 	//If the questions amount is more than 1, we need to start the conversation algorithm
 	if len(questions) > 1 && !isHelpAnswerTriggered {
-		base.AddConversation(message.Channel, dmAnswer.QuestionID, dto.BaseChatMessage{
+		scenario := getScenario(questions)
+		base.AddConversation(scenario, dto.BaseChatMessage{
 			Channel:           message.Channel,
 			Text:              message.Text,
 			AsUser:            false,
@@ -77,84 +72,92 @@ func GetDmAnswer(message Message) (dto.DictionaryMessage, error) {
 				Text: message.Text,
 				User: message.User,
 			},
-		}, "")
+		})
+
+		dmAnswer.Answer = scenario.GetUnAnsweredQuestion()
 	}
 
 	return dmAnswer, nil
 }
 
-func generateDmForConversation(message Message, openConversation base.Conversation) (dto.DictionaryMessage, error) {
-	questions, err := container.C.Dictionary.GetQuestionsByScenarioID(openConversation.ScenarioID)
-	//if we don't have an error here, then we can proceed with the questions preparing for scenarios
-	if err != nil {
-		log.Logger().AddError(err).Msg("Failed to get the list of question by the scenarioID")
-		return dto.DictionaryMessage{}, err
+func getScenario(questions []database.QuestionObject) (scenario database.EventScenario) {
+	for _, q := range questions {
+		scenario.Questions = append(scenario.Questions, database.Question{
+			Question: q.Question,
+			Answer:   q.Answer,
+		})
+
+		if q.IsVariable {
+			scenario.RequiredVariables = append(scenario.RequiredVariables, database.ScenarioVariable{
+				Question: q.Answer,
+			})
+		}
 	}
 
-	if len(questions) == 0 {
+	return scenario
+}
+
+func getVariableQuestionsByScenarioID(scenarioID int64) (result []database.QuestionObject, err error) {
+	questions, err := container.C.Dictionary.GetQuestionsByScenarioID(scenarioID, true)
+	if err != nil {
+		log.Logger().AddError(err).Msg("Failed to get the list of questions by the scenarioID")
+		return result, err
+	}
+
+	for _, q := range questions {
+		if q.Question != "" {
+			continue
+		}
+
+		result = append(result, q)
+	}
+
+	return result, err
+}
+
+func setAnswerToVariable(answer string, openConversation *base.Conversation) {
+	if len(openConversation.Scenario.RequiredVariables) == 0 {
+		return
+	}
+
+	for i, variable := range openConversation.Scenario.RequiredVariables {
+		if variable.Value != "" {
+			continue
+		}
+
+		openConversation.Scenario.RequiredVariables[i].Value = answer
+		return
+	}
+}
+
+func generateDmForConversation(message Message, openConversation base.Conversation) (dto.DictionaryMessage, error) {
+	if len(openConversation.Scenario.RequiredVariables) == 0 {
 		return dto.DictionaryMessage{}, nil
 	}
 
-	//We do questions check only in case of multiple questions attached to the scenario.
-	//In other cases we do as we did before
-	scenarioNextQuestion := getNextQuestion(openConversation, questions)
-
-	//if we have 0 as ID - we execute the scenario
-	if scenarioNextQuestion.ID == int64(0) {
-		//We mark the scenario, to be executed
-		openConversation = base.MarkAsReadyEventToBeExecuted(openConversation)
-
-		//We get the last question object from the scenario and we use it as the answer
-		dmAnswer := dto.DictionaryMessage{
-			ScenarioID:            openConversation.ScenarioID,
-			EventID:               openConversation.ScenarioID,
-			Question:              scenarioNextQuestion.Question,
-			QuestionID:            scenarioNextQuestion.ID,
-			Regex:                 "",
-			Answer:                "Ok",
-			MainGroupIndexInRegex: "",
-			ReactionType:          openConversation.ReactionType,
+	for _, variable := range openConversation.Scenario.RequiredVariables {
+		if variable.Value != "" {
+			continue
 		}
 
-		//We add the last message to the variables
-		openConversation.Variables = append(openConversation.Variables, message.Text)
-		base.CurrentConversations[message.Channel] = openConversation
+		dmAnswer := dto.DictionaryMessage{
+			ScenarioID:   openConversation.ScenarioID,
+			EventID:      openConversation.EventID,
+			Answer:       variable.Question,
+			ReactionType: openConversation.ReactionType,
+		}
 
 		return dmAnswer, nil
 	}
 
-	//In that case we have the last questionID so that means, we need to use the last question here.
-	dmAnswer := dto.DictionaryMessage{
-		ScenarioID:            openConversation.ScenarioID,
-		EventID:               openConversation.EventID,
-		Question:              scenarioNextQuestion.Question,
-		QuestionID:            scenarioNextQuestion.ID,
-		Regex:                 "",
-		Answer:                scenarioNextQuestion.Answer,
-		MainGroupIndexInRegex: "",
-		ReactionType:          scenarioNextQuestion.ReactionType,
-	}
+	base.MarkAsReadyEventToBeExecuted(message.Channel)
 
-	//We also add the new state for this conversation
-	base.AddConversation(message.Channel, dmAnswer.QuestionID, dto.BaseChatMessage{
-		Channel:           message.Channel,
-		Text:              message.Text,
-		AsUser:            false,
-		Ts:                time.Now(),
-		DictionaryMessage: dmAnswer,
-		OriginalMessage: dto.BaseOriginalMessage{
-			Text: message.Text,
-			User: message.User,
-		},
-	}, message.Text)
-
-	return dmAnswer, nil
-}
-
-func triggerUnknownAnswerScenario(message Message) (answer PreparedAnswer, err error) {
-	//todo: trigger the unknown answer event execution
-
-	return PreparedAnswer{}, nil
+	return dto.DictionaryMessage{
+		ScenarioID:   openConversation.ScenarioID,
+		EventID:      openConversation.ScenarioID,
+		Answer:       "Ok",
+		ReactionType: openConversation.ReactionType,
+	}, nil
 }
 
 func getNextQuestion(openConversation base.Conversation, questions []database.QuestionObject) database.QuestionObject {

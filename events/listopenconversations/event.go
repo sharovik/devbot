@@ -2,6 +2,7 @@ package listopenconversations
 
 import (
 	"fmt"
+
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/devbot/internal/service/base"
@@ -57,13 +58,12 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 	for _, conv := range base.GetCurrentConversations() {
 		message.Text += "\n-------"
 		message.Text += fmt.Sprintf("\nScenario #%d was triggered in <@%s> chat", conv.ScenarioID, conv.LastQuestion.Channel)
-		if len(conv.Variables) == 0 {
+		if len(conv.Scenario.RequiredVariables) == 0 {
 			message.Text += fmt.Sprintf("\nAnd there is no answers received yet for that scenario.")
 		} else {
 			message.Text += "\nWith the next filled answers:"
-			for i, variable := range conv.Variables {
-				id := i + 1
-				message.Text += fmt.Sprintf("\n* #%d: %s", id, variable)
+			for _, variable := range conv.Scenario.RequiredVariables {
+				message.Text += fmt.Sprintf("\n* %s: `%s`", variable.Question, variable.Value)
 			}
 		}
 		message.Text += "\n-------"
@@ -79,10 +79,10 @@ func (e EventStruct) Install() error {
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
+	return container.C.Dictionary.InstallNewEventScenario(database.EventScenario{
 		EventName:    EventName,
 		EventVersion: EventVersion,
-		Questions:    []database.Question{
+		Questions: []database.Question{
 			{
 				Question:      "show open conversations",
 				Answer:        "Give me a sec.",

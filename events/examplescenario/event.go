@@ -2,11 +2,12 @@ package examplescenario
 
 import (
 	"fmt"
+	"regexp"
+	"time"
+
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/devbot/internal/service/base"
-	"regexp"
-	"time"
 
 	"github.com/sharovik/devbot/internal/log"
 
@@ -57,29 +58,26 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 	whereToWrite := ""
 
 	//If we don't have all variables for our conversation, that means, we didn't received answers for all questions of our scenario
-	if len(currentConversation.Variables) != 2 {
+	if len(currentConversation.Scenario.RequiredVariables) != 2 {
 		message.Text = "Not all variables are defined."
 
-		//We remove this conversation from the memory, because it is expired. You must do this, otherwise bot will think that this conversation is still opened.
-		base.DeleteConversation(message.Channel)
 		return message, nil
 	}
 
-	if currentConversation.Variables[0] != "" {
-		whatToWrite = removeCurrentUserFromTheMessage(currentConversation.Variables[0])
+	if currentConversation.Scenario.RequiredVariables[0].Value != "" {
+		whatToWrite = removeCurrentUserFromTheMessage(currentConversation.Scenario.RequiredVariables[0].Value)
 	}
 
-	if currentConversation.Variables[1] != "" {
-		whereToWrite = extractChannelName(currentConversation.Variables[1])
+	if currentConversation.Scenario.RequiredVariables[1].Value != "" {
+		whereToWrite = extractChannelName(currentConversation.Scenario.RequiredVariables[1].Value)
 
 		if whereToWrite == "" {
 			message.Text = "Something went wrong and I can't parse properly the channel name."
-			base.DeleteConversation(message.Channel)
 			return message, nil
 		}
 	}
 
-	_, _, err = container.C.MessageClient.SendMessageV2(dto.BaseChatMessage{
+	_, _, err = container.C.MessageClient.SendMessage(dto.BaseChatMessage{
 		Channel:           whereToWrite,
 		Text:              whatToWrite,
 		AsUser:            true,
@@ -90,7 +88,7 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 
 	if err != nil {
 		log.Logger().AddError(err).Msg("Failed to send post-answer for selected event")
-		message.Text = fmt.Sprintf("Failed to send the message to the channel %s.\nReason: ```%s```", currentConversation.Variables[1], err.Error())
+		message.Text = fmt.Sprintf("Failed to send the message to the channel %s.\nReason: ```%s```", currentConversation.Scenario.RequiredVariables[1].Value, err.Error())
 		return message, err
 	}
 
@@ -98,8 +96,6 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 	//Leave message.Text empty, once you need to not show the message, once this event get triggered.
 	message.Text = "Done"
 
-	//We remove this conversation from the memory, because it is expired
-	base.DeleteConversation(message.Channel)
 	return message, nil
 }
 
@@ -123,21 +119,25 @@ func (e EventStruct) Install() error {
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	if err := container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
+	if err := container.C.Dictionary.InstallNewEventScenario(database.EventScenario{
 		EventName:    EventName,
 		EventVersion: EventVersion,
 		Questions: []database.Question{
 			{
 				Question:      "write a message",
-				Answer:        stepMessage,
 				QuestionRegex: "(?i)(write a message)",
-				QuestionGroup: "",
 			},
 			{
-				Question:      "",
-				Answer:        stepChannel,
-				QuestionRegex: "(?i)(write a message)",
-				QuestionGroup: "",
+				Question:      "write message",
+				QuestionRegex: "(?i)(write message)",
+			},
+		},
+		RequiredVariables: []database.ScenarioVariable{
+			{
+				Question: stepMessage,
+			},
+			{
+				Question: stepChannel,
 			},
 		},
 	}); err != nil {
@@ -153,7 +153,7 @@ func (e EventStruct) Update() error {
 }
 
 func removeCurrentUserFromTheMessage(message string) string {
-	regexString := fmt.Sprintf("(?im)(<@%s>)", container.C.Config.SlackConfig.BotUserID)
+	regexString := fmt.Sprintf("(?im)(<@%s>)", container.C.Config.MessagesAPIConfig.BotUserID)
 	re := regexp.MustCompile(regexString)
 	result := re.ReplaceAllString(message, ``)
 

@@ -2,11 +2,12 @@ package main
 
 import (
 	"flag"
+	"os"
+
 	"github.com/sharovik/devbot/internal/dto/databasedto"
 	"github.com/sharovik/devbot/internal/service/definedevents"
 	"github.com/sharovik/orm/clients"
 	"github.com/sharovik/orm/dto"
-	"os"
 
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/container"
@@ -26,7 +27,12 @@ var (
 )
 
 func init() {
-	cfg = config.Init()
+	configuration, err := config.Init()
+	if err != nil {
+		panic(err)
+	}
+
+	cfg = configuration
 	_ = log.Init(cfg.LogConfig)
 }
 
@@ -41,7 +47,7 @@ func main() {
 func triggerMigrations() error {
 	//Create migrations table
 	q := new(clients.Query).
-		Create(&databasedto.MigrationModel).
+		Create(databasedto.MigrationModel).
 		IfNotExists().
 		AddIndex(dto.Index{
 			Name:   "migration_version_uindex",
@@ -76,11 +82,17 @@ func run() error {
 	}
 
 	eventAlias := parseEventAlias()
-	container.C = container.C.Init()
+	cnt, err := container.Init()
+	if err != nil {
+		log.Logger().AddError(err).Msg("Failed to init container")
+		return err
+	}
+
+	container.C = cnt
+
 	definedevents.InitializeDefinedEvents()
 
-	err := triggerMigrations()
-	if err != nil {
+	if err = triggerMigrations(); err != nil {
 		log.Logger().AddError(err).Msg("Database check error")
 		return err
 	}
@@ -141,13 +153,13 @@ func run() error {
 
 func checkIfDatabaseExists() error {
 	log.Logger().AppendGlobalContext(map[string]interface{}{
-		"database_connection": cfg.DatabaseConnection,
-		"database_host":       cfg.DatabaseHost,
+		"database_connection": cfg.Database.Type,
+		"database_host":       cfg.Database.Host,
 	})
 	log.Logger().Info().Msg("Check if the database exists")
-	switch cfg.DatabaseConnection {
-	case database.ConnectionSQLite:
-		_, err := os.Stat(cfg.DatabaseHost)
+	switch cfg.Database.Type {
+	case clients.DatabaseTypeSqlite:
+		_, err := os.Stat(cfg.Database.Host)
 		if err == nil {
 			log.Logger().Info().Msg("Database file already exists")
 			return nil
@@ -155,15 +167,13 @@ func checkIfDatabaseExists() error {
 
 		log.Logger().Info().Msg("Creating the database file")
 
-		_, err = os.Create(cfg.DatabaseHost)
+		_, err = os.Create(cfg.Database.Host)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Failed to create database file")
 			return err
 		}
 	default:
-		log.Logger().Info().
-			Str("database_type", cfg.DatabaseConnection).
-			Msg("No action for selected type of database")
+		log.Logger().Info().Msg("No action for selected type of database")
 	}
 
 	return nil
@@ -177,6 +187,7 @@ func checkIfEnvFilesExists() error {
 
 		return err
 	}
+
 	return nil
 }
 

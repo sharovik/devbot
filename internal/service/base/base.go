@@ -2,11 +2,13 @@ package base
 
 import (
 	"fmt"
-	"github.com/sharovik/devbot/internal/container"
-	"github.com/sharovik/devbot/internal/dto"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/sharovik/devbot/internal/container"
+	"github.com/sharovik/devbot/internal/database"
+	"github.com/sharovik/devbot/internal/dto"
 )
 
 //ServiceInterface base interface for messages APIs services
@@ -22,47 +24,39 @@ type Conversation struct {
 	EventID                int64
 	ScenarioQuestionID     int64
 	Question               string
+	Channel                string
 	EventReadyToBeExecuted bool
 	LastQuestion           dto.BaseChatMessage
 	ReactionType           string
-	//This is map for custom variables of conversation, which can be used in custom events
-	Variables []string
+	Scenario               database.EventScenario
 }
 
-//CurrentConversations contains the list of current open conversations, where each key is a channel ID and the value is the last channel question
-var CurrentConversations = map[string]Conversation{}
+//currentConversations contains the list of current open conversations, where each key is a channel ID and the value is the last channel question
+var currentConversations = map[string]Conversation{}
 
 //GetCurrentConversations returns the list of current open conversations
 func GetCurrentConversations() map[string]Conversation {
-	return CurrentConversations
+	return currentConversations
 }
 
-//AddConversation method adds the new conversation to the list of open conversations. This will be used for scenarios build
-func AddConversation(channel string, questionID int64, message dto.BaseChatMessage, variable string) {
-	updatedConversation := Conversation{
+//AddConversation add the new conversation to the list of open conversations. This will be used for scenarios build
+func AddConversation(scenario database.EventScenario, message dto.BaseChatMessage) {
+	conversation := Conversation{
 		ScenarioID:         message.DictionaryMessage.ScenarioID,
 		EventID:            message.DictionaryMessage.EventID,
-		Question:           message.Text,
-		ScenarioQuestionID: questionID,
+		Question:           message.DictionaryMessage.Question,
+		ScenarioQuestionID: message.DictionaryMessage.QuestionID,
 		LastQuestion:       message,
 		ReactionType:       message.DictionaryMessage.ReactionType,
+		Scenario:           scenario,
 	}
 
-	if CurrentConversations[channel].ScenarioID != int64(0) {
-		updatedConversation = CurrentConversations[channel]
-		updatedConversation.ScenarioQuestionID = questionID
-		updatedConversation.LastQuestion = message
-		updatedConversation.ReactionType = message.DictionaryMessage.ReactionType
-	}
-
-	updatedConversation = AddConversationVariable(updatedConversation, variable)
-
-	CurrentConversations[channel] = updatedConversation
+	currentConversations[message.Channel] = conversation
 }
 
 //GetConversation method retrieve the conversation for selected channel
 func GetConversation(channel string) Conversation {
-	if conversation, ok := CurrentConversations[channel]; ok {
+	if conversation, ok := currentConversations[channel]; ok {
 		return conversation
 	}
 
@@ -70,9 +64,11 @@ func GetConversation(channel string) Conversation {
 }
 
 //MarkAsReadyEventToBeExecuted method set the conversation event ready to be executed
-func MarkAsReadyEventToBeExecuted(conversation Conversation) Conversation {
+func MarkAsReadyEventToBeExecuted(channel string) {
+	conversation := currentConversations[channel]
 	conversation.EventReadyToBeExecuted = true
-	return conversation
+
+	currentConversations[channel] = conversation
 }
 
 //CleanUpExpiredMessages removes the messages from the CleanUpExpiredMessages map object, which are expired
@@ -82,24 +78,14 @@ func CleanUpExpiredMessages() {
 	for channel, conversation := range GetCurrentConversations() {
 		elapsed := time.Duration(currentTime.Sub(conversation.LastQuestion.Ts).Nanoseconds())
 		if elapsed >= container.C.Config.OpenConversationTimeout {
-			DeleteConversation(channel)
+			FinaliseConversation(channel)
 		}
 	}
 }
 
-//DeleteConversation method delete the conversation for selected channel
-func DeleteConversation(channel string) {
-	delete(CurrentConversations, channel)
-}
-
-//AddConversationVariable method add the variable to the variables of the selected conversation
-func AddConversationVariable(conversation Conversation, variable string) Conversation {
-	if variable != "" {
-		//We save the current list of variables and add the new value there
-		conversation.Variables = append(conversation.Variables, variable)
-	}
-
-	return conversation
+//FinaliseConversation method delete the conversation for selected channel
+func FinaliseConversation(channel string) {
+	delete(currentConversations, channel)
 }
 
 //getStopScenarioWords method returns the stop words, which will be used for identification if we need to stop the scenario.
@@ -109,6 +95,9 @@ func getStopScenarioWords() []string {
 	for _, text := range []string{
 		"stop!",
 		"stop scenario!",
+		"exit",
+		"stop",
+		"cancel",
 	} {
 		modifiedText := fmt.Sprintf("(%s)", text)
 		stopPhrases = append(stopPhrases, modifiedText)

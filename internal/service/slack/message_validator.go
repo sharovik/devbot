@@ -1,18 +1,19 @@
 package slack
 
 import (
+	"regexp"
+
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/log"
-	"regexp"
 )
 
 //MessageAttributes the validation message attributes
 type MessageAttributes struct {
-	Type string
+	Type    string
 	Channel string
-	Text string
-	User string
-	BotID string
+	Text    string
+	User    string
+	BotID   string
 }
 
 const (
@@ -47,7 +48,7 @@ func isValidMessage(msg MessageAttributes) bool {
 		return false
 	}
 
-	if msg.User == container.C.Config.SlackConfig.BotUserID || msg.BotID != "" {
+	if msg.User == container.C.Config.MessagesAPIConfig.BotUserID || msg.BotID != "" {
 		log.Logger().Debug().Msg("This message is from our bot user")
 		return false
 	}

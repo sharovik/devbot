@@ -3,13 +3,14 @@ package unknownquestion
 import (
 	"database/sql"
 	"fmt"
+	"regexp"
+	"strings"
+
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/orm/clients"
 	cdto "github.com/sharovik/orm/dto"
 	cquery "github.com/sharovik/orm/query"
-	"regexp"
-	"strings"
 
 	"github.com/sharovik/devbot/internal/log"
 
@@ -123,7 +124,7 @@ func (e EventStruct) Install() error {
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
+	return container.C.Dictionary.InstallNewEventScenario(database.EventScenario{
 		EventName:    EventName,
 		EventVersion: EventVersion,
 		Questions: []database.Question{

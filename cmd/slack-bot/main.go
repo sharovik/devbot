@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/sharovik/devbot/internal/service/definedevents"
 	"time"
+
+	"github.com/sharovik/devbot/internal/service/definedevents"
 
 	"github.com/sharovik/devbot/internal/config"
 
@@ -12,7 +13,12 @@ import (
 )
 
 func init() {
-	container.C = container.C.Init()
+	cnt, err := container.Init()
+	if err != nil {
+		panic(err)
+	}
+
+	container.C = cnt
 	definedevents.InitializeDefinedEvents()
 }
 

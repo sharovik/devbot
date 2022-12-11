@@ -33,6 +33,7 @@ type SlackResponseEventMessage struct {
 	Blocks       []MessageBlock `json:"blocks"`
 }
 
+//ToBaseOriginalMessage converts the SlackResponseEventMessage to BaseOriginalMessage object
 func (m SlackResponseEventMessage) ToBaseOriginalMessage() BaseOriginalMessage {
 	return BaseOriginalMessage{
 		Text:        m.Text,

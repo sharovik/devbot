@@ -2,6 +2,7 @@ package eventslist
 
 import (
 	"fmt"
+
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/dto/databasedto"
 	"github.com/sharovik/orm/clients"
@@ -44,7 +45,7 @@ func (e EListEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, e
 
 	q := new(clients.Query).
 		Select([]interface{}{"events.id", "events.alias", "questions.question"}).
-		From(&databasedto.EventModel).
+		From(databasedto.EventModel).
 		Join(query.Join{
 			Target: query.Reference{
 				Table: databasedto.ScenariosModel.GetTableName(),
@@ -98,7 +99,7 @@ func (e EListEvent) Install() error {
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
+	return container.C.Dictionary.InstallNewEventScenario(database.EventScenario{
 		EventName:    EventName,
 		EventVersion: EventVersion,
 		Questions: []database.Question{

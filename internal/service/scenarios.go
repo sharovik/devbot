@@ -2,13 +2,12 @@ package service
 
 import (
 	"database/sql"
+
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
-	"github.com/sharovik/devbot/internal/service/base"
 	"github.com/sharovik/orm/clients"
 	cdto "github.com/sharovik/orm/dto"
 	cquery "github.com/sharovik/orm/query"
-	"time"
 )
 
 //GenerateDMAnswerForScenarioStep method generates DM object for selected scenario step
@@ -107,27 +106,4 @@ func GenerateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error)
 		MainGroupIndexInRegex: rg,
 		ReactionType:          item.GetField("alias").Value.(string),
 	}, nil
-}
-
-//RunScenario runs the selected scenario step
-func RunScenario(answer dto.BaseChatMessage, step string) error {
-	dmAnswer, err := GenerateDMAnswerForScenarioStep(step)
-	if err != nil {
-		return err
-	}
-
-	base.AddConversation(answer.Channel, dmAnswer.QuestionID, dto.BaseChatMessage{
-		Channel:           answer.Channel,
-		Text:              step,
-		AsUser:            false,
-		Ts:                time.Now(),
-		DictionaryMessage: dmAnswer,
-		OriginalMessage: dto.BaseOriginalMessage{
-			Text:  answer.OriginalMessage.Text,
-			User:  answer.OriginalMessage.User,
-			Files: answer.OriginalMessage.Files,
-		},
-	}, "")
-
-	return nil
 }

@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto/databasedto"
@@ -25,14 +26,14 @@ func (m UpdateEventsTriggersHistoryMigration) GetName() string {
 func (m UpdateEventsTriggersHistoryMigration) Execute() error {
 	client := container.C.Dictionary.GetDBClient()
 
-	q := new(clients.Query).Drop(&databasedto.EventTriggerHistoryModel)
+	q := new(clients.Query).Drop(databasedto.EventTriggerHistoryModel)
 	if _, err := client.Execute(q); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("Failed to drop %s table", databasedto.EventTriggerHistoryModel.GetTableName()))
 	}
 
 	//Create events table
 	q = new(clients.Query).
-		Create(&databasedto.EventTriggerHistoryModel).
+		Create(databasedto.EventTriggerHistoryModel).
 		AddIndex(dto.Index{
 			Name:   "user_id_index",
 			Target: databasedto.EventTriggerHistoryModel.GetTableName(),

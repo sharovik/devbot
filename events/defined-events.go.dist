@@ -11,6 +11,7 @@ import (
 	"github.com/sharovik/devbot/internal/container"
 )
 
+//DefinedEvents the list of available events
 var DefinedEvents = map[string]container.DefinedEvent{
 	example.EventName: example.Event,
 	eventslist.EventName: eventslist.Event,

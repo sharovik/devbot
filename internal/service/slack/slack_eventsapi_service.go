@@ -4,13 +4,14 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/sharovik/devbot/internal/client"
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/service/analiser"
 	"github.com/sharovik/devbot/internal/service/base"
-	"net/http"
-	"strings"
-	"time"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
@@ -23,15 +24,16 @@ const slackAPIOrigin = "https://slack.com/api"
 //S slack service object
 var S base.ServiceInterface
 
+//InitService initialize the events-api service
 func InitService() {
-	S = EventsApiService{}
+	S = EventsAPIService{}
 }
 
-//EventsApiService struct of slack service
-type EventsApiService struct {
+//EventsAPIService struct of slack service
+type EventsAPIService struct {
 }
 
-func (EventsApiService) fetchMainChannelID() error {
+func (EventsAPIService) fetchMainChannelID() error {
 	availableChannels, statusCode, err := container.C.MessageClient.GetConversationsList()
 	if err != nil {
 		log.Logger().AddError(err).Int("status_code", statusCode).Msg("Failed conversations list fetching")
@@ -40,25 +42,25 @@ func (EventsApiService) fetchMainChannelID() error {
 
 	var generalChannel dto.Channel
 	for _, channel := range availableChannels.Channels {
-		if channel.Name == container.C.Config.SlackConfig.MainChannelAlias {
+		if channel.Name == container.C.Config.MessagesAPIConfig.MainChannelAlias {
 			generalChannel = channel
 			break
 		}
 	}
 
-	if container.C.Config.SlackConfig.MainChannelID == "" {
-		if err := container.C.Config.SetToEnv(config.SlackEnvMainChannelID, generalChannel.ID, true); err != nil {
+	if container.C.Config.MessagesAPIConfig.MainChannelID == "" {
+		if err := container.C.Config.SetToEnv(config.EnvMainChannelID, generalChannel.ID, true); err != nil {
 			log.Logger().AddError(err).Str("channel_id", generalChannel.ID).Msg("Failed to save slackEnvMainChannelID in .env file")
 			return err
 		}
 
-		container.C.Config.SlackConfig.MainChannelID = generalChannel.ID
+		container.C.Config.MessagesAPIConfig.MainChannelID = generalChannel.ID
 	}
 
 	return nil
 }
 
-func (EventsApiService) fetchBotUserID() error {
+func (EventsAPIService) fetchBotUserID() error {
 	availableUsers, statusCode, err := container.C.MessageClient.GetUsersList()
 	if err != nil {
 		log.Logger().AddError(err).Int("status_code", statusCode).Msg("Failed conversations list fetching")
@@ -67,27 +69,27 @@ func (EventsApiService) fetchBotUserID() error {
 
 	var botMember dto.SlackMember
 	for _, member := range availableUsers.Members {
-		if member.Profile.RealName == container.C.Config.SlackConfig.BotName {
+		if member.Profile.RealName == container.C.Config.MessagesAPIConfig.BotName {
 			botMember = member
 			break
 		}
 	}
 
-	if container.C.Config.SlackConfig.BotUserID == "" {
-		if err := container.C.Config.SetToEnv(config.SlackEnvUserID, botMember.ID, true); err != nil {
+	if container.C.Config.MessagesAPIConfig.BotUserID == "" {
+		if err := container.C.Config.SetToEnv(config.EnvUserID, botMember.ID, true); err != nil {
 			log.Logger().AddError(err).Str("user_id", botMember.ID).Msg("Failed to save slackEnvMainChannelID in .env file")
 			return err
 		}
 
-		container.C.Config.SlackConfig.BotUserID = botMember.ID
+		container.C.Config.MessagesAPIConfig.BotUserID = botMember.ID
 	}
 
 	return nil
 }
 
 //BeforeWSConnectionStart runs methods before the WS connection start
-func (s EventsApiService) BeforeWSConnectionStart() error {
-	if container.C.Config.SlackConfig.MainChannelID == "" {
+func (s EventsAPIService) BeforeWSConnectionStart() error {
+	if container.C.Config.MessagesAPIConfig.MainChannelID == "" {
 		log.Logger().Info().Msg("Main channel ID wasn't specified. Trying to fetch main channel from API")
 		if err := s.fetchMainChannelID(); err != nil {
 			log.Logger().AddError(err).Msg("Failed to fetch channels")
@@ -95,7 +97,7 @@ func (s EventsApiService) BeforeWSConnectionStart() error {
 		}
 	}
 
-	if container.C.Config.SlackConfig.BotUserID == "" {
+	if container.C.Config.MessagesAPIConfig.BotUserID == "" {
 		log.Logger().Info().Msg("Bot user ID wasn't specified. Trying to fetch user ID from API")
 		if err := s.fetchBotUserID(); err != nil {
 			log.Logger().AddError(err).Msg("Failed to fetch user ID")
@@ -104,17 +106,17 @@ func (s EventsApiService) BeforeWSConnectionStart() error {
 	}
 
 	log.Logger().AppendGlobalContext(map[string]interface{}{
-		"main_channel_id":    container.C.Config.SlackConfig.MainChannelID,
-		"main_channel_alias": container.C.Config.SlackConfig.MainChannelAlias,
-		"bot_user_id":        container.C.Config.SlackConfig.BotUserID,
-		"bot_user_name":      container.C.Config.SlackConfig.BotName,
+		"main_channel_id":    container.C.Config.MessagesAPIConfig.MainChannelID,
+		"main_channel_alias": container.C.Config.MessagesAPIConfig.MainChannelAlias,
+		"bot_user_id":        container.C.Config.MessagesAPIConfig.BotUserID,
+		"bot_user_name":      container.C.Config.MessagesAPIConfig.BotName,
 	})
 
 	return nil
 }
 
 //InitWebSocketReceiver method for initialization of websocket receiver
-func (s EventsApiService) InitWebSocketReceiver() error {
+func (s EventsAPIService) InitWebSocketReceiver() error {
 	if err := s.BeforeWSConnectionStart(); err != nil {
 		log.Logger().AddError(err).Msg("Failed to prepare service for WS connection")
 		return err
@@ -131,7 +133,7 @@ func (s EventsApiService) InitWebSocketReceiver() error {
 	)
 
 	for {
-		var message dto.SlackResponseEventApiMessage
+		var message dto.SlackResponseEventAPIMessage
 
 		//Receive message
 		err = websocket.JSON.Receive(ws, &event)
@@ -142,11 +144,11 @@ func (s EventsApiService) InitWebSocketReceiver() error {
 
 		str, _ := json.Marshal(&event)
 		if strings.Contains(string(str), `"channel":{"created"`) || strings.Contains(string(str), `"type":"user_change"`) {
-			log.Logger().Warn().RawJSON("message_body", str).Msg("Received unsupported type of message")
+			log.Logger().Debug().RawJSON("message_body", str).Msg("Received not supported event. Ignoring.")
 			continue
 		}
 
-		if err := json.Unmarshal(str, &message); err != nil {
+		if err = json.Unmarshal(str, &message); err != nil {
 			log.Logger().AddError(err).
 				RawJSON("message_body", str).
 				Msg("Something went wrong with message parsing")
@@ -162,7 +164,7 @@ func (s EventsApiService) InitWebSocketReceiver() error {
 			Str("envelope_id", message.EnvelopeID).
 			Msg("Received event message")
 
-		if err := acknowledge(ws, message.EnvelopeID); err != nil {
+		if err = acknowledge(ws, message.EnvelopeID); err != nil {
 			log.Logger().AddError(err).
 				RawJSON("message_body", str).
 				Str("envelope_id", message.EnvelopeID).
@@ -181,7 +183,7 @@ func (s EventsApiService) InitWebSocketReceiver() error {
 			continue
 		}
 
-		if err := s.ProcessMessage(&message); err != nil {
+		if err = s.ProcessMessage(&message); err != nil {
 			log.Logger().AddError(err).Interface("message_object", &message).Msg("Can't check or answer to the message")
 		}
 
@@ -189,21 +191,21 @@ func (s EventsApiService) InitWebSocketReceiver() error {
 	}
 }
 
-func acknowledge(ws *websocket.Conn, envelopeId string) error {
+func acknowledge(ws *websocket.Conn, envelopeID string) error {
 	res := dto.SlackRequestAcknowledge{
-		EnvelopeID: envelopeId,
+		EnvelopeID: envelopeID,
 	}
 
 	log.Logger().Debug().
-		Str("envelope_id", envelopeId).
+		Str("envelope_id", envelopeID).
 		Msg("Acknowledge event message")
 
 	return websocket.JSON.Send(ws, res)
 }
 
 //ProcessMessage processes the message from the WS connection
-func (s EventsApiService) ProcessMessage(msg interface{}) error {
-	message := msg.(*dto.SlackResponseEventApiMessage)
+func (s EventsAPIService) ProcessMessage(msg interface{}) error {
+	message := msg.(*dto.SlackResponseEventAPIMessage)
 	log.Logger().Debug().
 		Str("type", message.Type).
 		Str("text", message.Payload.Event.Text).
@@ -256,7 +258,7 @@ func (s EventsApiService) ProcessMessage(msg interface{}) error {
 		m.DictionaryMessage = dmAnswer
 	}
 
-	//We need to put this message into our small queue,
+	//We need to put this message into our small schedule,
 	//because we need to make sure if we received our notification.
 	readyToAnswer(m)
 
@@ -267,8 +269,8 @@ func (s EventsApiService) ProcessMessage(msg interface{}) error {
 
 	openConversation := base.GetConversation(message.Payload.Event.Channel)
 	if openConversation.ScenarioID != 0 {
-		isChannelMessage, err := IsChannelID(message.Payload.Event.Channel)
-		if err != nil {
+		var isChannelMessage bool
+		if isChannelMessage, err = IsChannelID(message.Payload.Event.Channel); err != nil {
 			log.Logger().AddError(err).Msg("Error received during channel ID check")
 			return err
 		}
@@ -299,18 +301,18 @@ func getWSClient() client.SlackClient {
 		Client: &httpClient,
 	}
 
-	c.SetOauthToken(container.C.Config.SlackConfig.OAuthToken)
-	c.SetBaseURL(container.C.Config.SlackConfig.BaseURL)
+	c.SetOauthToken(container.C.Config.MessagesAPIConfig.OAuthToken)
+	c.SetBaseURL(container.C.Config.MessagesAPIConfig.BaseURL)
 
 	sc := client.SlackClient{}
-	sc.HttpClient = &c
+	sc.HTTPClient = &c
 
 	return sc
 }
 
 //wsConnect method for receiving of websocket URL which we will use for our connection
-func (EventsApiService) wsConnect() (*websocket.Conn, int, error) {
-	response, statusCode, err := getWSClient().HttpClient.Post("/apps.connections.open", []byte{}, map[string]string{})
+func (EventsAPIService) wsConnect() (*websocket.Conn, int, error) {
+	response, statusCode, err := getWSClient().HTTPClient.Post("/apps.connections.open", []byte{}, map[string]string{})
 	if err != nil {
 		log.Logger().AddError(err).RawJSON("response", response).Int("status_code", statusCode).Msg("Failed send message")
 		return &websocket.Conn{}, statusCode, err

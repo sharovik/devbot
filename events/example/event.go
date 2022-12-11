@@ -2,6 +2,7 @@ package example
 
 import (
 	"fmt"
+
 	"github.com/sharovik/devbot/internal/database"
 
 	"github.com/sharovik/devbot/internal/helper"
@@ -57,13 +58,13 @@ func (e ExmplEvent) Install() error {
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
+	return container.C.Dictionary.InstallNewEventScenario(database.EventScenario{
 		EventName:    EventName,
 		EventVersion: EventVersion,
-		Questions:    []database.Question{
+		Questions: []database.Question{
 			{
 				Question:      "who are you?",
-				Answer:        fmt.Sprintf("Hello, my name is %s", container.C.Config.SlackConfig.BotName),
+				Answer:        fmt.Sprintf("Hello, my name is %s", container.C.Config.MessagesAPIConfig.BotName),
 				QuestionRegex: "(?i)who are you?",
 				QuestionGroup: "",
 			},

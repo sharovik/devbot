@@ -24,7 +24,7 @@ build-slack-bot-for-current-system:
 
 code-check:
 	make lint
-	make tests
+	env APP_ENV="testing" make tests
 
 code-clean:
 	make imports

@@ -25,7 +25,7 @@ func (m InsertHelpMessageMigration) Execute() error {
 		return err
 	}
 
-	_, err = container.C.Dictionary.InsertQuestion("Help", "If you want to see the list of my functions, please try ask me the following question `events list`. This will printout all possible phrases what currently I can understand.", scenarioID, "(?i)^(help)$", "")
+	_, err = container.C.Dictionary.InsertQuestion("Help", "If you want to see the list of my functions, please try ask me the following question `events list`. This will printout all possible phrases what currently I can understand.", scenarioID, "(?i)^(help)$", "", false)
 	if err != nil {
 		return err
 	}

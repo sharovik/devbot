@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/sharovik/devbot/internal/dto"
-	"github.com/sharovik/devbot/internal/log"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
+
+	"github.com/sharovik/devbot/internal/dto"
+	"github.com/sharovik/devbot/internal/log"
 )
 
 //SlackClient client for slack api calls
@@ -60,41 +61,11 @@ func (client SlackClient) AttachFileTo(channel string, pathToFile string, filena
 	writer.Close()
 	file.Close()
 
-	return client.HttpClient.Post("/files.upload", &buf, map[string]string{})
+	return client.HTTPClient.Post("/files.upload", &buf, map[string]string{})
 }
 
 //SendMessage method for post message send through simple API request
-func (client SlackClient) SendMessage(message dto.SlackRequestChatPostMessage) (dto.SlackResponseChatPostMessage, int, error) {
-	log.Logger().Debug().Interface("message", message).Msg("Start chat.postMessage")
-	byteStr, err := json.Marshal(message)
-	if err != nil {
-		return dto.SlackResponseChatPostMessage{}, 0, err
-	}
-
-	response, statusCode, err := client.HttpClient.Post("/chat.postMessage", byteStr, map[string]string{})
-	if err != nil {
-		log.Logger().AddError(err).
-			RawJSON("response", response).
-			Int("status_code", statusCode).
-			Msg("Failed send message")
-		return dto.SlackResponseChatPostMessage{}, statusCode, err
-	}
-
-	var dtoResponse dto.SlackResponseChatPostMessage
-	if err := json.Unmarshal(response, &dtoResponse); err != nil {
-		return dto.SlackResponseChatPostMessage{}, statusCode, err
-	}
-
-	if !dtoResponse.Ok {
-		return dtoResponse, statusCode, errors.New(dtoResponse.Error)
-	}
-
-	log.Logger().Debug().Interface("message", message).Msg("Finish chat.postMessage")
-	return dtoResponse, statusCode, nil
-}
-
-//SendMessageV2 method for post message send through simple API request
-func (client SlackClient) SendMessageV2(message dto.BaseChatMessage) (resp dto.BaseResponseInterface, status int, err error) {
+func (client SlackClient) SendMessage(message dto.BaseChatMessage) (resp dto.BaseResponseInterface, status int, err error) {
 	log.Logger().Debug().Interface("message", message).Msg("Start chat.postMessage")
 	byteStr, err := json.Marshal(dto.SlackRequestChatPostMessage{
 		Channel:           message.Channel,
@@ -109,7 +80,7 @@ func (client SlackClient) SendMessageV2(message dto.BaseChatMessage) (resp dto.B
 		return resp, 0, err
 	}
 
-	response, statusCode, err := client.HttpClient.Post("/chat.postMessage", byteStr, map[string]string{})
+	response, statusCode, err := client.HTTPClient.Post("/chat.postMessage", byteStr, map[string]string{})
 	if err != nil {
 		log.Logger().AddError(err).
 			RawJSON("response", response).
@@ -136,7 +107,7 @@ func (client SlackClient) SendMessageV2(message dto.BaseChatMessage) (resp dto.B
 
 //GetConversationsList method which returns the conversations list of current workspace
 func (client SlackClient) GetConversationsList() (dto.SlackResponseConversationsList, int, error) {
-	response, statusCode, err := client.HttpClient.Get("/conversations.list", map[string]string{})
+	response, statusCode, err := client.HTTPClient.Get("/conversations.list", map[string]string{})
 	if err != nil {
 		return dto.SlackResponseConversationsList{}, statusCode, err
 	}
@@ -155,7 +126,7 @@ func (client SlackClient) GetConversationsList() (dto.SlackResponseConversations
 
 //GetUsersList method which returns the users list of current workspace
 func (client SlackClient) GetUsersList() (dto.SlackResponseUsersList, int, error) {
-	response, statusCode, err := client.HttpClient.Get("/users.list", map[string]string{})
+	response, statusCode, err := client.HTTPClient.Get("/users.list", map[string]string{})
 	if err != nil {
 		return dto.SlackResponseUsersList{}, statusCode, err
 	}

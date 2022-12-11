@@ -1,31 +1,22 @@
 package database
 
 import (
+	"database/sql"
+
 	"github.com/sharovik/orm/clients"
+	cdto "github.com/sharovik/orm/dto"
+	cquery "github.com/sharovik/orm/query"
 
 	"github.com/sharovik/devbot/internal/dto"
 )
 
-const (
-	//ConnectionSQLite the sqlite database connection type
-	ConnectionSQLite = "sqlite"
-	//ConnectionMySQL the sqlite database connection type
-	ConnectionMySQL = "mysql"
-)
-
-type Message struct {
-	Channel string
-	User    string
-	Text    string
-}
-
 //BaseDatabaseInterface interface for base database client
 type BaseDatabaseInterface interface {
-	InitDatabaseConnection() error
+	InitDatabaseConnection(cfg clients.DatabaseConfig) error
 	GetDBClient() clients.BaseClientInterface
 	CloseDatabaseConnection() error
 	FindAnswer(message string) (dto.DictionaryMessage, error)
-	InsertQuestion(question string, answer string, scenarioID int64, questionRegex string, questionRegexGroup string) (int64, error)
+	InsertQuestion(question string, answer string, scenarioID int64, questionRegex string, questionRegexGroup string, isVariable bool) (int64, error)
 	InsertScenario(name string, eventID int64) (int64, error)
 	FindScenarioByID(scenarioID int64) (int64, error)
 	GetLastScenarioID() (int64, error)
@@ -35,7 +26,7 @@ type BaseDatabaseInterface interface {
 	FindRegex(regex string) (int64, error)
 	InsertQuestionRegex(questionRegex string, questionRegexGroup string) (int64, error)
 	GetAllRegex() (map[int64]string, error)
-	GetQuestionsByScenarioID(scenarioID int64) (result []QuestionObject, err error)
+	GetQuestionsByScenarioID(scenarioID int64, isVariable bool) (result []QuestionObject, err error)
 
 	//RunMigrations Should be used for custom event migrations loading
 	RunMigrations(path string) error
@@ -47,7 +38,7 @@ type BaseDatabaseInterface interface {
 	InstallEvent(eventName string, eventVersion string, question string, answer string, questionRegex string, questionRegexGroup string) error
 
 	//InstallNewEventScenario the method will be used for the new better way of scenario installation
-	InstallNewEventScenario(scenario NewEventScenario) error
+	InstallNewEventScenario(scenario EventScenario) error
 }
 
 //QuestionObject used for proper data mapping from questions table
@@ -56,13 +47,22 @@ type QuestionObject struct {
 	Question     string
 	Answer       string
 	ReactionType string
+	IsVariable   bool
 }
 
-//NewEventScenario the object can be used for the new event scenario installation
-type NewEventScenario struct {
-	EventName    string
-	EventVersion string
-	Questions    []Question
+//ScenarioVariable the object for scenario variable
+type ScenarioVariable struct {
+	Name     string
+	Value    string
+	Question string
+}
+
+//EventScenario the object can be used for the new event scenario installation
+type EventScenario struct {
+	EventName         string
+	EventVersion      string
+	Questions         []Question
+	RequiredVariables []ScenarioVariable
 }
 
 //Question the scenario question
@@ -73,7 +73,20 @@ type Question struct {
 	QuestionGroup string
 }
 
-func installNewEventScenario(d BaseDatabaseInterface, scenario NewEventScenario) error {
+//GetUnAnsweredQuestion retrieves unanswered question from the list of questions of the scenario
+func (e *EventScenario) GetUnAnsweredQuestion() string {
+	for _, variable := range e.RequiredVariables {
+		if variable.Value != "" {
+			continue
+		}
+
+		return variable.Question
+	}
+
+	return ""
+}
+
+func installNewEventScenario(d BaseDatabaseInterface, scenario EventScenario) error {
 	eventID, err := d.FindEventByAlias(scenario.EventName)
 	if err != nil {
 		return err
@@ -92,11 +105,80 @@ func installNewEventScenario(d BaseDatabaseInterface, scenario NewEventScenario)
 	}
 
 	for _, q := range scenario.Questions {
-		_, err = d.InsertQuestion(q.Question, q.Answer, scenarioID, q.QuestionRegex, q.QuestionRegex)
+		_, err = d.InsertQuestion(q.Question, q.Answer, scenarioID, q.QuestionRegex, q.QuestionRegex, false)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, v := range scenario.RequiredVariables {
+		_, err = d.InsertQuestion("", v.Question, scenarioID, "", "", true)
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func getQuestionsByScenarioID(d BaseDatabaseInterface, scenarioID int64, isVariable bool) (result []QuestionObject, err error) {
+	query := new(clients.Query).
+		Select([]interface{}{
+			"questions.id",
+			"questions.question",
+			"questions.answer",
+			"questions.is_variable",
+			"events.alias",
+		}).
+		From(&cdto.BaseModel{TableName: "questions"}).
+		Join(cquery.Join{
+			Target:    cquery.Reference{Table: "scenarios", Key: "id"},
+			With:      cquery.Reference{Table: "questions", Key: "scenario_id"},
+			Condition: "=",
+			Type:      cquery.InnerJoinType,
+		}).
+		Join(cquery.Join{
+			Target:    cquery.Reference{Table: "events", Key: "id"},
+			With:      cquery.Reference{Table: "scenarios", Key: "event_id"},
+			Condition: "=",
+			Type:      cquery.InnerJoinType,
+		}).
+		Where(cquery.Where{
+			First:    "scenarios.id",
+			Operator: "=",
+			Second:   cquery.Bind{Field: "scenarios.id", Value: scenarioID},
+		}).
+		OrderBy("questions.id", cquery.OrderDirectionAsc)
+
+	if isVariable {
+		query.Where(cquery.Where{
+			First:    "questions.is_variable",
+			Operator: "=",
+			Second:   cquery.Bind{Field: "is_variable", Value: true},
+		})
+	}
+
+	res, err := d.GetDBClient().Execute(query)
+	if err == sql.ErrNoRows {
+		return result, nil
+	} else if err != nil {
+		return result, err
+	}
+
+	for _, item := range res.Items() {
+		isVar := false
+		if item.GetField("is_variable").Value.(int) == 1 {
+			isVar = true
+		}
+
+		result = append(result, QuestionObject{
+			ID:           int64(item.GetField("id").Value.(int)),
+			Question:     item.GetField("question").Value.(string),
+			Answer:       item.GetField("answer").Value.(string),
+			ReactionType: item.GetField("alias").Value.(string),
+			IsVariable:   isVar,
+		})
+	}
+
+	return result, nil
 }

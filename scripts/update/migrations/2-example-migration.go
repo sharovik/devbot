@@ -24,7 +24,7 @@ func (m ExampleMigration) Execute() error {
 
 	q := new(clients.Query).
 		Select(databasedto.MigrationModel.GetColumns()).
-		From(&databasedto.MigrationModel).
+		From(databasedto.MigrationModel).
 		Where(query.Where{
 			First:    "1",
 			Operator: "=",

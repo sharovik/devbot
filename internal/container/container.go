@@ -2,10 +2,11 @@ package container
 
 import (
 	"crypto/tls"
-	"fmt"
-	"github.com/sharovik/devbot/internal/dto"
+	"errors"
 	"net/http"
 	"time"
+
+	"github.com/sharovik/devbot/internal/dto"
 
 	"github.com/sharovik/devbot/internal/database"
 
@@ -17,13 +18,13 @@ import (
 //DefinedEvent the interface for events
 //@todo: move to the better place.
 type DefinedEvent interface {
-	//The main execution method, which will run the actual functionality for the event
+	//Execute The main execution method, which will run the actual functionality for the event
 	Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error)
 
-	//The installation method, which will executes the installation parts of the event
+	//Install The installation method, which will executes the installation parts of the event
 	Install() error
 
-	//The update method, which will update the application to use new version of this event
+	//Update The update method, which will update the application to use new version of this event
 	Update() error
 }
 
@@ -42,20 +43,29 @@ type Main struct {
 var C Main
 
 //Init initialise container
-func (container Main) Init() Main {
-	container.Config = config.Init()
+func Init() (Main, error) {
+	C := new(Main)
+	cfg, err := config.Init()
+	if err != nil {
+		return Main{}, err
+	}
 
-	_ = log.Init(container.Config.LogConfig)
+	C.Config = cfg
+
+	err = log.Init(C.Config.LogConfig)
+	if err != nil {
+		return Main{}, err
+	}
 
 	netTransport := &http.Transport{
-		TLSHandshakeTimeout: time.Duration(container.Config.HTTPClient.TLSHandshakeTimeout) * time.Second,
+		TLSHandshakeTimeout: time.Duration(C.Config.HTTPClient.TLSHandshakeTimeout) * time.Second,
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: container.Config.HTTPClient.InsecureSkipVerify,
+			InsecureSkipVerify: C.Config.HTTPClient.InsecureSkipVerify,
 		},
 	}
 
 	httpClient := http.Client{
-		Timeout:   time.Duration(container.Config.HTTPClient.RequestTimeout) * time.Second,
+		Timeout:   time.Duration(C.Config.HTTPClient.RequestTimeout) * time.Second,
 		Transport: netTransport,
 	}
 
@@ -63,69 +73,59 @@ func (container Main) Init() Main {
 	bitBucketClient.Init(&client.HTTPClient{
 		Client:       &httpClient,
 		BaseURL:      client.DefaultBitBucketBaseAPIUrl,
-		ClientID:     container.Config.BitBucketConfig.ClientID,
-		ClientSecret: container.Config.BitBucketConfig.ClientSecret,
+		ClientID:     C.Config.BitBucketConfig.ClientID,
+		ClientSecret: C.Config.BitBucketConfig.ClientSecret,
 	})
-	container.BibBucketClient = &bitBucketClient
-	container.HTTPClient = &client.HTTPClient{
+	C.BibBucketClient = &bitBucketClient
+	C.HTTPClient = &client.HTTPClient{
 		Client: &httpClient,
 	}
 
-	c := client.HTTPClient{
-		Client: &httpClient,
-	}
+	C.MessageClient = C.initMessageClient()
 
-	c.SetOauthToken(container.Config.SlackConfig.WebAPIOAuthToken)
-	c.SetBaseURL(container.Config.SlackConfig.BaseURL)
-
-	sc := client.SlackClient{}
-	sc.HttpClient = &c
-
-	container.MessageClient = sc
-	if err := container.loadDictionary(); err != nil {
+	if err := C.loadDictionary(); err != nil {
 		panic(err)
 	}
 
-	container.MigrationService = database.MigrationService{
+	C.MigrationService = database.MigrationService{
 		Logger:     *log.Logger(),
-		Dictionary: container.Dictionary,
+		Dictionary: C.Dictionary,
 	}
 
-	return container
+	return *C, nil
 }
 
 //Terminate terminates the properly connections
-func (container *Main) Terminate() {
-	if err := container.Dictionary.CloseDatabaseConnection(); err != nil {
+func (c *Main) Terminate() {
+	if err := c.Dictionary.CloseDatabaseConnection(); err != nil {
 		panic(err)
 	}
 }
 
-func (container *Main) loadDictionary() error {
-	switch container.Config.DatabaseConnection {
-	case database.ConnectionSQLite:
-		dictionary := database.SQLiteDictionary{
-			Cfg: container.Config,
-		}
+func (c *Main) loadDictionary() error {
+	dictionary := new(database.Dictionary)
+	if err := dictionary.InitDatabaseConnection(c.Config.Database); err != nil {
+		return err
+	}
 
-		if err := dictionary.InitDatabaseConnection(); err != nil {
-			return err
-		}
+	c.Dictionary = dictionary
 
-		container.Dictionary = &dictionary
-		return nil
-	case database.ConnectionMySQL:
-		dictionary := database.MySQLDictionary{
-			Cfg: container.Config,
-		}
+	return nil
+}
 
-		if err := dictionary.InitDatabaseConnection(); err != nil {
-			return err
-		}
+func (c *Main) initMessageClient() client.MessageClientInterface {
+	switch c.Config.MessagesAPIConfig.Type {
+	case config.MessagesAPITypeSlack:
+		h := c.HTTPClient
 
-		container.Dictionary = &dictionary
-		return nil
+		h.SetOauthToken(c.Config.MessagesAPIConfig.WebAPIOAuthToken)
+		h.SetBaseURL(c.Config.MessagesAPIConfig.BaseURL)
+
+		sc := client.SlackClient{}
+		sc.HTTPClient = h
+
+		return sc
 	default:
-		return fmt.Errorf("Unknown dictionary database used: %s ", container.Config.DatabaseConnection)
+		panic(errors.New("Unknown messages API type"))
 	}
 }

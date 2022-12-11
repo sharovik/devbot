@@ -1,40 +1,7 @@
 # devbot
 [![Gitter](https://badges.gitter.im/devbot-tool/community.svg)](https://gitter.im/devbot-tool/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-This is a free, opensource chat-bot framework, based on GoLang. Using this framework you can set-up a custom bot, which can execute the commands you need.
-
-## Features out of the box
-Here is the list of current events, which comes out of the box.
-
-### Unknown question
-If bot don't know how to answer, he will try to find potential events using the words from your question
-![question-options](documentation/images/possible-options.png)
-
-### Current installed events
-Ask bot `events list` to see the list of available events. This is useful, when you don't know which event what command have.
-
-![events-list](documentation/images/events-list.png)
-
-### Help of event
-Each event should have `--help` feature. So, once you don't know how to use selected event, please type `--help` after the event command
-
-![usage-help-command](documentation/images/new-answer-help.png)
-
-### Example of scenario
-There is an example event, which you can use as skeleton for your custom scenarios
-![example-scenario](documentation/images/example-scenario.png)
-
-### List open conversations
-You can always control open conversations
-![show-open-conversations](documentation/images/show-open-conversations.png)
-
-### Stop conversation
-You always can stop open conversations
-![stop-open-conversations](documentation/images/stop-conversation.png)
-
-### Repeat last event
-When you have triggered already the event, let's say, "staging deployment" and you need to re-deploy. You can ask bot to repeat the previous scenario you triggered in that channel.
-![repeat-scenario](documentation/images/repeat-event.png)
+Free, opensource "chat-bot" skeleton project, based on GoLang. Using this project you can build your custom simple bot, which can execute the commands you need.
 
 ## Table of contents
 - [How to run](#how-to-run)
@@ -44,12 +11,18 @@ When you have triggered already the event, let's say, "staging deployment" and y
 - [How to write custom event](documentation/events.md)
 - [How to build scenario](documentation/scenarios.md)
 - [Migrations](documentation/migrations.md)
+- [Features out of the box](documentation/features-out-of-the-box.md)
 - [Available events](documentation/available-features.md)
 - [Events available for installation](#custom-events-available-for-installation)
 - [How to add new questions into the database](documentation/dictionary.md) - this part deprecated and soon will be improved
 - [Project build](documentation/build.md)
 - [Authors](#authors)
 - [License](#license)
+
+## How it works?
+You write bot a PM(personal message) OR tag bot in your channel. Then, depending on your message, bot will try to trigger an event.
+
+[Find example here](documentation/events.md).
 
 ## How to run
 

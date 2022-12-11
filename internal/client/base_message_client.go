@@ -4,12 +4,14 @@ import (
 	"github.com/sharovik/devbot/internal/dto"
 )
 
+//BaseMessageClient the base messages client
 type BaseMessageClient struct {
-	HttpClient BaseHTTPClientInterface
+	HTTPClient BaseHTTPClientInterface
 }
 
+//GetHTTPClient method for retrieving of the current http client
 func (c BaseMessageClient) GetHTTPClient() BaseHTTPClientInterface {
-	return c.HttpClient
+	return c.HTTPClient
 }
 
 //MessageClientInterface interface for slack client
@@ -20,10 +22,9 @@ type MessageClientInterface interface {
 	GetConversationsList() (dto.SlackResponseConversationsList, int, error)
 	GetUsersList() (dto.SlackResponseUsersList, int, error)
 
-	//PM messages
-	SendMessage(dto.SlackRequestChatPostMessage) (dto.SlackResponseChatPostMessage, int, error)
-	SendMessageV2(message dto.BaseChatMessage) (response dto.BaseResponseInterface, status int, err error)
+	//SendMessage sends the message to selected channel
+	SendMessage(message dto.BaseChatMessage) (response dto.BaseResponseInterface, status int, err error)
 
-	//Send attachment
+	//AttachFileTo send attachment
 	AttachFileTo(channel string, pathToFile string, filename string) ([]byte, int, error)
 }

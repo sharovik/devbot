@@ -30,10 +30,12 @@ type SlackResponseChatPostMessage struct {
 	} `json:"message"`
 }
 
+//SetByteResponse sets the byte response
 func (r *SlackResponseChatPostMessage) SetByteResponse(response []byte) {
 	r.ByteResponse = response
 }
 
+//GetByteResponse returns the byte response
 func (r *SlackResponseChatPostMessage) GetByteResponse() []byte {
 	return r.ByteResponse
 }

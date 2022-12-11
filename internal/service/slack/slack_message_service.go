@@ -2,10 +2,11 @@ package slack
 
 import (
 	"fmt"
-	"github.com/sharovik/devbot/internal/service/base"
-	"github.com/sharovik/devbot/internal/service/history"
 	"regexp"
 	"time"
+
+	"github.com/sharovik/devbot/internal/service/base"
+	"github.com/sharovik/devbot/internal/service/history"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
@@ -19,7 +20,7 @@ func getPreparedAnswer(channel string) dto.BaseChatMessage {
 }
 
 func answerToMessage(m dto.BaseChatMessage) error {
-	response, statusCode, err := container.C.MessageClient.SendMessageV2(m)
+	response, statusCode, err := container.C.MessageClient.SendMessage(m)
 	if err != nil {
 		log.Logger().AddError(err).
 			Interface("response", response).
@@ -91,25 +92,7 @@ func prepareAnswer(message *dto.SlackResponseEventMessage, dm dto.DictionaryMess
 			return triggerUnknownAnswerScenario(message)
 		}
 
-		//@todo trigger learn scenario
-	}
-
-	//We will trigger the event history save in case when we don't have open conversation
-	//or when we do have open conversation, but it is time to trigger the event execution
-	//so we can store all variables
-	if 0 == base.GetConversation(message.Channel).ScenarioID || base.GetConversation(message.Channel).EventReadyToBeExecuted {
-		history.RememberEventExecution(dto.BaseChatMessage{
-			Channel:           message.Channel,
-			Text:              message.Text,
-			AsUser:            true,
-			Ts:                time.Now(),
-			DictionaryMessage: dm,
-			OriginalMessage: dto.BaseOriginalMessage{
-				Text:  message.Text,
-				User:  message.User,
-				Files: message.Files,
-			},
-		})
+		//@todo: trigger learn scenario
 	}
 
 	responseMessage := dto.BaseChatMessage{
@@ -188,6 +171,25 @@ func TriggerAnswer(channel string) error {
 				log.Logger().AddError(err).Msg("Failed to send post-answer for selected event")
 			}
 		}
+
+		//We will trigger the event history save in case when we don't have open conversation
+		//or when we do have open conversation, but it is time to trigger the event execution
+		//so, we can store all variables
+		if 0 == base.GetConversation(answerMessage.Channel).ScenarioID || base.GetConversation(answerMessage.Channel).EventReadyToBeExecuted {
+			history.RememberEventExecution(dto.BaseChatMessage{
+				Channel:           answerMessage.Channel,
+				Text:              answerMessage.Text,
+				AsUser:            true,
+				Ts:                time.Now(),
+				DictionaryMessage: answerMessage.DictionaryMessage,
+				OriginalMessage: dto.BaseOriginalMessage{
+					Text: answerMessage.Text,
+					User: answerMessage.OriginalMessage.User,
+				},
+			})
+		}
+
+		base.FinaliseConversation(channel)
 	}()
 
 	return nil
