@@ -125,7 +125,7 @@ func TestSQLiteDictionary_FindAnswer(t *testing.T) {
 		}
 
 		var dmAnswer dto.DictionaryMessage
-		dmAnswer, err = dictionary.FindAnswer(&msg)
+		dmAnswer, err = dictionary.FindAnswer(msg.Text)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, dmAnswer)
 		assert.Equal(t, answer, dmAnswer.Answer, question)
@@ -143,7 +143,7 @@ func TestSQLiteDictionary_FindAnswer(t *testing.T) {
 		}
 
 		var dmAnswer dto.DictionaryMessage
-		dmAnswer, err = dictionary.FindAnswer(&msg)
+		dmAnswer, err = dictionary.FindAnswer(msg.Text)
 		assert.Empty(t, dmAnswer, question)
 	}
 
