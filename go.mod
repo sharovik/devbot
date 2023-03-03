@@ -10,5 +10,5 @@ require (
 	github.com/rs/zerolog v1.14.3
 	github.com/sharovik/orm v1.1.3
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/net v0.0.0-20191116160921-f9c825593386
+	golang.org/x/net v0.7.0
 )
