@@ -1,11 +1,12 @@
-package slack
+package message
 
 import (
 	"fmt"
+	"github.com/sharovik/devbot/internal/database"
+	"github.com/sharovik/devbot/internal/service/message/conversation"
 	"regexp"
 	"time"
 
-	"github.com/sharovik/devbot/internal/service/base"
 	"github.com/sharovik/devbot/internal/service/history"
 
 	"github.com/sharovik/devbot/internal/container"
@@ -123,14 +124,40 @@ func triggerUnknownAnswerScenario(message *dto.SlackResponseEventMessage) (answe
 	}, nil
 }
 
-//TriggerAnswer triggers an answer for received message
-func TriggerAnswer(channel string) error {
-	answerMessage := getPreparedAnswer(channel)
+//TriggerScenario triggers the scenario for selected channel
+func TriggerScenario(channel string, scenario database.EventScenario) error {
+	dmAnswer := dto.DictionaryMessage{
+		ScenarioID:   scenario.ID,
+		EventID:      scenario.EventID,
+		ReactionType: scenario.EventName,
+	}
 
+	conversation.AddConversation(scenario, dto.BaseChatMessage{
+		Channel:           channel,
+		AsUser:            true,
+		Text:              scenario.GetUnAnsweredQuestion(),
+		Ts:                time.Now(),
+		DictionaryMessage: dmAnswer,
+		OriginalMessage: dto.BaseOriginalMessage{
+			Text: scenario.GetUnAnsweredQuestion(),
+		},
+	})
+
+	if err := TriggerAnswer(channel, conversation.GetConversation(channel).LastQuestion); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//TriggerAnswer triggers an answer for received message
+func TriggerAnswer(channel string, answerMessage dto.BaseChatMessage) error {
 	if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
 		log.Logger().AddError(err).Msg("Failed to send prepared answers")
 		return err
 	}
+
+	conversation.SetLastQuestion(answerMessage)
 
 	if answerMessage.DictionaryMessage.ReactionType == "" || container.C.DefinedEvents[answerMessage.DictionaryMessage.ReactionType] == nil {
 		log.Logger().Warn().
@@ -139,7 +166,7 @@ func TriggerAnswer(channel string) error {
 		return nil
 	}
 
-	activeConversation := base.GetConversation(channel)
+	activeConversation := conversation.GetConversation(channel)
 	if activeConversation.ScenarioID != int64(0) && !activeConversation.EventReadyToBeExecuted {
 		log.Logger().Info().
 			Interface("conversation", activeConversation).
@@ -167,7 +194,7 @@ func TriggerAnswer(channel string) error {
 
 		if answer.Text != "" {
 			answerMessage.Text = answer.Text
-			if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
+			if err = SendAnswerForReceivedMessage(answerMessage); err != nil {
 				log.Logger().AddError(err).Msg("Failed to send post-answer for selected event")
 			}
 		}
@@ -175,7 +202,7 @@ func TriggerAnswer(channel string) error {
 		//We will trigger the event history save in case when we don't have open conversation
 		//or when we do have open conversation, but it is time to trigger the event execution
 		//so, we can store all variables
-		if 0 == base.GetConversation(answerMessage.Channel).ScenarioID || base.GetConversation(answerMessage.Channel).EventReadyToBeExecuted {
+		if 0 == conversation.GetConversation(answerMessage.Channel).ScenarioID || conversation.GetConversation(answerMessage.Channel).EventReadyToBeExecuted {
 			history.RememberEventExecution(dto.BaseChatMessage{
 				Channel:           answerMessage.Channel,
 				Text:              answerMessage.Text,
@@ -189,7 +216,9 @@ func TriggerAnswer(channel string) error {
 			})
 		}
 
-		base.FinaliseConversation(channel)
+		if conversation.GetConversation(answerMessage.Channel).EventReadyToBeExecuted {
+			conversation.FinaliseConversation(channel)
+		}
 	}()
 
 	return nil

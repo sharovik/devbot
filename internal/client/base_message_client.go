@@ -14,7 +14,7 @@ func (c BaseMessageClient) GetHTTPClient() BaseHTTPClientInterface {
 	return c.HTTPClient
 }
 
-//MessageClientInterface interface for slack client
+//MessageClientInterface interface for message client
 type MessageClientInterface interface {
 	GetHTTPClient() BaseHTTPClientInterface
 

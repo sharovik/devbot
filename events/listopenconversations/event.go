@@ -2,10 +2,10 @@ package listopenconversations
 
 import (
 	"fmt"
+	"github.com/sharovik/devbot/internal/service/message/conversation"
 
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/helper"
-	"github.com/sharovik/devbot/internal/service/base"
 
 	"github.com/sharovik/devbot/internal/log"
 
@@ -48,14 +48,14 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 		return message, nil
 	}
 
-	currentConversations := base.GetCurrentConversations()
+	currentConversations := conversation.GetCurrentConversations()
 	if len(currentConversations) == 0 {
 		message.Text = "There is no open conversations."
 		return message, nil
 	}
 
 	message.Text = "Here is the list:"
-	for _, conv := range base.GetCurrentConversations() {
+	for _, conv := range conversation.GetCurrentConversations() {
 		message.Text += "\n-------"
 		message.Text += fmt.Sprintf("\nScenario #%d was triggered in <@%s> chat", conv.ScenarioID, conv.LastQuestion.Channel)
 		if len(conv.Scenario.RequiredVariables) == 0 {

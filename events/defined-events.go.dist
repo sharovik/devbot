@@ -20,4 +20,5 @@ var DefinedEvents = map[string]container.DefinedEvent{
 	listopenconversations.EventName: listopenconversations.Event,
 	unknownquestion.EventName: unknownquestion.Event,
 	repeatevent.EventName: repeatevent.Event,
+    scheduleevent.EventName:         scheduleevent.Event,
 }

@@ -1,7 +1,7 @@
 # devbot
 [![Gitter](https://badges.gitter.im/devbot-tool/community.svg)](https://gitter.im/devbot-tool/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-Free, opensource "chat-bot" skeleton project, based on GoLang. Using this project you can build your custom simple bot, which can execute the commands you need.
+Free, opensource "ChatBot" project, based on GoLang. Using this project you can build your custom simple bot, which can execute the commands you need.
 
 ## Table of contents
 - [How to run](#how-to-run)

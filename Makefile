@@ -16,11 +16,11 @@ LDFLAGS=-ldflags="-s -w"
 vendor:
 	go mod vendor
 
-build-slack-bot-cross-platform:
-	env CGO_ENABLED=1 xgo --targets=darwin/*,linux/amd64,linux/386,windows/* --dest ./$(PROJECT_BUILD_DIR)/$(BIN_DIR)/ --out slack-bot ./cmd/slack-bot
+build-devbot-cross-platform:
+	env CGO_ENABLED=1 xgo --targets=darwin/*,linux/amd64,linux/386,windows/* --dest ./$(PROJECT_BUILD_DIR)/$(BIN_DIR)/ --out devbot ./cmd/devbot
 
-build-slack-bot-for-current-system:
-	env CGO_ENABLED=1 go build -o ./bin/slack-bot-current-system ./cmd/slack-bot/main.go
+build-devbot-for-current-system:
+	env CGO_ENABLED=1 go build -o ./bin/devbot-current-system ./cmd/devbot/main.go
 
 code-check:
 	make lint
@@ -103,7 +103,7 @@ prepare-release:
 build:
 	make install
 	make update
-	make build-slack-bot-for-current-system
+	make build-devbot-for-current-system
 
 refresh-events:
 	./scripts/project-tools/update-events.sh
@@ -114,8 +114,11 @@ create-missing-files:
 
 build-project-cross-platform:
 	make create-missing-files
-	make build-slack-bot-cross-platform
+	make build-devbot-cross-platform
 	make build-installation-script
 	make build-update-script
+
+cleanup:
+	rm -rf vendor terraform scripts internal events documentation cmd
 
 .PHONY: vendor

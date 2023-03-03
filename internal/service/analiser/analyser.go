@@ -1,6 +1,7 @@
 package analiser
 
 import (
+	"github.com/sharovik/devbot/internal/service/message/conversation"
 	"time"
 
 	"github.com/sharovik/devbot/internal/container"
@@ -8,7 +9,6 @@ import (
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/devbot/internal/log"
-	"github.com/sharovik/devbot/internal/service/base"
 )
 
 //Message the message object, from which we will generate the dto.DictionaryMessage
@@ -22,9 +22,10 @@ type Message struct {
 func GetDmAnswer(message Message) (dmAnswer dto.DictionaryMessage, err error) {
 	//Now we need to check if there was already opened conversation for this channel
 	//If so, then we need to get the Answer from this scenario
-	openConversation := base.GetConversation(message.Channel)
+	openConversation := conversation.GetConversation(message.Channel)
 
-	IsScenarioStopTriggered := base.IsScenarioStopTriggered(message.Text)
+	//If that was a stop word, we need to cancel the conversation
+	IsScenarioStopTriggered := conversation.IsScenarioStopTriggered(message.Text)
 	if IsScenarioStopTriggered {
 		dmAnswer = dto.DictionaryMessage{
 			ScenarioID:            0,
@@ -36,11 +37,12 @@ func GetDmAnswer(message Message) (dmAnswer dto.DictionaryMessage, err error) {
 			MainGroupIndexInRegex: "",
 			ReactionType:          "text",
 		}
-		base.FinaliseConversation(message.Channel)
+		conversation.FinaliseConversation(message.Channel)
 
 		return dmAnswer, nil
 	}
 
+	//If there was a scenario triggered for this conversation, we trigger the scenario handling logic
 	if openConversation.ScenarioID != 0 {
 		setAnswerToVariable(message.Text, &openConversation)
 
@@ -61,8 +63,9 @@ func GetDmAnswer(message Message) (dmAnswer dto.DictionaryMessage, err error) {
 	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.Text)
 	//If the questions amount is more than 1, we need to start the conversation algorithm
 	if len(questions) > 1 && !isHelpAnswerTriggered {
-		scenario := getScenario(questions)
-		base.AddConversation(scenario, dto.BaseChatMessage{
+		scenario := database.EventScenario{}
+		SetScenarioQuestions(&scenario, questions)
+		conversation.AddConversation(scenario, dto.BaseChatMessage{
 			Channel:           message.Channel,
 			Text:              message.Text,
 			AsUser:            false,
@@ -80,7 +83,7 @@ func GetDmAnswer(message Message) (dmAnswer dto.DictionaryMessage, err error) {
 	return dmAnswer, nil
 }
 
-func getScenario(questions []database.QuestionObject) (scenario database.EventScenario) {
+func SetScenarioQuestions(scenario *database.EventScenario, questions []database.QuestionObject) {
 	for _, q := range questions {
 		scenario.Questions = append(scenario.Questions, database.Question{
 			Question: q.Question,
@@ -93,8 +96,6 @@ func getScenario(questions []database.QuestionObject) (scenario database.EventSc
 			})
 		}
 	}
-
-	return scenario
 }
 
 func getVariableQuestionsByScenarioID(scenarioID int64) (result []database.QuestionObject, err error) {
@@ -115,13 +116,13 @@ func getVariableQuestionsByScenarioID(scenarioID int64) (result []database.Quest
 	return result, err
 }
 
-func setAnswerToVariable(answer string, openConversation *base.Conversation) {
+func setAnswerToVariable(answer string, openConversation *conversation.Conversation) {
 	if len(openConversation.Scenario.RequiredVariables) == 0 {
 		return
 	}
 
 	for i, variable := range openConversation.Scenario.RequiredVariables {
-		if variable.Value != "" {
+		if variable.Value != "" || openConversation.LastQuestion.Text != variable.Question {
 			continue
 		}
 
@@ -130,7 +131,7 @@ func setAnswerToVariable(answer string, openConversation *base.Conversation) {
 	}
 }
 
-func generateDmForConversation(message Message, openConversation base.Conversation) (dto.DictionaryMessage, error) {
+func generateDmForConversation(message Message, openConversation conversation.Conversation) (dto.DictionaryMessage, error) {
 	if len(openConversation.Scenario.RequiredVariables) == 0 {
 		return dto.DictionaryMessage{}, nil
 	}
@@ -150,7 +151,7 @@ func generateDmForConversation(message Message, openConversation base.Conversati
 		return dmAnswer, nil
 	}
 
-	base.MarkAsReadyEventToBeExecuted(message.Channel)
+	conversation.MarkAsReadyEventToBeExecuted(message.Channel)
 
 	return dto.DictionaryMessage{
 		ScenarioID:   openConversation.ScenarioID,
@@ -158,33 +159,4 @@ func generateDmForConversation(message Message, openConversation base.Conversati
 		Answer:       "Ok",
 		ReactionType: openConversation.ReactionType,
 	}, nil
-}
-
-func getNextQuestion(openConversation base.Conversation, questions []database.QuestionObject) database.QuestionObject {
-	shouldAskNewQuestion := false
-	lastQuestion := database.QuestionObject{}
-	lastQuestionID := int64(0)
-	for _, question := range questions {
-
-		lastQuestionID = question.ID
-		if openConversation.ScenarioQuestionID == question.ID {
-			shouldAskNewQuestion = true
-			continue
-		}
-
-		if shouldAskNewQuestion {
-			lastQuestion = question
-			break
-		}
-
-		//In that case we always store here the latest question object
-		lastQuestion = question
-	}
-
-	//This means there was the last question already triggered
-	if lastQuestionID == openConversation.ScenarioQuestionID {
-		lastQuestion = database.QuestionObject{}
-	}
-
-	return lastQuestion
 }

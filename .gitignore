@@ -16,6 +16,7 @@ events/*
 !events/listopenconversations
 !events/unknownquestion
 !events/repeatevent
+!events/scheduleevent
 devbot.sqlite
 
 terraform/.terraform

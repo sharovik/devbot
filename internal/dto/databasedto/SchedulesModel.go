@@ -44,6 +44,11 @@ var SchedulesModel = New(
 			Type:   dto.VarcharColumnType,
 			Length: 255,
 		},
+		dto.ModelField{
+			Name:    "is_repeatable",
+			Type:    dto.BooleanColumnType,
+			Default: false,
+		},
 	},
 	dto.ModelField{
 		Name:          "id",

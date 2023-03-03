@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"strings"
 
 	"github.com/sharovik/orm/clients"
 	cdto "github.com/sharovik/orm/dto"
@@ -59,10 +60,35 @@ type ScenarioVariable struct {
 
 //EventScenario the object can be used for the new event scenario installation
 type EventScenario struct {
-	EventName         string
-	EventVersion      string
-	Questions         []Question
+	//EventName name of the event, to which we need connect the scenario
+	EventName string
+
+	//ScenarioName name of the scenario
+	ScenarioName string
+
+	//EventID the id of existing event in the database
+	EventID int64
+
+	//EventVersion version of the event
+	EventVersion string
+
+	//ID id of scenario
+	ID int64
+
+	//Questions scenario questions list
+	Questions []Question
+
+	//RequiredVariables required variables list we expecting for this scenario
 	RequiredVariables []ScenarioVariable
+}
+
+func (e *EventScenario) VariablesToString() string {
+	var result []string
+	for _, variable := range e.RequiredVariables {
+		result = append(result, variable.Value)
+	}
+
+	return strings.Join(result, ";")
 }
 
 //Question the scenario question
@@ -99,7 +125,12 @@ func installNewEventScenario(d BaseDatabaseInterface, scenario EventScenario) er
 		}
 	}
 
-	scenarioID, err := d.InsertScenario(scenario.EventName, eventID)
+	name := scenario.ScenarioName
+	if name == "" {
+		name = scenario.EventName
+	}
+
+	scenarioID, err := d.InsertScenario(name, eventID)
 	if err != nil {
 		return err
 	}

@@ -1,4 +1,4 @@
-package base
+package conversation
 
 import (
 	"fmt"
@@ -6,17 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/dto"
 )
-
-//ServiceInterface base interface for messages APIs services
-type ServiceInterface interface {
-	InitWebSocketReceiver() error
-	BeforeWSConnectionStart() error
-	ProcessMessage(message interface{}) error
-}
 
 //Conversation the conversation object which contains the information about the scenario selected for the conversation and the last question asked by the customer.
 type Conversation struct {
@@ -33,6 +25,8 @@ type Conversation struct {
 
 //currentConversations contains the list of current open conversations, where each key is a channel ID and the value is the last channel question
 var currentConversations = map[string]Conversation{}
+
+const openConversationTimeout = time.Second * 600
 
 //GetCurrentConversations returns the list of current open conversations
 func GetCurrentConversations() map[string]Conversation {
@@ -52,6 +46,14 @@ func AddConversation(scenario database.EventScenario, message dto.BaseChatMessag
 	}
 
 	currentConversations[message.Channel] = conversation
+}
+
+//SetLastQuestion sets the last question to the current conversation
+func SetLastQuestion(message dto.BaseChatMessage) {
+	conv := GetConversation(message.Channel)
+	conv.LastQuestion = message
+
+	currentConversations[message.Channel] = conv
 }
 
 //GetConversation method retrieve the conversation for selected channel
@@ -77,7 +79,7 @@ func CleanUpExpiredMessages() {
 
 	for channel, conversation := range GetCurrentConversations() {
 		elapsed := time.Duration(currentTime.Sub(conversation.LastQuestion.Ts).Nanoseconds())
-		if elapsed >= container.C.Config.OpenConversationTimeout {
+		if elapsed >= openConversationTimeout {
 			FinaliseConversation(channel)
 		}
 	}
@@ -85,6 +87,10 @@ func CleanUpExpiredMessages() {
 
 //FinaliseConversation method delete the conversation for selected channel
 func FinaliseConversation(channel string) {
+	if _, ok := currentConversations[channel]; !ok {
+		return
+	}
+
 	delete(currentConversations, channel)
 }
 

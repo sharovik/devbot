@@ -2,14 +2,23 @@
 .idea
 .DS_store
 
-vendor
-
 devbot.sqlite
 .env
 
 project-build
+.github
+bin
+documentation
+terraform
+test
+vendor
 
 Dockerfile
+_config.yml
+LICENSE.md
+README.md
+SECURITY.md
+slack-app-manifest.yml
 
 # Git is not needed after deploy
 .git

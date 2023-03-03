@@ -1,6 +1,6 @@
 package dto
 
-//Channel it's an object which contains information about slack channel
+//Channel it's an object which contains information about message channel
 type Channel struct {
 	ID                      string        `json:"id"`
 	Name                    string        `json:"name"`

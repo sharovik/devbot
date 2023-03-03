@@ -2,6 +2,8 @@ package repeatevent
 
 import (
 	"fmt"
+	"github.com/sharovik/devbot/internal/service/message/conversation"
+	"github.com/sharovik/devbot/internal/service/schedule"
 	"strings"
 	"time"
 
@@ -11,7 +13,6 @@ import (
 	"github.com/sharovik/devbot/internal/dto/databasedto"
 	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/devbot/internal/log"
-	"github.com/sharovik/devbot/internal/service/base"
 	"github.com/sharovik/orm/clients"
 	cdto "github.com/sharovik/orm/dto"
 	"github.com/sharovik/orm/query"
@@ -200,7 +201,7 @@ func triggerScenario(item cdto.ModelInterface) (dto.BaseChatMessage, error) {
 			RequiredVariables: nil,
 		}
 
-		variables = strings.Split(item.GetField("variables").Value.(string), ";")
+		variables = strings.Split(item.GetField("variables").Value.(string), schedule.VariablesDelimiter)
 		for _, variable := range variables {
 			scenario.RequiredVariables = append(scenario.RequiredVariables, database.ScenarioVariable{
 				Value: variable,
@@ -215,7 +216,7 @@ func triggerScenario(item cdto.ModelInterface) (dto.BaseChatMessage, error) {
 			ReactionType: eventAlias,
 		}
 
-		base.AddConversation(scenario, dto.BaseChatMessage{
+		conversation.AddConversation(scenario, dto.BaseChatMessage{
 			Channel:           channel,
 			Text:              item.GetField("command").Value.(string),
 			AsUser:            false,
@@ -224,7 +225,7 @@ func triggerScenario(item cdto.ModelInterface) (dto.BaseChatMessage, error) {
 			OriginalMessage:   dto.BaseOriginalMessage{},
 		})
 
-		return container.C.DefinedEvents[eventAlias].Execute(base.GetConversation(channel).LastQuestion)
+		return container.C.DefinedEvents[eventAlias].Execute(conversation.GetConversation(channel).LastQuestion)
 	}
 
 	return container.C.DefinedEvents[eventAlias].Execute(dto.BaseChatMessage{

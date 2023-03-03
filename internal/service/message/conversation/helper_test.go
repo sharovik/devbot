@@ -1,30 +1,13 @@
-package base
+package conversation
 
 import (
 	"github.com/sharovik/devbot/internal/database"
-	"os"
-	"path"
-	"runtime"
 	"testing"
 	"time"
 
-	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/stretchr/testify/assert"
 )
-
-func init() {
-	//We switch pointer to the root directory for control the path from which we need to generate test-data file-paths
-	_, filename, _, _ := runtime.Caller(0)
-	dir := path.Join(path.Dir(filename), "../../../")
-	_ = os.Chdir(dir)
-
-	cnt, err := container.Init()
-	if err != nil {
-		panic(err)
-	}
-	container.C = cnt
-}
 
 func TestGetCurrentConversations(t *testing.T) {
 	currentConversations["_test_channel_"] = Conversation{

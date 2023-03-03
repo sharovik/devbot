@@ -3,10 +3,9 @@ package container
 import (
 	"crypto/tls"
 	"errors"
+	"github.com/sharovik/devbot/internal/dto/event"
 	"net/http"
 	"time"
-
-	"github.com/sharovik/devbot/internal/dto"
 
 	"github.com/sharovik/devbot/internal/database"
 
@@ -14,19 +13,6 @@ import (
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/log"
 )
-
-//DefinedEvent the interface for events
-//@todo: move to the better place.
-type DefinedEvent interface {
-	//Execute The main execution method, which will run the actual functionality for the event
-	Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error)
-
-	//Install The installation method, which will executes the installation parts of the event
-	Install() error
-
-	//Update The update method, which will update the application to use new version of this event
-	Update() error
-}
 
 //Main container object
 type Main struct {
@@ -36,7 +22,7 @@ type Main struct {
 	Dictionary       database.BaseDatabaseInterface
 	HTTPClient       client.BaseHTTPClientInterface
 	MigrationService database.MigrationService
-	DefinedEvents    map[string]DefinedEvent
+	DefinedEvents    map[string]event.DefinedEventInterface
 }
 
 //C container variable
@@ -44,7 +30,7 @@ var C Main
 
 //Init initialise container
 func Init() (Main, error) {
-	C := new(Main)
+	C = Main{}
 	cfg, err := config.Init()
 	if err != nil {
 		return Main{}, err
@@ -83,7 +69,7 @@ func Init() (Main, error) {
 
 	C.MessageClient = C.initMessageClient()
 
-	if err := C.loadDictionary(); err != nil {
+	if err = C.loadDictionary(); err != nil {
 		panic(err)
 	}
 
@@ -92,7 +78,7 @@ func Init() (Main, error) {
 		Dictionary: C.Dictionary,
 	}
 
-	return *C, nil
+	return C, nil
 }
 
 //Terminate terminates the properly connections

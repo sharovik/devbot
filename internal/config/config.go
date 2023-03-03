@@ -53,15 +53,14 @@ type HTTPClient struct {
 
 //Config configuration object
 type Config struct {
-	appEnv                  string
-	LearningEnabled         bool
-	MessagesAPIConfig       MessagesAPIConfig
-	BitBucketConfig         BitBucketConfig
-	initialised             bool
-	OpenConversationTimeout time.Duration
-	Database                clients.DatabaseConfig
-	HTTPClient              HTTPClient
-	LogConfig               log.Config
+	appEnv            string
+	LearningEnabled   bool
+	MessagesAPIConfig MessagesAPIConfig
+	BitBucketConfig   BitBucketConfig
+	initialised       bool
+	Database          clients.DatabaseConfig
+	HTTPClient        HTTPClient
+	LogConfig         log.Config
 }
 
 //cfg variable which contains initialised Config
@@ -92,10 +91,10 @@ const (
 	//EnvBaseURL env variable for base url
 	EnvBaseURL = "MESSAGES_API_BASE_URL"
 
-	//EnvOAuthToken env variable for slack oauth token
+	//EnvOAuthToken env variable for message oauth token
 	EnvOAuthToken = "MESSAGES_API_OAUTH_TOKEN"
 
-	//EnvWebAPIOAuthToken env variable for slack web api oauth token.
+	//EnvWebAPIOAuthToken env variable for message web api oauth token.
 	EnvWebAPIOAuthToken = "MESSAGES_API_WEB_API_OAUTH_TOKEN"
 
 	//DatabaseConnection env variable for database connection type
@@ -137,9 +136,6 @@ const (
 	//BitBucketDefaultMainBranch the default main branch which can be used in cases, when you can't get the information from the PR link
 	BitBucketDefaultMainBranch = "BITBUCKET_DEFAULT_MAIN_BRANCH"
 
-	//OpenConversationTimeout the lifetime of open conversations
-	OpenConversationTimeout = "OPEN_CONVERSATION_TIMEOUT"
-
 	httpClientRequestTimeout      = "HTTP_CLIENT_REQUEST_TIMEOUT"
 	httpClientTLSHandshakeTimeout = "HTTP_CLIENT_TLS_HANDSHAKE_TIMEOUT"
 	httpClientInsecureSkipVerify  = "HTTP_CLIENT_INSECURE_SKIP_VERIFY"
@@ -153,7 +149,7 @@ const (
 	envLogFieldLevelName    = "LOG_FIELD_LEVEL_NAME"
 	envLogFieldErrorMessage = "LOG_FIELD_ERROR_MESSAGE"
 
-	//MessagesAPITypeSlack slack messages API type
+	//MessagesAPITypeSlack message messages API type
 	MessagesAPITypeSlack = "slack"
 
 	defaultMainChannelAlias        = "general"
@@ -178,32 +174,20 @@ func Init() (Config, error) {
 			return Config{}, err
 		}
 
-		openConversationTimeout := defaultOpenConversationTimeout
-		if os.Getenv(OpenConversationTimeout) != "" {
-			//@todo: add error handling
-			openConversationTimeoutIntVal, err := strconv.ParseInt(os.Getenv(OpenConversationTimeout), 10, 64)
-			if err != nil {
-				return Config{}, err
-			}
-
-			openConversationTimeout = time.Second * time.Duration(openConversationTimeoutIntVal)
-		}
-
 		httpC, err := initHTTPClientConfig()
 		if err != nil {
 			return Config{}, err
 		}
 
 		cfg = Config{
-			appEnv:                  os.Getenv(envAppEnv),
-			LearningEnabled:         getBoolValue(learningEnabled),
-			MessagesAPIConfig:       initMessagesAPIConfig(),
-			BitBucketConfig:         initBitbucketConfig(),
-			initialised:             true,
-			OpenConversationTimeout: openConversationTimeout,
-			HTTPClient:              httpC,
-			Database:                initDatabaseConfig(),
-			LogConfig:               initLogConfig(),
+			appEnv:            os.Getenv(envAppEnv),
+			LearningEnabled:   getBoolValue(learningEnabled),
+			MessagesAPIConfig: initMessagesAPIConfig(),
+			BitBucketConfig:   initBitbucketConfig(),
+			initialised:       true,
+			HTTPClient:        httpC,
+			Database:          initDatabaseConfig(),
+			LogConfig:         initLogConfig(),
 		}
 
 		return cfg, nil

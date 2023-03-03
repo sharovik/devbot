@@ -13,7 +13,7 @@ import (
 	"github.com/sharovik/devbot/internal/log"
 )
 
-//SlackClient client for slack api calls
+//SlackClient client for message api calls
 type SlackClient struct {
 	BaseMessageClient
 	Client     *http.Client

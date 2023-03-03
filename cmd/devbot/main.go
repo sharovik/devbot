@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/sharovik/devbot/internal/service/schedule"
 	"time"
 
 	"github.com/sharovik/devbot/internal/service/definedevents"
@@ -9,7 +10,7 @@ import (
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/log"
-	"github.com/sharovik/devbot/internal/service/slack"
+	"github.com/sharovik/devbot/internal/service/message"
 )
 
 func init() {
@@ -20,6 +21,8 @@ func init() {
 
 	container.C = cnt
 	definedevents.InitializeDefinedEvents()
+	message.InitService()
+	schedule.InitS(container.C.Config, container.C.Dictionary.GetDBClient(), container.C.DefinedEvents)
 }
 
 const (
@@ -33,10 +36,14 @@ var (
 )
 
 func run() error {
-	slack.InitService()
+	if err := schedule.S.Run(); err != nil {
+		log.Logger().AddError(err).Msg("Failed to run schedule service")
+
+		return err
+	}
 
 	for {
-		if err := slack.S.InitWebSocketReceiver(); err != nil {
+		if err := message.S.InitWebSocketReceiver(); err != nil {
 			log.Logger().AddError(err).Msg("Error received during application run")
 
 			if numberOfRetries >= maximumRetries {
@@ -76,11 +83,11 @@ func main() {
 		"started":         lastRetry,
 	})
 
-	log.Logger().StartMessage("SlackBot")
+	log.Logger().StartMessage("DevBot")
 	if err := run(); err != nil {
 		log.Logger().AddError(err).Msg("Application was interrupted by an error")
 	}
 
 	container.C.Terminate()
-	log.Logger().FinishMessage("SlackBot")
+	log.Logger().FinishMessage("DevBot")
 }

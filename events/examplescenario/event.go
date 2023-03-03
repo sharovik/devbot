@@ -2,12 +2,12 @@ package examplescenario
 
 import (
 	"fmt"
+	"github.com/sharovik/devbot/internal/service/message/conversation"
 	"regexp"
 	"time"
 
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/helper"
-	"github.com/sharovik/devbot/internal/service/base"
 
 	"github.com/sharovik/devbot/internal/log"
 
@@ -52,7 +52,7 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 		return message, nil
 	}
 
-	currentConversation := base.GetConversation(message.Channel)
+	currentConversation := conversation.GetConversation(message.Channel)
 
 	whatToWrite := ""
 	whereToWrite := ""
