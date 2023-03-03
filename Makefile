@@ -13,7 +13,7 @@ PROJECT_BUILD_SCRIPTS_DICTIONARY_DIR=$(PROJECT_BUILD_DIR)/$(DICTIONARY_SCRIPT_DI
 CMD:=$(patsubst cmd/%/main.go,%,$(shell find cmd -type f -name 'main.go'))
 LDFLAGS=-ldflags="-s -w"
 
-vendor:
+install-vendors:
 	go mod vendor
 
 build-devbot-cross-platform:
