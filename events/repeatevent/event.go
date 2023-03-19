@@ -28,19 +28,19 @@ const (
 	helpMessage = "Ask me `repeat` and I will try repeat again the event I previously executed by your command. Eg: You ask me to run something and then you need to rerun in again. You write repeat and I repeat the event."
 )
 
-//EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
+// EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
 type EventStruct struct {
 	EventName string
 }
 
-//Event - object which is ready to use
+// Event - object which is ready to use
 var (
 	Event = EventStruct{
 		EventName: EventName,
 	}
 )
 
-//Execute method which is called by message processor
+// Execute method which is called by message processor
 func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
 	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.OriginalMessage.Text)
 	if err != nil {
@@ -82,7 +82,7 @@ func getRepeatEventID() (int64, error) {
 	return eventID, nil
 }
 
-//Install method for installation of event
+// Install method for installation of event
 func (e EventStruct) Install() error {
 	log.Logger().Debug().
 		Str("event_name", EventName).
@@ -178,7 +178,7 @@ func getEventAliasByID(eventID int) (string, error) {
 		return "", err
 	}
 
-	if len(item.Items()) < 0 {
+	if len(item.Items()) == 0 {
 		return "", fmt.Errorf("Failed to find the event alias for selected ID")
 	}
 
@@ -247,7 +247,7 @@ func triggerScenario(item cdto.ModelInterface) (dto.BaseChatMessage, error) {
 	})
 }
 
-//Update for event update actions
+// Update for event update actions
 func (e EventStruct) Update() error {
 	return nil
 }

@@ -2,6 +2,9 @@ package service
 
 import (
 	"database/sql"
+	"github.com/sharovik/devbot/internal/database"
+	"github.com/sharovik/devbot/internal/dto/databasedto"
+	"github.com/sharovik/devbot/internal/service/analiser"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
@@ -10,7 +13,7 @@ import (
 	cquery "github.com/sharovik/orm/query"
 )
 
-//GenerateDMAnswerForScenarioStep method generates DM object for selected scenario step
+// GenerateDMAnswerForScenarioStep method generates DM object for selected scenario step
 func GenerateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error) {
 	query := new(clients.Query).
 		Select([]interface{}{
@@ -106,4 +109,60 @@ func GenerateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error)
 		MainGroupIndexInRegex: rg,
 		ReactionType:          item.GetField("alias").Value.(string),
 	}, nil
+}
+
+func PrepareScenario(scenarioID int64, reactionType string) (scenario database.EventScenario, err error) {
+	scenario.ID = scenarioID
+	questions, err := container.C.Dictionary.GetQuestionsByScenarioID(scenario.ID, true)
+	if err != nil {
+		return scenario, err
+	}
+
+	eventID, err := container.C.Dictionary.FindEventByAlias(reactionType)
+	if err != nil {
+		return scenario, err
+	}
+
+	scenario.EventName = reactionType
+	scenario.EventID = eventID
+	analiser.SetScenarioQuestions(&scenario, questions)
+
+	return scenario, nil
+}
+
+// PrepareEventScenario
+// Method generates the scenario object based on the eventId and reaction type received
+// eventID - is the ID of event
+// reactionType
+func PrepareEventScenario(eventID int64, reactionType string) (scenario database.EventScenario, err error) {
+	//We are getting scenario
+	q := new(clients.Query).Select(databasedto.ScenariosModel.GetColumns()).
+		From(databasedto.ScenariosModel).
+		Where(cquery.Where{
+			First:    "event_id",
+			Operator: "=",
+			Second: cquery.Bind{
+				Field: "event_id",
+				Value: eventID,
+			},
+		}).OrderBy("id", cquery.OrderDirectionAsc).Limit(cquery.Limit{
+		From: 0,
+		To:   1,
+	})
+	res, err := container.C.Dictionary.GetDBClient().Execute(q)
+	if err != nil {
+		return scenario, err
+	}
+
+	scenario.ID = int64(res.Items()[0].GetField("id").Value.(int))
+	variables, err := container.C.Dictionary.GetQuestionsByScenarioID(scenario.ID, true)
+	if err != nil {
+		return scenario, err
+	}
+	analiser.SetScenarioQuestions(&scenario, variables)
+
+	scenario.EventName = reactionType
+	scenario.EventID = eventID
+
+	return scenario, nil
 }

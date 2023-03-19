@@ -19,7 +19,7 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-//MsgAttributes the validation message attributes
+// MsgAttributes the validation message attributes
 type MsgAttributes struct {
 	Type    string
 	Channel string
@@ -46,7 +46,7 @@ var (
 	}
 )
 
-//SlackService struct of message service
+// SlackService struct of message service
 type SlackService struct {
 }
 
@@ -104,7 +104,7 @@ func (SlackService) fetchBotUserID() error {
 	return nil
 }
 
-//BeforeWSConnectionStart runs methods before the WS connection start
+// BeforeWSConnectionStart runs methods before the WS connection start
 func (s SlackService) BeforeWSConnectionStart() error {
 	if container.C.Config.MessagesAPIConfig.MainChannelID == "" {
 		log.Logger().Info().Msg("Main channel ID wasn't specified. Trying to fetch main channel from API")
@@ -132,7 +132,7 @@ func (s SlackService) BeforeWSConnectionStart() error {
 	return nil
 }
 
-//InitWebSocketReceiver method for initialization of websocket receiver
+// InitWebSocketReceiver method for initialization of websocket receiver
 func (s SlackService) InitWebSocketReceiver() error {
 	if err := s.BeforeWSConnectionStart(); err != nil {
 		log.Logger().AddError(err).Msg("Failed to prepare service for WS connection")
@@ -219,7 +219,7 @@ func acknowledge(ws *websocket.Conn, envelopeID string) error {
 	return websocket.JSON.Send(ws, res)
 }
 
-//ProcessMessage processes the message from the WS connection
+// ProcessMessage processes the message from the WS connection
 func (s SlackService) ProcessMessage(msg interface{}) error {
 	message := msg.(*dto.SlackResponseEventAPIMessage)
 	log.Logger().Debug().
@@ -274,7 +274,7 @@ func (s SlackService) ProcessMessage(msg interface{}) error {
 		m.DictionaryMessage = dmAnswer
 	}
 
-	if err := TriggerAnswer(message.Payload.Event.Channel, m); err != nil {
+	if err = TriggerAnswer(message.Payload.Event.Channel, m, true); err != nil {
 		log.Logger().AddError(err).Msg("Failed trigger the answer")
 		return err
 	}
@@ -309,7 +309,7 @@ func getWSClient() client.SlackClient {
 	return sc
 }
 
-//wsConnect method for receiving of websocket URL which we will use for our connection
+// wsConnect method for receiving of websocket URL which we will use for our connection
 func (SlackService) wsConnect() (*websocket.Conn, int, error) {
 	response, statusCode, err := getWSClient().HTTPClient.Post("/apps.connections.open", []byte{}, map[string]string{})
 	if err != nil {

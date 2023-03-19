@@ -7,6 +7,7 @@ import (
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/devbot/internal/log"
+	"github.com/sharovik/devbot/internal/service"
 	"github.com/sharovik/devbot/internal/service/message"
 	"github.com/sharovik/devbot/internal/service/message/conversation"
 	"github.com/sharovik/devbot/internal/service/schedule"
@@ -29,7 +30,7 @@ const (
 	questionEventAlias = "Which event I need to execute?\nPlease, provide the event alias(use events list command to get it)."
 )
 
-//EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
+// EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
 type EventStruct struct {
 	EventName string
 }
@@ -39,7 +40,7 @@ type requestedScenario struct {
 	ExecuteAt schedule.ExecuteAt
 }
 
-//Event - object which is ready to use
+// Event - object which is ready to use
 var (
 	Event = EventStruct{
 		EventName: EventName,
@@ -47,7 +48,7 @@ var (
 	requestedScenarios = map[string]requestedScenario{}
 )
 
-//Execute method which is called by message processor
+// Execute method which is called by message processor
 func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
 	initScenarioService()
 
@@ -167,12 +168,12 @@ func askEventQuestions(eventType string, channel string) error {
 	}
 
 	//We prepare the scenario, with our event name, to make sure we execute the right at the end
-	scenario, err := scenarioService.prepareEventScenario(eventID, EventName)
+	scenario, err := service.PrepareEventScenario(eventID, EventName)
 	if err != nil {
 		return err
 	}
 
-	if err = message.TriggerScenario(channel, scenario); err != nil {
+	if err = message.TriggerScenario(channel, scenario, false); err != nil {
 		return err
 	}
 
@@ -188,12 +189,12 @@ func askEventQuestions(eventType string, channel string) error {
 
 func askScenarioQuestions(scenarioID int64, channel string) error {
 	//We prepare the scenario, with our event name, to make sure we execute the right at the end
-	scenario, err := scenarioService.prepareScenario(scenarioID, EventName)
+	scenario, err := service.PrepareScenario(scenarioID, EventName)
 	if err != nil {
 		return err
 	}
 
-	if err = message.TriggerScenario(channel, scenario); err != nil {
+	if err = message.TriggerScenario(channel, scenario, false); err != nil {
 		return err
 	}
 
@@ -240,7 +241,7 @@ func getScheduleTime(message dto.BaseChatMessage) schedule.ExecuteAt {
 	return r
 }
 
-//Install method for installation of event
+// Install method for installation of event
 func (e EventStruct) Install() error {
 	log.Logger().Debug().
 		Str("event_name", EventName).
@@ -289,7 +290,7 @@ func (e EventStruct) Install() error {
 	})
 }
 
-//Update for event update actions
+// Update for event update actions
 func (e EventStruct) Update() error {
 	return nil
 }

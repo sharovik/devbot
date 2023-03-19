@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/service/message/conversation"
-	"regexp"
 	"time"
 
 	"github.com/sharovik/devbot/internal/service/history"
@@ -15,10 +14,6 @@ import (
 )
 
 var messagesReceived = map[string]dto.BaseChatMessage{}
-
-func getPreparedAnswer(channel string) dto.BaseChatMessage {
-	return messagesReceived[channel]
-}
 
 func answerToMessage(m dto.BaseChatMessage) error {
 	response, statusCode, err := container.C.MessageClient.SendMessage(m)
@@ -34,11 +29,7 @@ func answerToMessage(m dto.BaseChatMessage) error {
 	return nil
 }
 
-func readyToAnswer(message dto.BaseChatMessage) {
-	messagesReceived[message.Channel] = message
-}
-
-//SendAnswerForReceivedMessage method which sends the answer by specific message
+// SendAnswerForReceivedMessage method which sends the answer by specific message
 func SendAnswerForReceivedMessage(message dto.BaseChatMessage) error {
 	if err := answerToMessage(message); err != nil {
 		log.Logger().AddError(err).Msg("Failed to sent answer message")
@@ -51,21 +42,6 @@ func SendAnswerForReceivedMessage(message dto.BaseChatMessage) error {
 
 func messageExpired(message dto.BaseChatMessage) {
 	delete(messagesReceived, message.Channel)
-}
-
-//IsChannelID method checks the ID of received message and if it is a channel ID, then the TRUE will be returned
-func IsChannelID(ID string) (isChannelMessage bool, err error) {
-	regex, err := regexp.Compile(`(?i)(^C(\w+))`)
-	if err != nil {
-		return
-	}
-
-	matches := regex.FindStringSubmatch(ID)
-	if len(matches) == 0 {
-		return
-	}
-
-	return true, nil
 }
 
 func refreshPreparedMessages() {
@@ -124,8 +100,8 @@ func triggerUnknownAnswerScenario(message *dto.SlackResponseEventMessage) (answe
 	}, nil
 }
 
-//TriggerScenario triggers the scenario for selected channel
-func TriggerScenario(channel string, scenario database.EventScenario) error {
+// TriggerScenario triggers the scenario for selected channel
+func TriggerScenario(channel string, scenario database.EventScenario, shouldRemember bool) error {
 	dmAnswer := dto.DictionaryMessage{
 		ScenarioID:   scenario.ID,
 		EventID:      scenario.EventID,
@@ -143,18 +119,22 @@ func TriggerScenario(channel string, scenario database.EventScenario) error {
 		},
 	})
 
-	if err := TriggerAnswer(channel, conversation.GetConversation(channel).LastQuestion); err != nil {
+	if err := TriggerAnswer(channel, conversation.GetConversation(channel).LastQuestion, shouldRemember); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-//TriggerAnswer triggers an answer for received message
-func TriggerAnswer(channel string, answerMessage dto.BaseChatMessage) error {
-	if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
-		log.Logger().AddError(err).Msg("Failed to send prepared answers")
-		return err
+// TriggerAnswer triggers an answer for received message
+func TriggerAnswer(channel string, answerMessage dto.BaseChatMessage, shouldRemember bool) error {
+	if answerMessage.Text != "" {
+		if err := SendAnswerForReceivedMessage(answerMessage); err != nil {
+			log.Logger().AddError(err).Msg("Failed to send prepared answers")
+			conversation.FinaliseConversation(channel)
+
+			return err
+		}
 	}
 
 	conversation.SetLastQuestion(answerMessage)
@@ -190,6 +170,7 @@ func TriggerAnswer(channel string, answerMessage dto.BaseChatMessage) error {
 		answer, err := container.C.DefinedEvents[answerMessage.DictionaryMessage.ReactionType].Execute(msg)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Failed to execute the event")
+			conversation.FinaliseConversation(channel)
 		}
 
 		if answer.Text != "" {
@@ -202,7 +183,7 @@ func TriggerAnswer(channel string, answerMessage dto.BaseChatMessage) error {
 		//We will trigger the event history save in case when we don't have open conversation
 		//or when we do have open conversation, but it is time to trigger the event execution
 		//so, we can store all variables
-		if 0 == conversation.GetConversation(answerMessage.Channel).ScenarioID || conversation.GetConversation(answerMessage.Channel).EventReadyToBeExecuted {
+		if shouldRemember && (0 == conversation.GetConversation(answerMessage.Channel).ScenarioID || conversation.GetConversation(answerMessage.Channel).EventReadyToBeExecuted) {
 			history.RememberEventExecution(dto.BaseChatMessage{
 				Channel:           answerMessage.Channel,
 				Text:              answerMessage.Text,

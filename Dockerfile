@@ -18,7 +18,7 @@ RUN apk add --no-cache bash && apk add --no-cache make && apk add build-base && 
 
 RUN make build && make cleanup
 
-FROM run
+FROM base as run
 
 ENV APP_PATH="/home/go/src/github.com/sharovik/devbot"
 

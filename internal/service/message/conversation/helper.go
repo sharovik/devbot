@@ -10,7 +10,7 @@ import (
 	"github.com/sharovik/devbot/internal/dto"
 )
 
-//Conversation the conversation object which contains the information about the scenario selected for the conversation and the last question asked by the customer.
+// Conversation the conversation object which contains the information about the scenario selected for the conversation and the last question asked by the customer.
 type Conversation struct {
 	ScenarioID             int64
 	EventID                int64
@@ -23,17 +23,17 @@ type Conversation struct {
 	Scenario               database.EventScenario
 }
 
-//currentConversations contains the list of current open conversations, where each key is a channel ID and the value is the last channel question
+// currentConversations contains the list of current open conversations, where each key is a channel ID and the value is the last channel question
 var currentConversations = map[string]Conversation{}
 
 const openConversationTimeout = time.Second * 600
 
-//GetCurrentConversations returns the list of current open conversations
+// GetCurrentConversations returns the list of current open conversations
 func GetCurrentConversations() map[string]Conversation {
 	return currentConversations
 }
 
-//AddConversation add the new conversation to the list of open conversations. This will be used for scenarios build
+// AddConversation add the new conversation to the list of open conversations. This will be used for scenarios build
 func AddConversation(scenario database.EventScenario, message dto.BaseChatMessage) {
 	conversation := Conversation{
 		ScenarioID:         message.DictionaryMessage.ScenarioID,
@@ -48,7 +48,7 @@ func AddConversation(scenario database.EventScenario, message dto.BaseChatMessag
 	currentConversations[message.Channel] = conversation
 }
 
-//SetLastQuestion sets the last question to the current conversation
+// SetLastQuestion sets the last question to the current conversation
 func SetLastQuestion(message dto.BaseChatMessage) {
 	conv := GetConversation(message.Channel)
 	conv.LastQuestion = message
@@ -56,7 +56,7 @@ func SetLastQuestion(message dto.BaseChatMessage) {
 	currentConversations[message.Channel] = conv
 }
 
-//GetConversation method retrieve the conversation for selected channel
+// GetConversation method retrieve the conversation for selected channel
 func GetConversation(channel string) Conversation {
 	if conversation, ok := currentConversations[channel]; ok {
 		return conversation
@@ -65,7 +65,7 @@ func GetConversation(channel string) Conversation {
 	return Conversation{}
 }
 
-//MarkAsReadyEventToBeExecuted method set the conversation event ready to be executed
+// MarkAsReadyEventToBeExecuted method set the conversation event ready to be executed
 func MarkAsReadyEventToBeExecuted(channel string) {
 	conversation := currentConversations[channel]
 	conversation.EventReadyToBeExecuted = true
@@ -73,7 +73,7 @@ func MarkAsReadyEventToBeExecuted(channel string) {
 	currentConversations[channel] = conversation
 }
 
-//CleanUpExpiredMessages removes the messages from the CleanUpExpiredMessages map object, which are expired
+// CleanUpExpiredMessages removes the messages from the CleanUpExpiredMessages map object, which are expired
 func CleanUpExpiredMessages() {
 	currentTime := time.Now()
 
@@ -85,7 +85,7 @@ func CleanUpExpiredMessages() {
 	}
 }
 
-//FinaliseConversation method delete the conversation for selected channel
+// FinaliseConversation method delete the conversation for selected channel
 func FinaliseConversation(channel string) {
 	if _, ok := currentConversations[channel]; !ok {
 		return
@@ -94,7 +94,7 @@ func FinaliseConversation(channel string) {
 	delete(currentConversations, channel)
 }
 
-//getStopScenarioWords method returns the stop words, which will be used for identification if we need to stop the scenario.
+// getStopScenarioWords method returns the stop words, which will be used for identification if we need to stop the scenario.
 func getStopScenarioWords() []string {
 	var stopPhrases []string
 
@@ -112,7 +112,7 @@ func getStopScenarioWords() []string {
 	return stopPhrases
 }
 
-//IsScenarioStopTriggered method checks if the scenario stop action was triggered
+// IsScenarioStopTriggered method checks if the scenario stop action was triggered
 func IsScenarioStopTriggered(text string) bool {
 	regexStr := fmt.Sprintf("(?i)%s", strings.Join(getStopScenarioWords(), "|"))
 	regex, err := regexp.Compile(regexStr)
