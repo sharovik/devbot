@@ -13,6 +13,9 @@ Imagine user triggered your event, but unfortunately from the message bot cannot
 To stop the scenario, please use the following phrases:
 - `stop!`
 - `stop scenario!`
+- `exit`
+- `stop`
+- `cancel`
 Once bot receives some of these phrases, he will try to stop the active scenario in the current channel, where the message posted.
 
 ## Database
@@ -28,24 +31,13 @@ And in case of the scenario, the bot **asks user** and **we don't expect the que
  
 ![scenario-list-questions](images/scenario-list-questions.png)
 
-The query which is used here
-
-```sql
-select q.id, q.question, q.answer, e.alias
-from questions q
-join scenarios s on q.scenario_id = s.id
-join events e on s.event_id = e.id
-where s.id = "{SCENARIO_ID}"
-order by q.id asc
-```
-
 Each scenario must have:
-1. at least 2 questions
+1. at least 1 question
 2. a connected event with the alias defined(otherwise the custom event will not be triggered)
 3. only first question of scenario should have the filled `question` attribute and all next questions should have that field as empty string
 
 ## Conversations
-Each trigger of scenario opens the conversation for the channel from where the message was received. That means, once the bod started the scenario, you will not be able to ask him other questions, because he is expecting the answers for the open scenario conversation.
+Each trigger of scenario, opens a conversation for the channel from where the message was received. That means, once the bod started the scenario, you will not be able to ask him other questions, because he is expecting the answers for the open scenario conversation.
 
 Below you can see how the example of how the scenario processing looks like
 
@@ -56,28 +48,68 @@ Each scenario with multiple questions and answers should have not less than 2 qu
 So for installation you will need to create the initial question and answer first and then, based on created scenario ID, connect to it one or more questions.
 
 Here you can see the example of Install method for your custom event, where we install the scenario
-
 ```go
-//Install method for installation of event
-func (e ExmplEvent) Install() error {
+
+// Install method for installation of event
+func (e EventStruct) Install() error {
+    log.Logger().Debug().
+        Str("event_name", EventName).
+        Str("event_version", EventVersion).
+        Msg("Triggered event installation")
+
+	return container.C.Dictionary.InstallNewEventScenario(database.EventScenario{
+		EventName:    EventName,
+		EventVersion: EventVersion,
+		Questions: []database.Question{
+			{
+				Question:      "who are you?",
+				Answer:        fmt.Sprintf("Hello, my name is %s", container.C.Config.MessagesAPIConfig.BotName),
+				QuestionRegex: "(?i)who are you?",
+				QuestionGroup: "",
+			},
+		},
+	})
+}
+```
+
+As you can see, in the `database.EventScenario` struct you can define multiple questions, which will be connected to a one scenario.
+Where each `database.Question` is a trigger for the scenario.
+
+If your scenario require to have a variables filled, please use the following structure
+```go
+// Install method for installation of event
+func (e EventStruct) Install() error {
 	log.Logger().Debug().
 		Str("event_name", EventName).
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
-        EventName:    EventName,
-        EventVersion: EventVersion,
-        Questions:    []database.Question{
-            {
-                Question:      "who are you?",
-                Answer:        fmt.Sprintf("Hello, my name is %s", container.C.Config.SlackConfig.BotName),
-                QuestionRegex: "(?i)who are you?",
-                QuestionGroup: "",
-            },
-        },
-    })
+	if err := container.C.Dictionary.InstallNewEventScenario(database.EventScenario{
+		EventName:    EventName,
+		EventVersion: EventVersion,
+		Questions: []database.Question{
+			{
+				Question:      "write a message",
+				QuestionRegex: "(?i)(write a message)",
+			},
+			{
+				Question:      "write message",
+				QuestionRegex: "(?i)(write message)",
+			},
+		},
+		RequiredVariables: []database.ScenarioVariable{
+			{
+				Question: stepMessage,
+			},
+			{
+				Question: stepChannel,
+			},
+		},
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
 ```
-
-As you can see, in the `database.NewEventScenario` struct you can define multiple questions, which will be connected to a one scenario.
+In this example, each `database.ScenarioVariable` is a variable, which need to be filled. The questions will be asked in that order, you specified in `Install` method

@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/sharovik/devbot/internal/database"
-	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/devbot/internal/service"
 	"github.com/sharovik/devbot/internal/service/message"
 	"github.com/sharovik/devbot/internal/service/message/conversation"
@@ -34,29 +33,24 @@ const (
 
 // EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
 type EventStruct struct {
-	EventName string
 }
 
 var (
 	// Event - object which is ready to use
-	Event = EventStruct{
-		EventName: EventName,
-	}
+	Event                 = EventStruct{}
 	selectedConversations = map[string]string{}
 )
 
+func (e EventStruct) Help() string {
+	return helpMessage
+}
+
+func (e EventStruct) Alias() string {
+	return EventName
+}
+
 // Execute method which is called by message processor
 func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
-	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.OriginalMessage.Text)
-	if err != nil {
-		log.Logger().Warn().Err(err).Msg("Something went wrong with help message parsing")
-	}
-
-	if isHelpAnswerTriggered {
-		message.Text = helpMessage
-		return message, nil
-	}
-
 	conv := conversation.GetConversation(message.Channel)
 	if len(conv.Scenario.RequiredVariables) > 0 && selectedConversations[message.Channel] != "" {
 		selected := selectedConversations[message.Channel]
@@ -72,6 +66,12 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 	}
 
 	textStr, err := extractRequestString(message.OriginalMessage.Text)
+	if err != nil {
+		message.Text = "Failed to parse the answer"
+
+		return message, nil
+	}
+
 	words := strings.Split(textStr, " ")
 
 	var foundResults, cleanItems = findResults(words)

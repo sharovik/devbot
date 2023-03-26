@@ -4,6 +4,11 @@ import "github.com/sharovik/devbot/internal/dto"
 
 //DefinedEventInterface the interface for events
 type DefinedEventInterface interface {
+	//Help returns the help message string
+	Help() string
+
+	Alias() string
+
 	//Execute The main execution method, which will run the actual functionality for the event
 	Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error)
 

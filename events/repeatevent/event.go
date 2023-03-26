@@ -11,7 +11,6 @@ import (
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/sharovik/devbot/internal/dto/databasedto"
-	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/devbot/internal/log"
 	"github.com/sharovik/orm/clients"
 	cdto "github.com/sharovik/orm/dto"
@@ -30,28 +29,23 @@ const (
 
 // EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
 type EventStruct struct {
-	EventName string
 }
 
 // Event - object which is ready to use
 var (
-	Event = EventStruct{
-		EventName: EventName,
-	}
+	Event = EventStruct{}
 )
+
+func (e EventStruct) Help() string {
+	return helpMessage
+}
+
+func (e EventStruct) Alias() string {
+	return EventName
+}
 
 // Execute method which is called by message processor
 func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
-	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.OriginalMessage.Text)
-	if err != nil {
-		log.Logger().Warn().Err(err).Msg("Something went wrong with help message parsing")
-	}
-
-	if isHelpAnswerTriggered {
-		message.Text = helpMessage
-		return message, nil
-	}
-
 	executedEvent, err := lastExecutedEvent(message)
 	if err != nil {
 		message.Text = "Failed to fetch the last executed events for that channel."

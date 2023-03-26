@@ -32,7 +32,6 @@ const (
 
 // EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
 type EventStruct struct {
-	EventName string
 }
 
 type requestedScenario struct {
@@ -42,25 +41,21 @@ type requestedScenario struct {
 
 // Event - object which is ready to use
 var (
-	Event = EventStruct{
-		EventName: EventName,
-	}
+	Event              = EventStruct{}
 	requestedScenarios = map[string]requestedScenario{}
 )
+
+func (e EventStruct) Help() string {
+	return helpMessage
+}
+
+func (e EventStruct) Alias() string {
+	return EventName
+}
 
 // Execute method which is called by message processor
 func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
 	initScenarioService()
-
-	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.OriginalMessage.Text)
-	if err != nil {
-		log.Logger().Warn().Err(err).Msg("Something went wrong with help message parsing")
-	}
-
-	if isHelpAnswerTriggered {
-		message.Text = helpMessage
-		return message, nil
-	}
 
 	//We schedule the scenario
 	if requestedScenarios[message.Channel].Scenario.ID != 0 {
@@ -75,7 +70,7 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 
 		delete(requestedScenarios, message.Channel)
 
-		if err = scheduleRequestedScenario(rScenario, message, executeAt); err != nil {
+		if err := scheduleRequestedScenario(rScenario, message, executeAt); err != nil {
 			message.Text = "Failed to schedule scenario"
 			message.Text += fmt.Sprintf("\nReason: %s", err.Error())
 
@@ -108,7 +103,7 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 	scheduleTime := getScheduleTime(message)
 	//if event type is defined, we ask questions from that event to collect the answers and use them during schedule.
 	if eventType != "" {
-		if err = askEventQuestions(eventType, message.Channel); err != nil {
+		if err := askEventQuestions(eventType, message.Channel); err != nil {
 			message.Text = "I cannot ask you the questions from that event. Please, try again."
 			return message, err
 		}

@@ -5,8 +5,6 @@ import (
 
 	"github.com/sharovik/devbot/internal/database"
 
-	"github.com/sharovik/devbot/internal/helper"
-
 	"github.com/sharovik/devbot/internal/log"
 
 	"github.com/sharovik/devbot/internal/container"
@@ -23,36 +21,31 @@ const (
 	helpMessage = "Ask me `who are you?` and you will see the answer."
 )
 
-//ExmplEvent the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
-type ExmplEvent struct {
-	EventName string
+// EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
+type EventStruct struct {
 }
 
-//Event - object which is ready to use
-var Event = ExmplEvent{
-	EventName: EventName,
+// Event - object which is ready to use
+var Event = EventStruct{}
+
+func (e EventStruct) Help() string {
+	return helpMessage
 }
 
-//Execute method which is called by message processor
-func (e ExmplEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
-	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.OriginalMessage.Text)
-	if err != nil {
-		log.Logger().Warn().Err(err).Msg("Something went wrong with help message parsing")
-	}
+func (e EventStruct) Alias() string {
+	return EventName
+}
 
-	if isHelpAnswerTriggered {
-		message.Text = helpMessage
-		return message, nil
-	}
-
+// Execute method which is called by message processor
+func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
 	//This answer will be show once the event get triggered.
 	//Leave message.Text empty, once you need to not show the message, once this event get triggered.
 	message.Text = "This is an example of the answer."
 	return message, nil
 }
 
-//Install method for installation of event
-func (e ExmplEvent) Install() error {
+// Install method for installation of event
+func (e EventStruct) Install() error {
 	log.Logger().Debug().
 		Str("event_name", EventName).
 		Str("event_version", EventVersion).
@@ -72,7 +65,7 @@ func (e ExmplEvent) Install() error {
 	})
 }
 
-//Update for event update actions
-func (e ExmplEvent) Update() error {
+// Update for event update actions
+func (e EventStruct) Update() error {
 	return nil
 }

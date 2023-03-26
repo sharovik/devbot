@@ -11,14 +11,14 @@ import (
 	"github.com/sharovik/devbot/internal/log"
 )
 
-//Message the message object, from which we will generate the dto.DictionaryMessage
+// Message the message object, from which we will generate the dto.DictionaryMessage
 type Message struct {
 	Channel string
 	User    string
 	Text    string
 }
 
-//GetDmAnswer retrieves the Dictionary Message Answer
+// GetDmAnswer retrieves the Dictionary Message Answer
 func GetDmAnswer(message Message) (dmAnswer dto.DictionaryMessage, err error) {
 	//Now we need to check if there was already opened conversation for this channel
 	//If so, then we need to get the Answer from this scenario
@@ -61,6 +61,17 @@ func GetDmAnswer(message Message) (dmAnswer dto.DictionaryMessage, err error) {
 	}
 
 	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.Text)
+	if err != nil {
+		log.Logger().AddError(err).Msg("Failed to parse the help template")
+	}
+
+	if "" != dmAnswer.ReactionType && isHelpAnswerTriggered {
+		dmAnswer.Answer = container.C.DefinedEvents[dmAnswer.ReactionType].Help()
+		dmAnswer.IsHelpTriggered = true
+
+		return dmAnswer, nil
+	}
+
 	//If the questions amount is more than 1, we need to start the conversation algorithm
 	if len(questions) > 1 && !isHelpAnswerTriggered {
 		scenario := database.EventScenario{}

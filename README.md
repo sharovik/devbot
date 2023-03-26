@@ -6,15 +6,13 @@ Free, opensource "ChatBot" project, based on GoLang. Using this project you can 
 ## Table of contents
 - [How to run](#how-to-run)
 - [Prerequisites](documentation/prerequisites.md)
-- [Installation](documentation/installation.md)
 - [Install to AWS](documentation/terraform-aws-setup.md)
 - [How to write custom event](documentation/events.md)
 - [How to build scenario](documentation/scenarios.md)
 - [Migrations](documentation/migrations.md)
 - [Features out of the box](documentation/features-out-of-the-box.md)
-- [Available events](documentation/available-features.md)
+- [Internal functionalities](documentation/available-features.md)
 - [Events available for installation](#custom-events-available-for-installation)
-- [How to add new questions into the database](documentation/dictionary.md) - this part deprecated and soon will be improved
 - [Project build](documentation/build.md)
 - [Authors](#authors)
 - [License](#license)
@@ -22,49 +20,39 @@ Free, opensource "ChatBot" project, based on GoLang. Using this project you can 
 ## How it works?
 You write bot a PM(personal message) OR tag bot in your channel. Then, depending on your message, bot will try to trigger an event.
 
-[Find example here](documentation/events.md).
+![example](documentation/images/example-event-with-text.png)
+
+[More details about the event structure here](documentation/events.md).
 
 ## How to run
 
-### Run from pre-compiled binary files
-This is the fastest way of the project setup.
-1. [Clone the latest version](https://github.com/sharovik/devbot/releases/latest)
-2. Go to project directory
-3. Run `make build` - to build chatbot binary for your system
-4. Start the bot:
-**For MacOS and Linux**
+Build the project, [you can find the instructions here](documentation/build.md)
+
+Once project build finished, please run the following command:
+**For macOS and Linux**
 ``` 
-./bin/slack-bot-{YOUR_SYSTEM}
+./bin/devbot-current-system
 ```
 For windows
 ``` 
-start bin\slack-bot-windows-{TYPE_OF_SYSTEM}.exe
-```
-
-**Note! Before the project build, please see the instructions, [you can find the instructions here](documentation/build.md)**
-
-Once project build finished, please run the following command
-**For MacOS and Linux**
-``` 
-./bin/slack-bot-current-system
-```
-For windows
-``` 
-start bin\slack-bot-current-system
+start bin\devbot-current-system.exe
 ```
 
 ### Run by using docker
+**Before run, make sure you created `.env` file and set up the credentials**
+
 This project also support the Docker.
-1. Clone the project into your working directory, go into that directory and run the following command
+1. Build the image. To do that, please run the following command:
 ``` 
-docker build . -t devbot-dock
+docker build . -t devbot-app
 ```
-2. If build was successful, please use this command to start the container
+2. If build was successful, please use the following command to run the container
 ```
-docker run --env-file=.env devbot-dock
+docker run --env-file=.env devbot-app
 ```
 
-**Before run, make sure you created .env file and setup the credentials**
+### Run using docker compose
+Execute command `docker compose up`
 
 ### Example of output
 If you did everything right, after project start you should see something like this:
@@ -77,7 +65,7 @@ If you did everything right, after project start you should see something like t
 - [BitBucket run pipeline event](https://github.com/sharovik/bitbucket-run-pipeline)
 
 ## Authors
-* **Pavel Simzicov** - *Initial work* - [sharovik](https://github.com/sharovik)
+* **Pavel Simzicov** - *Main work* - [sharovik](https://github.com/sharovik)
 
 ### Vendors used
 * github.com/joho/godotenv - for env files loading

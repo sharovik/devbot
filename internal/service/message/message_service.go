@@ -137,6 +137,10 @@ func TriggerAnswer(channel string, answerMessage dto.BaseChatMessage, shouldReme
 		}
 	}
 
+	if answerMessage.DictionaryMessage.IsHelpTriggered {
+		return nil
+	}
+
 	conversation.SetLastQuestion(answerMessage)
 
 	if answerMessage.DictionaryMessage.ReactionType == "" || container.C.DefinedEvents[answerMessage.DictionaryMessage.ReactionType] == nil {

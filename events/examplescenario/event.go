@@ -30,28 +30,23 @@ const (
 	stepChannel = "Where I need to post this message? If it's channel, the channel should be public."
 )
 
-//EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
+// EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
 type EventStruct struct {
-	EventName string
 }
 
-//Event - object which is ready to use
-var Event = EventStruct{
-	EventName: EventName,
+// Event - object which is ready to use
+var Event = EventStruct{}
+
+func (e EventStruct) Help() string {
+	return helpMessage
 }
 
-//Execute method which is called by message processor
+func (e EventStruct) Alias() string {
+	return EventName
+}
+
+// Execute method which is called by message processor
 func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
-	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.OriginalMessage.Text)
-	if err != nil {
-		log.Logger().Warn().Err(err).Msg("Something went wrong with help message parsing")
-	}
-
-	if isHelpAnswerTriggered {
-		message.Text = helpMessage
-		return message, nil
-	}
-
 	currentConversation := conversation.GetConversation(message.Channel)
 
 	whatToWrite := ""
@@ -77,7 +72,7 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 		}
 	}
 
-	_, _, err = container.C.MessageClient.SendMessage(dto.BaseChatMessage{
+	_, _, err := container.C.MessageClient.SendMessage(dto.BaseChatMessage{
 		Channel:           whereToWrite,
 		Text:              whatToWrite,
 		AsUser:            true,
@@ -112,7 +107,7 @@ func extractChannelName(text string) string {
 	return matches["1"]
 }
 
-//Install method for installation of event
+// Install method for installation of event
 func (e EventStruct) Install() error {
 	log.Logger().Debug().
 		Str("event_name", EventName).
@@ -147,7 +142,7 @@ func (e EventStruct) Install() error {
 	return nil
 }
 
-//Update for event update actions
+// Update for event update actions
 func (e EventStruct) Update() error {
 	return nil
 }

@@ -21,28 +21,23 @@ const (
 	regexChannel = `(?im)(?:[<#@]|(?:&lt;))(\w+)(?:[|>]|(?:&gt;))`
 )
 
-//EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
+// EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
 type EventStruct struct {
-	EventName string
 }
 
-//Event - object which is ready to use
-var Event = EventStruct{
-	EventName: EventName,
+// Event - object which is ready to use
+var Event = EventStruct{}
+
+func (e EventStruct) Help() string {
+	return helpMessage
 }
 
-//Execute method which is called by message processor
+func (e EventStruct) Alias() string {
+	return EventName
+}
+
+// Execute method which is called by message processor
 func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
-	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.OriginalMessage.Text)
-	if err != nil {
-		log.Logger().Warn().Err(err).Msg("Something went wrong with help message parsing")
-	}
-
-	if isHelpAnswerTriggered {
-		message.Text = helpMessage
-		return message, nil
-	}
-
 	channel := extractChannelName(message.OriginalMessage.Text)
 	if channel == "" {
 		message.Text = "Please specify the channel name."
@@ -55,7 +50,7 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 	return message, nil
 }
 
-//Install method for installation of event
+// Install method for installation of event
 func (e EventStruct) Install() error {
 	log.Logger().Debug().
 		Str("event_name", EventName).
@@ -76,7 +71,7 @@ func (e EventStruct) Install() error {
 	})
 }
 
-//Update for event update actions
+// Update for event update actions
 func (e EventStruct) Update() error {
 	return nil
 }
