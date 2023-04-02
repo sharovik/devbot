@@ -11,7 +11,7 @@ import (
 	"github.com/sharovik/devbot/internal/dto"
 )
 
-//BaseDatabaseInterface interface for base database client
+// BaseDatabaseInterface interface for base database client
 type BaseDatabaseInterface interface {
 	InitDatabaseConnection(cfg clients.DatabaseConfig) error
 	GetDBClient() clients.BaseClientInterface
@@ -42,7 +42,7 @@ type BaseDatabaseInterface interface {
 	InstallNewEventScenario(scenario EventScenario) error
 }
 
-//QuestionObject used for proper data mapping from questions table
+// QuestionObject used for proper data mapping from questions table
 type QuestionObject struct {
 	ID           int64
 	Question     string
@@ -51,14 +51,16 @@ type QuestionObject struct {
 	IsVariable   bool
 }
 
-//ScenarioVariable the object for scenario variable
+// ScenarioVariable similar to the Question, but here is a different concept. Question object is used as the main entrypoint for the scenario execution,
+//whereas ScenarioVariable is a part of already executed/triggered scenario. For example, you have a scenario, where before your logic execution you need to get the variables data from the answers.
+//In this case you will use scenario variables, just to make sure you ask required information.
 type ScenarioVariable struct {
 	Name     string
 	Value    string
 	Question string
 }
 
-//EventScenario the object can be used for the new event scenario installation
+// EventScenario the main object of event scenario. It will be used during scenarios installation process, via `Install` method call.
 type EventScenario struct {
 	//EventName name of the event, to which we need connect the scenario
 	EventName string
@@ -78,10 +80,11 @@ type EventScenario struct {
 	//Questions scenario questions list
 	Questions []Question
 
-	//RequiredVariables required variables list we expecting for this scenario
+	//RequiredVariables required variables list we've expecting for this scenario
 	RequiredVariables []ScenarioVariable
 }
 
+//VariablesToString converts the variables to the string.
 func (e *EventScenario) VariablesToString() string {
 	var result []string
 	for _, variable := range e.RequiredVariables {
@@ -91,7 +94,8 @@ func (e *EventScenario) VariablesToString() string {
 	return strings.Join(result, ";")
 }
 
-//Question the scenario question
+// Question the question, which will be asked during scenario execution. It's a main entry point for your scenario.
+// the combination of Question, QuestionRegex attributes will be used during the answer search.
 type Question struct {
 	Question      string
 	Answer        string
@@ -99,7 +103,7 @@ type Question struct {
 	QuestionGroup string
 }
 
-//GetUnAnsweredQuestion retrieves unanswered question from the list of questions of the scenario
+// GetUnAnsweredQuestion retrieves unanswered question from the list of questions of the scenario
 func (e *EventScenario) GetUnAnsweredQuestion() string {
 	for _, variable := range e.RequiredVariables {
 		if variable.Value != "" {

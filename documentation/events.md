@@ -120,7 +120,7 @@ func (e EventStruct) Update() error {
 ![empty text message](images/example-event-text-empty.png)
 
 #### With the filled text message in Execute method
-![with text message](images/example-event-with-text.png)
+![with text message](images/demo-who-are-you.gif)
 
 ### Source code
 You can find the source code of the event in [events/example](https://github.com/sharovik/devbot/tree/master/events/example) folder

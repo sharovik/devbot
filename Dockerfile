@@ -18,13 +18,16 @@ RUN apk add --no-cache bash && apk add --no-cache make && apk add build-base && 
 
 RUN make build && make cleanup
 
-FROM base as run
+FROM alpine:latest as run
+RUN apk --no-cache add ca-certificates
 
 ENV APP_PATH="/home/go/src/github.com/sharovik/devbot"
 
 WORKDIR ${APP_PATH}
 
 COPY --from=base ${APP_PATH}/bin ${APP_PATH}/bin
+COPY --from=base ${APP_PATH}/.env ${APP_PATH}/.env
+COPY --from=base ${APP_PATH}/devbot.sqlite ${APP_PATH}/devbot.sqlite
 
 # Command to run when starting the container
 ENTRYPOINT ["./bin/devbot-current-system"]

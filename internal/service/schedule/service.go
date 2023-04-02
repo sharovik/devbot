@@ -126,6 +126,14 @@ func (s *Service) trigger(item Item) {
 		})
 	}
 
+	if conversation.GetConversation(item.Channel).ScenarioID != 0 {
+		log.Logger().Debug().
+			Str("channel", item.Channel).
+			Interface("item", item).
+			Msg("There is open conversation for selected channel. Skipping.")
+		return
+	}
+
 	conversation.AddConversation(scenario, dto.BaseChatMessage{
 		Channel: item.Channel,
 		AsUser:  true,
