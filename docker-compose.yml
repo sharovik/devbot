@@ -1,0 +1,8 @@
+version: "3.4"
+services:
+  app:
+    build:
+      dockerfile: Dockerfile
+      target: run
+    env_file:
+      - .env

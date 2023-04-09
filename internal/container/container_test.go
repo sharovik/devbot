@@ -18,7 +18,8 @@ func init() {
 }
 
 func TestMain_Init(t *testing.T) {
-	c := C.Init()
+	c, err := Init()
+	assert.NoError(t, err)
 	assert.IsType(t, Main{}, c)
 
 	assert.Equal(t, true, c.Config.IsInitialised())

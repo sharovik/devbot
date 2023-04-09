@@ -2,16 +2,18 @@ package service
 
 import (
 	"database/sql"
+	"github.com/sharovik/devbot/internal/database"
+	"github.com/sharovik/devbot/internal/dto/databasedto"
+	"github.com/sharovik/devbot/internal/service/analiser"
+
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
-	"github.com/sharovik/devbot/internal/service/base"
 	"github.com/sharovik/orm/clients"
 	cdto "github.com/sharovik/orm/dto"
 	cquery "github.com/sharovik/orm/query"
-	"time"
 )
 
-//GenerateDMAnswerForScenarioStep method generates DM object for selected scenario step
+// GenerateDMAnswerForScenarioStep method generates DM object for selected scenario step
 func GenerateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error) {
 	query := new(clients.Query).
 		Select([]interface{}{
@@ -69,7 +71,7 @@ func GenerateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error)
 		},
 	})
 
-	res, err := container.C.Dictionary.GetNewClient().Execute(query)
+	res, err := container.C.Dictionary.GetDBClient().Execute(query)
 
 	if err == sql.ErrNoRows {
 		return dto.DictionaryMessage{}, nil
@@ -109,25 +111,58 @@ func GenerateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error)
 	}, nil
 }
 
-//RunScenario runs the selected scenario step
-func RunScenario(answer dto.BaseChatMessage, step string) error {
-	dmAnswer, err := GenerateDMAnswerForScenarioStep(step)
+func PrepareScenario(scenarioID int64, reactionType string) (scenario database.EventScenario, err error) {
+	scenario.ID = scenarioID
+	questions, err := container.C.Dictionary.GetQuestionsByScenarioID(scenario.ID, true)
 	if err != nil {
-		return err
+		return scenario, err
 	}
 
-	base.AddConversation(answer.Channel, dmAnswer.QuestionID, dto.BaseChatMessage{
-		Channel:           answer.Channel,
-		Text:              step,
-		AsUser:            false,
-		Ts:                time.Now(),
-		DictionaryMessage: dmAnswer,
-		OriginalMessage: dto.BaseOriginalMessage{
-			Text:  answer.OriginalMessage.Text,
-			User:  answer.OriginalMessage.User,
-			Files: answer.OriginalMessage.Files,
-		},
-	}, "")
+	eventID, err := container.C.Dictionary.FindEventByAlias(reactionType)
+	if err != nil {
+		return scenario, err
+	}
 
-	return nil
+	scenario.EventName = reactionType
+	scenario.EventID = eventID
+	analiser.SetScenarioQuestions(&scenario, questions)
+
+	return scenario, nil
+}
+
+// PrepareEventScenario
+// Method generates the scenario object based on the eventId and reaction type received
+// eventID - is the ID of event
+// reactionType
+func PrepareEventScenario(eventID int64, reactionType string) (scenario database.EventScenario, err error) {
+	//We are getting scenario
+	q := new(clients.Query).Select(databasedto.ScenariosModel.GetColumns()).
+		From(databasedto.ScenariosModel).
+		Where(cquery.Where{
+			First:    "event_id",
+			Operator: "=",
+			Second: cquery.Bind{
+				Field: "event_id",
+				Value: eventID,
+			},
+		}).OrderBy("id", cquery.OrderDirectionAsc).Limit(cquery.Limit{
+		From: 0,
+		To:   1,
+	})
+	res, err := container.C.Dictionary.GetDBClient().Execute(q)
+	if err != nil {
+		return scenario, err
+	}
+
+	scenario.ID = int64(res.Items()[0].GetField("id").Value.(int))
+	variables, err := container.C.Dictionary.GetQuestionsByScenarioID(scenario.ID, true)
+	if err != nil {
+		return scenario, err
+	}
+	analiser.SetScenarioQuestions(&scenario, variables)
+
+	scenario.EventName = reactionType
+	scenario.EventID = eventID
+
+	return scenario, nil
 }

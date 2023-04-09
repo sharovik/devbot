@@ -1,7 +1,7 @@
 package dto
 
-//SlackResponseEventApiMessage the main object of the response
-type SlackResponseEventApiMessage struct {
+//SlackResponseEventAPIMessage the main object of the response
+type SlackResponseEventAPIMessage struct {
 	AcceptsResponsePayload bool   `json:"accepts_response_payload"`
 	EnvelopeID             string `json:"envelope_id"`
 	Payload                struct {

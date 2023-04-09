@@ -1,4 +1,4 @@
-FROM golang:alpine
+FROM golang:alpine as base
 
 MAINTAINER Pavel Simzicov <sharovik89@ya.ru>
 
@@ -16,8 +16,18 @@ COPY . .
 
 RUN apk add --no-cache bash && apk add --no-cache make && apk add build-base && apk add --no-cache git
 
-RUN make vendor
-RUN make build
+RUN make build && make cleanup
+
+FROM alpine:latest as run
+RUN apk --no-cache add ca-certificates
+
+ENV APP_PATH="/home/go/src/github.com/sharovik/devbot"
+
+WORKDIR ${APP_PATH}
+
+COPY --from=base ${APP_PATH}/bin ${APP_PATH}/bin
+COPY --from=base ${APP_PATH}/.env ${APP_PATH}/.env
+COPY --from=base ${APP_PATH}/devbot.sqlite ${APP_PATH}/devbot.sqlite
 
 # Command to run when starting the container
-ENTRYPOINT ["./bin/slack-bot-current-system"]
+ENTRYPOINT ["./bin/devbot-current-system"]

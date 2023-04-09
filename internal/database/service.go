@@ -3,62 +3,43 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
+	"github.com/sharovik/devbot/internal/dto"
+	"github.com/sharovik/devbot/internal/dto/databasedto"
+	"github.com/sharovik/devbot/internal/helper"
 	"github.com/sharovik/orm/clients"
 	cdto "github.com/sharovik/orm/dto"
 	cquery "github.com/sharovik/orm/query"
-	"io/ioutil"
-	"path/filepath"
-
-	"os"
-
-	//Register the sqlite3 lib
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/sharovik/devbot/internal/config"
-	"github.com/sharovik/devbot/internal/dto"
-	"github.com/sharovik/devbot/internal/helper"
 )
 
-//SQLiteDictionary the sqlite dictionary object
-type SQLiteDictionary struct {
-	client    *sql.DB
-	newClient clients.BaseClientInterface
-	Cfg       config.Config
+//Dictionary the sqlite dictionary object
+type Dictionary struct {
+	db clients.BaseClientInterface
 }
 
-//GetClient method returns the client connection
-//@deprecated
-func (d *SQLiteDictionary) GetClient() *sql.DB {
-	return d.client
-}
-
-//GetNewClient method returns the client connection
-func (d *SQLiteDictionary) GetNewClient() clients.BaseClientInterface {
-	return d.newClient
+//GetDBClient method returns the client connection
+func (d *Dictionary) GetDBClient() clients.BaseClientInterface {
+	return d.db
 }
 
 //InitDatabaseConnection initialise the database connection
-func (d *SQLiteDictionary) InitDatabaseConnection() error {
-	if _, err := os.Stat(d.Cfg.DatabaseHost); err != nil {
-		return err
-	}
+func (d *Dictionary) InitDatabaseConnection(cfg clients.DatabaseConfig) error {
+	var err error
+	d.db, err = clients.InitClient(cfg)
 
-	db, err := sql.Open("sqlite3", d.Cfg.DatabaseHost)
-	if err != nil {
-		return err
-	}
-
-	d.client = db
-	d.newClient = clients.SQLiteClient{Client: db}
-	return nil
+	return err
 }
 
 //CloseDatabaseConnection method for database connection close
-func (d *SQLiteDictionary) CloseDatabaseConnection() error {
-	return d.newClient.Disconnect()
+func (d *Dictionary) CloseDatabaseConnection() error {
+	return d.db.Disconnect()
 }
 
 //FindAnswer used for searching of message in the database
-func (d SQLiteDictionary) FindAnswer(message string) (dto.DictionaryMessage, error) {
+func (d *Dictionary) FindAnswer(message string) (dto.DictionaryMessage, error) {
 	var (
 		dmAnswer dto.DictionaryMessage
 		regexID  int64
@@ -88,7 +69,7 @@ func (d SQLiteDictionary) FindAnswer(message string) (dto.DictionaryMessage, err
 	return dmAnswer, nil
 }
 
-func (d SQLiteDictionary) parsedByAvailableRegex(question string) (int64, error) {
+func (d *Dictionary) parsedByAvailableRegex(question string) (int64, error) {
 	availableRegex, err := d.GetAllRegex()
 	if err != nil {
 		return int64(0), err
@@ -105,7 +86,7 @@ func (d SQLiteDictionary) parsedByAvailableRegex(question string) (int64, error)
 }
 
 //answerByQuestionString method retrieves the answer data by selected question string
-func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID int64) (dto.DictionaryMessage, error) {
+func (d *Dictionary) answerByQuestionString(questionText string, regexID int64) (dto.DictionaryMessage, error) {
 	query := new(clients.Query).
 		Select([]interface{}{
 			"scenarios.id",
@@ -160,7 +141,7 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 		OrderBy("questions.id", cquery.OrderDirectionAsc).
 		Limit(cquery.Limit{From: 0, To: 1})
 
-	res, err := d.newClient.Execute(query)
+	res, err := d.db.Execute(query)
 
 	if err == sql.ErrNoRows {
 		return dto.DictionaryMessage{}, nil
@@ -190,7 +171,7 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 
 	return dto.DictionaryMessage{
 		ScenarioID:            int64(item.GetField("id").Value.(int)),
-		EventID:            int64(item.GetField("event_id").Value.(int)),
+		EventID:               int64(item.GetField("event_id").Value.(int)),
 		Answer:                item.GetField("answer").Value.(string),
 		QuestionID:            int64(item.GetField("question_id").Value.(int)),
 		Question:              item.GetField("question").Value.(string),
@@ -201,7 +182,7 @@ func (d SQLiteDictionary) answerByQuestionString(questionText string, regexID in
 }
 
 //InsertScenario used for scenario creation
-func (d SQLiteDictionary) InsertScenario(name string, eventID int64) (int64, error) {
+func (d *Dictionary) InsertScenario(name string, eventID int64) (int64, error) {
 	var model = cdto.BaseModel{
 		TableName: "scenarios",
 		Fields: []interface{}{
@@ -216,7 +197,7 @@ func (d SQLiteDictionary) InsertScenario(name string, eventID int64) (int64, err
 		},
 	}
 
-	res, err := d.newClient.Execute(new(clients.Query).Insert(&model))
+	res, err := d.db.Execute(new(clients.Query).Insert(&model))
 	if err != nil {
 		return 0, err
 	}
@@ -225,7 +206,7 @@ func (d SQLiteDictionary) InsertScenario(name string, eventID int64) (int64, err
 }
 
 //FindScenarioByID search scenario by id
-func (d SQLiteDictionary) FindScenarioByID(scenarioID int64) (int64, error) {
+func (d *Dictionary) FindScenarioByID(scenarioID int64) (int64, error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
 		From(&cdto.BaseModel{TableName: "scenarios"}).
@@ -237,7 +218,7 @@ func (d SQLiteDictionary) FindScenarioByID(scenarioID int64) (int64, error) {
 				Value: scenarioID,
 			},
 		})
-	res, err := d.newClient.Execute(query)
+	res, err := d.db.Execute(query)
 	if err == sql.ErrNoRows {
 		return 0, nil
 	} else if err != nil {
@@ -252,13 +233,16 @@ func (d SQLiteDictionary) FindScenarioByID(scenarioID int64) (int64, error) {
 }
 
 //GetLastScenarioID retrieve the last scenario id
-func (d SQLiteDictionary) GetLastScenarioID() (int64, error) {
+func (d *Dictionary) GetLastScenarioID() (int64, error) {
 	query := new(clients.Query).
-		Select([]interface{}{"id"}).
-		From(&cdto.BaseModel{TableName: "scenarios"}).
+		Select([]interface{}{cdto.ModelField{
+			Name: "id",
+			Type: cdto.IntegerColumnType,
+		}}).
+		From(databasedto.ScenariosModel).
 		OrderBy("id", cquery.OrderDirectionDesc).
 		Limit(cquery.Limit{From: 0, To: 1})
-	res, err := d.newClient.Execute(query)
+	res, err := d.db.Execute(query)
 	if err == sql.ErrNoRows {
 		return 0, nil
 	} else if err != nil {
@@ -274,7 +258,7 @@ func (d SQLiteDictionary) GetLastScenarioID() (int64, error) {
 }
 
 //FindEventByAlias search event by alias
-func (d SQLiteDictionary) FindEventByAlias(eventAlias string) (int64, error) {
+func (d *Dictionary) FindEventByAlias(eventAlias string) (int64, error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
 		From(&cdto.BaseModel{TableName: "events"}).
@@ -286,7 +270,7 @@ func (d SQLiteDictionary) FindEventByAlias(eventAlias string) (int64, error) {
 				Value: eventAlias,
 			},
 		})
-	res, err := d.newClient.Execute(query)
+	res, err := d.db.Execute(query)
 	if err == sql.ErrNoRows {
 		return 0, nil
 	} else if err != nil {
@@ -302,7 +286,7 @@ func (d SQLiteDictionary) FindEventByAlias(eventAlias string) (int64, error) {
 }
 
 //FindEventBy search event by alias and version
-func (d SQLiteDictionary) FindEventBy(eventAlias string, version string) (int64, error) {
+func (d *Dictionary) FindEventBy(eventAlias string, version string) (int64, error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
 		From(&cdto.BaseModel{TableName: "events"}).
@@ -323,7 +307,7 @@ func (d SQLiteDictionary) FindEventBy(eventAlias string, version string) (int64,
 			},
 			Type: cquery.WhereOrType,
 		})
-	res, err := d.newClient.Execute(query)
+	res, err := d.db.Execute(query)
 	if err == sql.ErrNoRows {
 		return 0, nil
 	} else if err != nil {
@@ -339,7 +323,7 @@ func (d SQLiteDictionary) FindEventBy(eventAlias string, version string) (int64,
 }
 
 //InsertEvent used for event creation
-func (d SQLiteDictionary) InsertEvent(alias string, version string) (int64, error) {
+func (d *Dictionary) InsertEvent(alias string, version string) (int64, error) {
 	var model = cdto.BaseModel{
 		TableName: "events",
 		Fields: []interface{}{
@@ -354,7 +338,7 @@ func (d SQLiteDictionary) InsertEvent(alias string, version string) (int64, erro
 		},
 	}
 
-	res, err := d.newClient.Execute(new(clients.Query).Insert(&model))
+	res, err := d.db.Execute(new(clients.Query).Insert(&model))
 	if err != nil {
 		return 0, err
 	}
@@ -363,7 +347,7 @@ func (d SQLiteDictionary) InsertEvent(alias string, version string) (int64, erro
 }
 
 //InsertQuestion inserts the question into the database
-func (d SQLiteDictionary) InsertQuestion(question string, answer string, scenarioID int64, questionRegex string, questionRegexGroup string) (int64, error) {
+func (d *Dictionary) InsertQuestion(question string, answer string, scenarioID int64, questionRegex string, questionRegexGroup string, isVariable bool) (int64, error) {
 	var (
 		regexID int64
 		err     error
@@ -400,13 +384,20 @@ func (d SQLiteDictionary) InsertQuestion(question string, answer string, scenari
 				Value: scenarioID,
 			},
 			cdto.ModelField{
-				Name:  "regex_id",
-				Value: regexID,
+				Name:  "is_variable",
+				Value: isVariable,
 			},
 		},
 	}
 
-	res, err := d.newClient.Execute(new(clients.Query).Insert(&model))
+	if regexID != 0 {
+		model.AddModelField(cdto.ModelField{
+			Name:  "regex_id",
+			Value: regexID,
+		})
+	}
+
+	res, err := d.db.Execute(new(clients.Query).Insert(&model))
 	if err != nil {
 		return 0, err
 	}
@@ -415,7 +406,7 @@ func (d SQLiteDictionary) InsertQuestion(question string, answer string, scenari
 }
 
 //FindRegex search regex by regex string
-func (d SQLiteDictionary) FindRegex(regex string) (int64, error) {
+func (d *Dictionary) FindRegex(regex string) (int64, error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
 		From(&cdto.BaseModel{TableName: "questions_regex"}).
@@ -427,7 +418,7 @@ func (d SQLiteDictionary) FindRegex(regex string) (int64, error) {
 				Value: regex,
 			},
 		})
-	res, err := d.newClient.Execute(query)
+	res, err := d.db.Execute(query)
 	if err == sql.ErrNoRows {
 		return 0, nil
 	} else if err != nil {
@@ -443,7 +434,7 @@ func (d SQLiteDictionary) FindRegex(regex string) (int64, error) {
 }
 
 //InsertQuestionRegex method insert the regex and returns the regexId. This regex can be connected to the multiple questions
-func (d SQLiteDictionary) InsertQuestionRegex(questionRegex string, questionRegexGroup string) (int64, error) {
+func (d *Dictionary) InsertQuestionRegex(questionRegex string, questionRegexGroup string) (int64, error) {
 	var model = cdto.BaseModel{
 		TableName: "questions_regex",
 		Fields: []interface{}{
@@ -458,7 +449,7 @@ func (d SQLiteDictionary) InsertQuestionRegex(questionRegex string, questionRege
 		},
 	}
 
-	res, err := d.newClient.Execute(new(clients.Query).Insert(&model))
+	res, err := d.db.Execute(new(clients.Query).Insert(&model))
 	if err != nil {
 		return 0, err
 	}
@@ -467,8 +458,8 @@ func (d SQLiteDictionary) InsertQuestionRegex(questionRegex string, questionRege
 }
 
 //GetAllRegex method retrieves all available regexs
-func (d SQLiteDictionary) GetAllRegex() (res map[int64]string, err error) {
-	rows, err := d.newClient.Execute(new(clients.Query).Select([]interface{}{"id", "regex"}).From(&cdto.BaseModel{TableName: "questions_regex"}))
+func (d *Dictionary) GetAllRegex() (res map[int64]string, err error) {
+	rows, err := d.db.Execute(new(clients.Query).Select(databasedto.QuestionsRegexModel.GetColumns()).From(&cdto.BaseModel{TableName: "questions_regex"}))
 	if err == sql.ErrNoRows {
 		return res, nil
 	} else if err != nil {
@@ -488,7 +479,7 @@ func (d SQLiteDictionary) GetAllRegex() (res map[int64]string, err error) {
 }
 
 //RunMigrations method for migrations load from specified path
-func (d SQLiteDictionary) RunMigrations(pathToFiles string) error {
+func (d *Dictionary) RunMigrations(pathToFiles string) error {
 	if _, err := os.Stat(pathToFiles); os.IsNotExist(err) {
 		return nil
 	}
@@ -505,7 +496,7 @@ func (d SQLiteDictionary) RunMigrations(pathToFiles string) error {
 		return err
 	}
 
-	var db = d.GetClient()
+	var db = d.GetDBClient().GetClient()
 	for file, filePath := range files {
 		migrationData, err := ioutil.ReadFile(filePath)
 		if err != nil {
@@ -535,7 +526,7 @@ func (d SQLiteDictionary) RunMigrations(pathToFiles string) error {
 }
 
 //IsMigrationAlreadyExecuted checks if the migration name was already executed
-func (d SQLiteDictionary) IsMigrationAlreadyExecuted(version string) (executed bool, err error) {
+func (d *Dictionary) IsMigrationAlreadyExecuted(version string) (executed bool, err error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
 		From(&cdto.BaseModel{TableName: "migration"}).
@@ -547,7 +538,7 @@ func (d SQLiteDictionary) IsMigrationAlreadyExecuted(version string) (executed b
 				Value: version,
 			},
 		})
-	rows, err := d.newClient.Execute(query)
+	rows, err := d.db.Execute(query)
 	if err == sql.ErrNoRows {
 		return false, nil
 	} else if err != nil {
@@ -562,7 +553,7 @@ func (d SQLiteDictionary) IsMigrationAlreadyExecuted(version string) (executed b
 }
 
 //MarkMigrationExecuted marks the selected migration version as executed
-func (d SQLiteDictionary) MarkMigrationExecuted(version string) (err error) {
+func (d *Dictionary) MarkMigrationExecuted(version string) (err error) {
 	var model = cdto.BaseModel{
 		TableName: "migration",
 		Fields: []interface{}{
@@ -573,12 +564,13 @@ func (d SQLiteDictionary) MarkMigrationExecuted(version string) (err error) {
 		},
 	}
 
-	_, err = d.newClient.Execute(new(clients.Query).Insert(&model))
+	_, err = d.db.Execute(new(clients.Query).Insert(&model))
 	return
 }
 
 //InstallEvent method installs the event(if it wasn't installed before) and creates the scenario for selected event with selected question and answer
-func (d SQLiteDictionary) InstallEvent(eventName string, eventVersion string, question string, answer string, questionRegex string, questionRegexGroup string) error {
+//Deprecated: please use InstallNewEventScenario instead
+func (d *Dictionary) InstallEvent(eventName string, eventVersion string, question string, answer string, questionRegex string, questionRegexGroup string) error {
 	eventID, err := d.FindEventByAlias(eventName)
 	if err != nil {
 		return err
@@ -598,7 +590,7 @@ func (d SQLiteDictionary) InstallEvent(eventName string, eventVersion string, qu
 		return err
 	}
 
-	_, err = d.InsertQuestion(question, answer, scenarioID, questionRegex, questionRegexGroup)
+	_, err = d.InsertQuestion(question, answer, scenarioID, questionRegex, questionRegexGroup, false)
 	if err != nil {
 		return err
 	}
@@ -607,53 +599,11 @@ func (d SQLiteDictionary) InstallEvent(eventName string, eventVersion string, qu
 }
 
 //GetQuestionsByScenarioID method retrieves all available questions and answers for selected scenarioID
-func (d SQLiteDictionary) GetQuestionsByScenarioID(scenarioID int64) (result []QuestionObject, err error) {
-	query := new(clients.Query).
-		Select([]interface{}{
-			"questions.id",
-			"questions.question",
-			"questions.answer",
-			"events.alias",
-		}).
-		From(&cdto.BaseModel{TableName: "questions"}).
-		Join(cquery.Join{
-			Target:    cquery.Reference{Table: "scenarios", Key: "id"},
-			With:      cquery.Reference{Table: "questions", Key: "scenario_id"},
-			Condition: "=",
-			Type:      cquery.InnerJoinType,
-		}).
-		Join(cquery.Join{
-			Target:    cquery.Reference{Table: "events", Key: "id"},
-			With:      cquery.Reference{Table: "scenarios", Key: "event_id"},
-			Condition: "=",
-			Type:      cquery.InnerJoinType,
-		}).
-		Where(cquery.Where{
-			First:    "scenarios.id",
-			Operator: "=",
-			Second:   cquery.Bind{Field: "scenarios.id", Value: scenarioID},
-		}).
-		OrderBy("questions.id", cquery.OrderDirectionAsc)
-	res, err := d.newClient.Execute(query)
-	if err == sql.ErrNoRows {
-		return result, nil
-	} else if err != nil {
-		return result, err
-	}
-
-	for _, item := range res.Items() {
-		result = append(result, QuestionObject{
-			ID:           int64(item.GetField("id").Value.(int)),
-			Question:     item.GetField("question").Value.(string),
-			Answer:       item.GetField("answer").Value.(string),
-			ReactionType: item.GetField("alias").Value.(string),
-		})
-	}
-
-	return result, nil
+func (d *Dictionary) GetQuestionsByScenarioID(scenarioID int64, isVariable bool) (result []QuestionObject, err error) {
+	return getQuestionsByScenarioID(d, scenarioID, isVariable)
 }
 
 //InstallNewEventScenario the method for installing of the new event scenario
-func (d SQLiteDictionary) InstallNewEventScenario(scenario NewEventScenario) error {
-	return installNewEventScenario(&d, scenario)
+func (d *Dictionary) InstallNewEventScenario(scenario EventScenario) error {
+	return installNewEventScenario(d, scenario)
 }

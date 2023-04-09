@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto/databasedto"
@@ -23,7 +24,7 @@ func (m InstallMigration) GetName() string {
 }
 
 func (m InstallMigration) Execute() error {
-	client := container.C.Dictionary.GetNewClient()
+	client := container.C.Dictionary.GetDBClient()
 
 	if err := createSchema(client); err != nil {
 		return err
@@ -35,7 +36,8 @@ func (m InstallMigration) Execute() error {
 func createSchema(client clients.BaseClientInterface) error {
 	//Create events table
 	q := new(clients.Query).
-		Create(&databasedto.EventModel).
+		Create(databasedto.EventModel).
+		IfNotExists().
 		AddIndex(dto.Index{
 			Name:   "events_name_uindex",
 			Target: databasedto.EventModel.GetTableName(),
@@ -48,7 +50,8 @@ func createSchema(client clients.BaseClientInterface) error {
 
 	//Create questions_regex table
 	q = new(clients.Query).
-		Create(&databasedto.QuestionsRegexModel).
+		Create(databasedto.QuestionsRegexModel).
+		IfNotExists().
 		AddIndex(dto.Index{
 			Name:   "question_regex_regex_uindex",
 			Target: databasedto.QuestionsRegexModel.GetTableName(),
@@ -61,7 +64,8 @@ func createSchema(client clients.BaseClientInterface) error {
 
 	//Create scenarios table
 	q = new(clients.Query).
-		Create(&databasedto.ScenariosModel).
+		Create(databasedto.ScenariosModel).
+		IfNotExists().
 		AddIndex(dto.Index{
 			Name:   "scenarios_name_uindex",
 			Target: databasedto.ScenariosModel.GetTableName(),
@@ -87,7 +91,8 @@ func createSchema(client clients.BaseClientInterface) error {
 
 	//Create questions table
 	q = new(clients.Query).
-		Create(&databasedto.QuestionsModel).
+		Create(databasedto.QuestionsModel).
+		IfNotExists().
 		AddIndex(dto.Index{
 			Name:   "questions_question_index",
 			Target: databasedto.QuestionsModel.GetTableName(),
@@ -122,6 +127,46 @@ func createSchema(client clients.BaseClientInterface) error {
 		})
 	if _, err := client.Execute(q); err != nil {
 		return errors.Wrap(err, fmt.Sprintf("Failed to create %s table", databasedto.QuestionsModel.GetTableName()))
+	}
+
+	//Create questions table
+	q = new(clients.Query).
+		Create(databasedto.SchedulesModel).
+		IfNotExists().
+		AddIndex(dto.Index{
+			Name:   "execute_at_index",
+			Target: databasedto.SchedulesModel.GetTableName(),
+			Key:    "execute_at",
+			Unique: false,
+		}).
+		AddForeignKey(dto.ForeignKey{
+			Name: "scenario_id",
+			Target: cquery.Reference{
+				Table: databasedto.ScenariosModel.GetTableName(),
+				Key:   "id",
+			},
+			With: cquery.Reference{
+				Table: databasedto.SchedulesModel.GetTableName(),
+				Key:   "scenario_id",
+			},
+			OnDelete: dto.SetNullAction,
+			OnUpdate: dto.NoActionAction,
+		}).
+		AddForeignKey(dto.ForeignKey{
+			Name: "event_id",
+			Target: cquery.Reference{
+				Table: databasedto.EventModel.GetTableName(),
+				Key:   "id",
+			},
+			With: cquery.Reference{
+				Table: databasedto.SchedulesModel.GetTableName(),
+				Key:   "event_id",
+			},
+			OnDelete: dto.SetNullAction,
+			OnUpdate: dto.NoActionAction,
+		})
+	if _, err := client.Execute(q); err != nil {
+		return errors.Wrap(err, fmt.Sprintf("Failed to create %s table", databasedto.SchedulesModel.GetTableName()))
 	}
 
 	return nil

@@ -20,10 +20,10 @@ func (m RemoveUniqueIndexMigration) GetName() string {
 }
 
 func (m RemoveUniqueIndexMigration) Execute() error {
-	client := container.C.Dictionary.GetNewClient()
+	client := container.C.Dictionary.GetDBClient()
 
 	q := new(clients.Query).
-		Alter(&databasedto.QuestionsModel).
+		Alter(databasedto.QuestionsModel).
 		DropIndex(dto.Index{
 			Name: "questions_question_uindex",
 		})
@@ -33,7 +33,7 @@ func (m RemoveUniqueIndexMigration) Execute() error {
 	}
 
 	q = new(clients.Query).
-		Alter(&databasedto.QuestionsModel).AddIndex(dto.Index{
+		Alter(databasedto.QuestionsModel).AddIndex(dto.Index{
 		Name:   "questions_question_uindex",
 		Target: databasedto.QuestionsModel.GetTableName(),
 		Key:    "question",

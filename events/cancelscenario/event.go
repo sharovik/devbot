@@ -3,8 +3,6 @@ package cancelscenario
 import (
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/helper"
-	"github.com/sharovik/devbot/internal/service/base"
-
 	"github.com/sharovik/devbot/internal/log"
 
 	"github.com/sharovik/devbot/internal/container"
@@ -23,35 +21,28 @@ const (
 	regexChannel = `(?im)(?:[<#@]|(?:&lt;))(\w+)(?:[|>]|(?:&gt;))`
 )
 
-//EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
+// EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
 type EventStruct struct {
-	EventName string
 }
 
-//Event - object which is ready to use
-var Event = EventStruct{
-	EventName: EventName,
+// Event - object which is ready to use
+var Event = EventStruct{}
+
+func (e EventStruct) Help() string {
+	return helpMessage
 }
 
-//Execute method which is called by message processor
+func (e EventStruct) Alias() string {
+	return EventName
+}
+
+// Execute method which is called by message processor
 func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
-	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.OriginalMessage.Text)
-	if err != nil {
-		log.Logger().Warn().Err(err).Msg("Something went wrong with help message parsing")
-	}
-
-	if isHelpAnswerTriggered {
-		message.Text = helpMessage
-		return message, nil
-	}
-
 	channel := extractChannelName(message.OriginalMessage.Text)
 	if channel == "" {
 		message.Text = "Please specify the channel name."
 		return message, nil
 	}
-
-	base.DeleteConversation(channel)
 
 	//This answer will be show once the event get triggered.
 	//Leave message.Text empty, once you need to not show the message, once this event get triggered.
@@ -59,17 +50,17 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 	return message, nil
 }
 
-//Install method for installation of event
+// Install method for installation of event
 func (e EventStruct) Install() error {
 	log.Logger().Debug().
 		Str("event_name", EventName).
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
+	return container.C.Dictionary.InstallNewEventScenario(database.EventScenario{
 		EventName:    EventName,
 		EventVersion: EventVersion,
-		Questions:    []database.Question{
+		Questions: []database.Question{
 			{
 				Question:      "stop conversation",
 				Answer:        "Ok, will do it now.",
@@ -80,7 +71,7 @@ func (e EventStruct) Install() error {
 	})
 }
 
-//Update for event update actions
+// Update for event update actions
 func (e EventStruct) Update() error {
 	return nil
 }

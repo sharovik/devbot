@@ -2,6 +2,7 @@ package eventslist
 
 import (
 	"fmt"
+
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/dto/databasedto"
 	"github.com/sharovik/orm/clients"
@@ -19,32 +20,39 @@ const (
 
 	//EventVersion the version of the event
 	EventVersion = "1.0.1"
+
+	helpMessage = `Ask me "events list" and I will return the list of available events, which I use during the messages processing.`
 )
 
-//EListEvent the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
-type EListEvent struct {
-	EventName string
+// EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
+type EventStruct struct {
 }
 
-//Event - object which is ready to use
+// Event - object which is ready to use
 var (
-	Event = EListEvent{
-		EventName: EventName,
-	}
-	m = []database.BaseMigrationInterface{
+	Event = EventStruct{}
+	m     = []database.BaseMigrationInterface{
 		InsertHelpMessageMigration{},
 	}
 )
 
-//Execute method which is called by message processor
-func (e EListEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
+func (e EventStruct) Help() string {
+	return helpMessage
+}
+
+func (e EventStruct) Alias() string {
+	return EventName
+}
+
+// Execute method which is called by message processor
+func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
 	//This answer will be show once the event get triggered.
 	//Leave message.Text empty, once you need to not show the message, once this event get triggered.
-	c := container.C.Dictionary.GetNewClient()
+	c := container.C.Dictionary.GetDBClient()
 
 	q := new(clients.Query).
 		Select([]interface{}{"events.id", "events.alias", "questions.question"}).
-		From(&databasedto.EventModel).
+		From(databasedto.EventModel).
 		Join(query.Join{
 			Target: query.Reference{
 				Table: databasedto.ScenariosModel.GetTableName(),
@@ -91,17 +99,17 @@ func (e EListEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, e
 	return message, nil
 }
 
-//Install method for installation of event
-func (e EListEvent) Install() error {
+// Install method for installation of event
+func (e EventStruct) Install() error {
 	log.Logger().Debug().
 		Str("event_name", EventName).
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
+	return container.C.Dictionary.InstallNewEventScenario(database.EventScenario{
 		EventName:    EventName,
 		EventVersion: EventVersion,
-		Questions:    []database.Question{
+		Questions: []database.Question{
 			{
 				Question:      "events list",
 				Answer:        "Just a sec, I will prepare the list for you.",
@@ -112,8 +120,8 @@ func (e EListEvent) Install() error {
 	})
 }
 
-//Update for event update actions
-func (e EListEvent) Update() error {
+// Update for event update actions
+func (e EventStruct) Update() error {
 	for _, migration := range m {
 		container.C.MigrationService.SetMigration(migration)
 	}

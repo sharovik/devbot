@@ -14,7 +14,7 @@ func TestConfig_GetEnvironment(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
-	var c = Init()
-
+	c, err := Init()
+	assert.NoError(t, err)
 	assert.Equal(t, true, c.initialised)
 }

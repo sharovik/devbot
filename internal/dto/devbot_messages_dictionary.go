@@ -1,6 +1,6 @@
 package dto
 
-//DictionaryMessage child struct of DevBotMessageDictionary object
+// DictionaryMessage child struct of DevBotMessageDictionary object
 type DictionaryMessage struct {
 	ScenarioID            int64
 	Question              string
@@ -10,4 +10,5 @@ type DictionaryMessage struct {
 	Answer                string
 	MainGroupIndexInRegex string
 	ReactionType          string
+	IsHelpTriggered       bool
 }

@@ -8,10 +8,6 @@ This feature will help you to improve the skills of your bot. With it you are ab
 - [Event setup](#event-setup)
 - [Example](#example)
 
-## Good to know for event setup
-- `defined-events.go.dist` file example which contains the way of how to load your custom events
-- [the event message object](event-message.md) - there you can find more details about event message object
-
 ## Prerequisites
 * run `cp defined-events.go.dist defined-events.go` to create the file where you will define your events
 
@@ -38,15 +34,22 @@ You need to specify the folder name without spaces. There should not be dashes o
 Let's call it `example` and create this example folder in the `events` folder.
 
 ### The code
-There is a [Base DefinedEvent interface](../internal/container/container.go) which defines the structure of each event. So, let's create our custom event using this base interface definition:
+There is a [Base DefinedEvent interface](../internal/dto/event/defined_event.go) which defines the structure of each event.
+The main methods are:
+- `Install` - method, which install the scenarios for your event
+- `Update` - once you introduce a migration for your event, this method will be triggered and migration will be applied
+- `Execute` - main method for event logic execution. This method receives as argument the [message object](event-message.md) type of `dto.BaseChatMessage`.
+
+Below, you can find an example of the event, which you can use as the base for your event
 ```go
 package example
 
 import (
 	"fmt"
 
-    "github.com/sharovik/devbot/internal/helper"
-    "github.com/sharovik/devbot/internal/log"
+	"github.com/sharovik/devbot/internal/database"
+
+	"github.com/sharovik/devbot/internal/log"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
@@ -59,65 +62,56 @@ const (
 	//EventVersion the version of the event
 	EventVersion = "1.0.1"
 
-    helpMessage = "Ask me `who are you?` and you will see the answer."
+	helpMessage = "Ask me `who are you?` and you will see the answer."
 )
 
-//ExmplEvent the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
-type ExmplEvent struct {
-	EventName string
+// EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
+type EventStruct struct {
 }
 
-//Event - object which is ready to use
-var Event = ExmplEvent{
-	EventName: EventName,
+// Event - object which is ready to use
+var Event = EventStruct{}
+
+func (e EventStruct) Help() string {
+	return helpMessage
 }
 
-//Execute method which is called by message processor
-func (e ExmplEvent) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
-    isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.OriginalMessage.Text)
-    if err != nil {
-        log.Logger().Warn().Err(err).Msg("Something went wrong with help message parsing")
-    }
+func (e EventStruct) Alias() string {
+	return EventName
+}
 
-    if isHelpAnswerTriggered {
-        message.Text = helpMessage
-        return message, nil
-    }
-
-    //This answer will be show once the event get triggered.
-    //Leave message.Text empty, once you need to not show the message, once this event get triggered.
+// Execute method which is called by message processor
+func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
+	//This answer will be show once the event get triggered.
+	//Leave message.Text empty, once you need to not show the message, once this event get triggered.
 	message.Text = "This is an example of the answer."
 	return message, nil
 }
 
-//Install method for installation of event
-func (e ExmplEvent) Install() error {
+// Install method for installation of event
+func (e EventStruct) Install() error {
 	log.Logger().Debug().
 		Str("event_name", EventName).
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	return container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
-        EventName:    EventName,
-        EventVersion: EventVersion,
-        Questions:    []database.Question{
-            {
-                Question:      "who are you?",
-                Answer:        fmt.Sprintf("Hello, my name is %s", container.C.Config.SlackConfig.BotName),
-                QuestionRegex: "(?i)who are you?",
-                QuestionGroup: "",
-            },
-        },
-    })
+	return container.C.Dictionary.InstallNewEventScenario(database.EventScenario{
+		EventName:    EventName,
+		EventVersion: EventVersion,
+		Questions: []database.Question{
+			{
+				Question:      "who are you?",
+				Answer:        fmt.Sprintf("Hello, my name is %s", container.C.Config.MessagesAPIConfig.BotName),
+				QuestionRegex: "(?i)who are you?",
+				QuestionGroup: "",
+			},
+		},
+	})
 }
 
-//Update for event update actions
-func (e ExmplEvent) Update() error {
-	for _, migration := range m {
-		container.C.MigrationService.SetMigration(migration)
-	}
-
-	return container.C.MigrationService.RunMigrations()
+// Update for event update actions
+func (e EventStruct) Update() error {
+	return nil
 }
 ```
 
@@ -126,7 +120,7 @@ func (e ExmplEvent) Update() error {
 ![empty text message](images/example-event-text-empty.png)
 
 #### With the filled text message in Execute method
-![with text message](images/example-event-with-text.png)
+![with text message](images/demo-who-are-you.gif)
 
 ### Source code
 You can find the source code of the event in [events/example](https://github.com/sharovik/devbot/tree/master/events/example) folder

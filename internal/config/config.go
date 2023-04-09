@@ -3,17 +3,19 @@ package config
 import (
 	"flag"
 	"fmt"
-	"github.com/sharovik/devbot/internal/log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/sharovik/devbot/internal/log"
+	"github.com/sharovik/orm/clients"
+
 	"github.com/joho/godotenv"
 )
 
-//SlackConfig struct object
-type SlackConfig struct {
+//MessagesAPIConfig struct object
+type MessagesAPIConfig struct {
 	BaseURL          string
 	OAuthToken       string
 	WebAPIOAuthToken string
@@ -21,7 +23,7 @@ type SlackConfig struct {
 	BotName          string
 	MainChannelAlias string
 	MainChannelID    string
-	LegacyBot        bool
+	Type             string
 }
 
 //BitBucketConfig struct for bitbucket config
@@ -51,20 +53,14 @@ type HTTPClient struct {
 
 //Config configuration object
 type Config struct {
-	appEnv                  string
-	AppDictionary           string
-	LearningEnabled         bool
-	SlackConfig             SlackConfig
-	BitBucketConfig         BitBucketConfig
-	initialised             bool
-	OpenConversationTimeout time.Duration
-	DatabaseConnection      string
-	DatabaseHost            string
-	DatabaseName            string
-	DatabaseUsername        string
-	DatabasePassword        string
-	HTTPClient              HTTPClient
-	LogConfig               log.Config
+	appEnv            string
+	LearningEnabled   bool
+	MessagesAPIConfig MessagesAPIConfig
+	BitBucketConfig   BitBucketConfig
+	initialised       bool
+	Database          clients.DatabaseConfig
+	HTTPClient        HTTPClient
+	LogConfig         log.Config
 }
 
 //cfg variable which contains initialised Config
@@ -77,32 +73,29 @@ const (
 	//EnvironmentTesting constant for testing environment
 	EnvironmentTesting = "testing"
 
-	appEnv        = "APP_ENV"
-	appDictionary = "APP_DICTIONARY"
+	envAppEnv          = "APP_ENV"
+	envMessagesAPIType = "MESSAGES_API_TYPE"
 
-	//SlackEnvUserID env variable for slack user ID
-	SlackEnvUserID = "SLACK_USER_ID"
+	//EnvUserID env variable for user ID
+	EnvUserID = "MESSAGES_API_USER_ID"
 
-	//SlackLegacy env variable for slack legacy bot mode
-	SlackLegacy = "SLACK_LEGACY_BOT"
+	//EnvMainChannelID env variable for main channel ID
+	EnvMainChannelID = "MESSAGES_API_MAIN_CHANNEL_ID"
 
-	//SlackEnvMainChannelID env variable for slack main channel ID
-	SlackEnvMainChannelID = "SLACK_MAIN_CHANNEL_ID"
+	//EnvMainChannelAlias env variable for main channel alias
+	EnvMainChannelAlias = "MESSAGES_API_MAIN_CHANNEL_ALIAS"
 
-	//SlackEnvMainChannelAlias env variable for slack main channel alias
-	SlackEnvMainChannelAlias = "SLACK_MAIN_CHANNEL_ALIAS"
+	//EnvBotName env variable for bot name
+	EnvBotName = "MESSAGES_API_BOT_NAME"
 
-	//SlackEnvBotName env variable for slack bot name
-	SlackEnvBotName = "SLACK_BOT_NAME"
+	//EnvBaseURL env variable for base url
+	EnvBaseURL = "MESSAGES_API_BASE_URL"
 
-	//SlackEnvBaseURL env variable for slack base url
-	SlackEnvBaseURL = "SLACK_BASE_URL"
+	//EnvOAuthToken env variable for message oauth token
+	EnvOAuthToken = "MESSAGES_API_OAUTH_TOKEN"
 
-	//SlackEnvOAuthToken env variable for slack oauth token
-	SlackEnvOAuthToken = "SLACK_OAUTH_TOKEN"
-
-	//SlackEnvWebAPIOAuthToken env variable for slack web api oauth token.
-	SlackEnvWebAPIOAuthToken = "SLACK_WEB_API_OAUTH_TOKEN"
+	//EnvWebAPIOAuthToken env variable for message web api oauth token.
+	EnvWebAPIOAuthToken = "MESSAGES_API_WEB_API_OAUTH_TOKEN"
 
 	//DatabaseConnection env variable for database connection type
 	DatabaseConnection = "DATABASE_CONNECTION"
@@ -137,31 +130,31 @@ const (
 	//BitBucketCurrentUserUUID the current BitBucket user UUID the client credentials of which we are using in BITBUCKET_CLIENT_ID and BITBUCKET_CLIENT_SECRET
 	BitBucketCurrentUserUUID = "BITBUCKET_USER_UUID"
 
-	//BitBucketDefaultWorkspace the default workspace which will can be used in the functionality, once you don't have PR link, from where to get this information
+	//BitBucketDefaultWorkspace the default workspace which can be used in the functionality, once you don't have PR link, from where to get this information
 	BitBucketDefaultWorkspace = "BITBUCKET_DEFAULT_WORKSPACE"
 
 	//BitBucketDefaultMainBranch the default main branch which can be used in cases, when you can't get the information from the PR link
 	BitBucketDefaultMainBranch = "BITBUCKET_DEFAULT_MAIN_BRANCH"
 
-	//OpenConversationTimeout the life time of open conversations
-	OpenConversationTimeout = "OPEN_CONVERSATION_TIMEOUT"
+	httpClientRequestTimeout      = "HTTP_CLIENT_REQUEST_TIMEOUT"
+	httpClientTLSHandshakeTimeout = "HTTP_CLIENT_TLS_HANDSHAKE_TIMEOUT"
+	httpClientInsecureSkipVerify  = "HTTP_CLIENT_INSECURE_SKIP_VERIFY"
 
-	HTTPClientRequestTimeout      = "HTTP_CLIENT_REQUEST_TIMEOUT"
-	HTTPClientTLSHandshakeTimeout = "HTTP_CLIENT_TLS_HANDSHAKE_TIMEOUT"
-	HTTPClientInsecureSkipVerify  = "HTTP_CLIENT_INSECURE_SKIP_VERIFY"
+	//learningEnabled enables or disables the learning mode. If enabled, the bot will try to ask in the main channel, how to react on that message.
+	learningEnabled = "LEARNING_MODE_ENABLED"
 
-	//LearningEnabled enables or disables the teaching. If enabled, the bot will try to ask the teacher users how to react on that message
-	LearningEnabled = "ENABLE_TEACHING"
+	envLogOutput            = "LOG_OUTPUT"
+	envLogLevel             = "LOG_LEVEL"
+	envLogFieldContext      = "LOG_FIELD_CONTEXT"
+	envLogFieldLevelName    = "LOG_FIELD_LEVEL_NAME"
+	envLogFieldErrorMessage = "LOG_FIELD_ERROR_MESSAGE"
 
-	LogOutput            = "LOG_OUTPUT"
-	LogLevel             = "LOG_LEVEL"
-	LogFieldContext      = "LOG_FIELD_CONTEXT"
-	LogFieldLevelName    = "LOG_FIELD_LEVEL_NAME"
-	LogFieldErrorMessage = "LOG_FIELD_ERROR_MESSAGE"
+	//MessagesAPITypeSlack message messages API type
+	MessagesAPITypeSlack = "slack"
 
 	defaultMainChannelAlias        = "general"
 	defaultBotName                 = "devbot"
-	defaultAppDictionary           = "slack"
+	defaultMessagesAPIType         = MessagesAPITypeSlack
 	defaultDatabaseConnection      = "sqlite"
 	defaultEnvFilePath             = "./.env"
 	defaultOpenConversationTimeout = time.Second * 600
@@ -169,7 +162,7 @@ const (
 )
 
 //Init initialise configuration for this project
-func Init() Config {
+func Init() (Config, error) {
 	if !cfg.IsInitialised() {
 
 		envPath = defaultEnvFilePath
@@ -178,132 +171,132 @@ func Init() Config {
 		}
 
 		if err := godotenv.Load(envPath); err != nil {
-			panic(err)
+			return Config{}, err
 		}
 
-		mainChannelAlias := defaultMainChannelAlias
-		if os.Getenv(SlackEnvMainChannelAlias) != "" {
-			mainChannelAlias = os.Getenv(SlackEnvMainChannelAlias)
-		}
-
-		BotName := defaultBotName
-		if os.Getenv(SlackEnvBotName) != "" {
-			BotName = os.Getenv(SlackEnvBotName)
-		}
-
-		AppDictionary := defaultAppDictionary
-		if os.Getenv(appDictionary) != "" {
-			AppDictionary = os.Getenv(appDictionary)
-		}
-
-		dbConnection := defaultDatabaseConnection
-		if os.Getenv(DatabaseConnection) != "" {
-			dbConnection = os.Getenv(DatabaseConnection)
-		}
-
-		openConversationTimeout := defaultOpenConversationTimeout
-		if os.Getenv(OpenConversationTimeout) != "" {
-			//@todo: add error handling
-			openConversationTimeoutIntVal, _ := strconv.ParseInt(os.Getenv(OpenConversationTimeout), 10, 64)
-			openConversationTimeout = time.Second * time.Duration(openConversationTimeoutIntVal)
-		}
-
-		bitBucketReleaseChannelMessageEnabled := false
-		bitBucketReleaseChannelMessageEnabledValue := os.Getenv(BitBucketReleaseChannelMessageEnabled)
-		if bitBucketReleaseChannelMessageEnabledValue == "true" || bitBucketReleaseChannelMessageEnabledValue == "1" {
-			bitBucketReleaseChannelMessageEnabled = true
-		}
-
-		var requestTimeout, tLSHandshakeTimeout int64
-		if os.Getenv(HTTPClientRequestTimeout) != "" {
-			requestTimeout, _ = strconv.ParseInt(os.Getenv(HTTPClientRequestTimeout), 10, 64)
-		}
-
-		if os.Getenv(HTTPClientTLSHandshakeTimeout) != "" {
-			tLSHandshakeTimeout, _ = strconv.ParseInt(os.Getenv(HTTPClientTLSHandshakeTimeout), 10, 64)
-		}
-
-		insecureSkipVerify := false
-		if os.Getenv(HTTPClientInsecureSkipVerify) == "true" || os.Getenv(HTTPClientInsecureSkipVerify) == "1" {
-			insecureSkipVerify = true
-		}
-
-		isLearningEnabled := false
-		if os.Getenv(LearningEnabled) == "true" || os.Getenv(LearningEnabled) == "1" {
-			isLearningEnabled = true
-		}
-
-		slackOAuthToken := os.Getenv(SlackEnvOAuthToken)
-		slackWebAPIOAuthToken := os.Getenv(SlackEnvWebAPIOAuthToken)
-		if slackWebAPIOAuthToken == "" {
-			slackWebAPIOAuthToken = slackOAuthToken
+		httpC, err := initHTTPClientConfig()
+		if err != nil {
+			return Config{}, err
 		}
 
 		cfg = Config{
-			appEnv:          os.Getenv(appEnv),
-			AppDictionary:   AppDictionary,
-			LearningEnabled: isLearningEnabled,
-			SlackConfig: SlackConfig{
-				BaseURL:          os.Getenv(SlackEnvBaseURL),
-				OAuthToken:       slackOAuthToken,
-				WebAPIOAuthToken: slackWebAPIOAuthToken,
-				MainChannelAlias: mainChannelAlias,
-				MainChannelID:    os.Getenv(SlackEnvMainChannelID),
-				BotUserID:        os.Getenv(SlackEnvUserID),
-				BotName:          BotName,
-				LegacyBot:        getBoolValue(SlackLegacy),
-			},
-			BitBucketConfig: BitBucketConfig{
-				ClientID:                     os.Getenv(BitBucketClientID),
-				ClientSecret:                 os.Getenv(BitBucketClientSecret),
-				ReleaseChannel:               os.Getenv(BitBucketReleaseChannel),
-				CurrentUserUUID:              os.Getenv(BitBucketCurrentUserUUID),
-				DefaultWorkspace:             os.Getenv(BitBucketDefaultWorkspace),
-				DefaultMainBranch:            os.Getenv(BitBucketDefaultMainBranch),
-				ReleaseChannelMessageEnabled: bitBucketReleaseChannelMessageEnabled,
-				RequiredReviewers:            PrepareBitBucketReviewers(os.Getenv(BitBucketRequiredReviewers)),
-			},
-			initialised:             true,
-			DatabaseConnection:      dbConnection,
-			DatabaseHost:            os.Getenv(DatabaseHost),
-			DatabaseUsername:        os.Getenv(DatabaseUsername),
-			DatabasePassword:        os.Getenv(DatabasePassword),
-			DatabaseName:            os.Getenv(DatabaseName),
-			OpenConversationTimeout: openConversationTimeout,
-			HTTPClient: HTTPClient{
-				RequestTimeout:      requestTimeout,
-				TLSHandshakeTimeout: tLSHandshakeTimeout,
-				InsecureSkipVerify:  insecureSkipVerify,
-			},
-			LogConfig: initLogConfig(),
+			appEnv:            os.Getenv(envAppEnv),
+			LearningEnabled:   getBoolValue(learningEnabled),
+			MessagesAPIConfig: initMessagesAPIConfig(),
+			BitBucketConfig:   initBitbucketConfig(),
+			initialised:       true,
+			HTTPClient:        httpC,
+			Database:          initDatabaseConfig(),
+			LogConfig:         initLogConfig(),
 		}
 
-		return cfg
+		return cfg, nil
 	}
 
-	return cfg
+	return cfg, nil
+}
+
+func initHTTPClientConfig() (c HTTPClient, err error) {
+	var requestTimeout, tLSHandshakeTimeout int64
+	if os.Getenv(httpClientRequestTimeout) != "" {
+		requestTimeout, err = strconv.ParseInt(os.Getenv(httpClientRequestTimeout), 10, 64)
+		if err != nil {
+			return HTTPClient{}, err
+		}
+	}
+
+	if os.Getenv(httpClientTLSHandshakeTimeout) != "" {
+		tLSHandshakeTimeout, _ = strconv.ParseInt(os.Getenv(httpClientTLSHandshakeTimeout), 10, 64)
+		if err != nil {
+			return HTTPClient{}, err
+		}
+	}
+
+	return HTTPClient{
+		RequestTimeout:      requestTimeout,
+		TLSHandshakeTimeout: tLSHandshakeTimeout,
+		InsecureSkipVerify:  getBoolValue(httpClientInsecureSkipVerify),
+	}, nil
+}
+
+func initBitbucketConfig() BitBucketConfig {
+	return BitBucketConfig{
+		ClientID:                     os.Getenv(BitBucketClientID),
+		ClientSecret:                 os.Getenv(BitBucketClientSecret),
+		ReleaseChannel:               os.Getenv(BitBucketReleaseChannel),
+		CurrentUserUUID:              os.Getenv(BitBucketCurrentUserUUID),
+		DefaultWorkspace:             os.Getenv(BitBucketDefaultWorkspace),
+		DefaultMainBranch:            os.Getenv(BitBucketDefaultMainBranch),
+		ReleaseChannelMessageEnabled: getBoolValue(BitBucketReleaseChannelMessageEnabled),
+		RequiredReviewers:            PrepareBitBucketReviewers(os.Getenv(BitBucketRequiredReviewers)),
+	}
+}
+
+func initMessagesAPIConfig() MessagesAPIConfig {
+	oAuthToken := os.Getenv(EnvOAuthToken)
+	webAPIOAuthToken := os.Getenv(EnvWebAPIOAuthToken)
+	mainChannelAlias := defaultMainChannelAlias
+	if os.Getenv(EnvMainChannelAlias) != "" {
+		mainChannelAlias = os.Getenv(EnvMainChannelAlias)
+	}
+
+	botName := defaultBotName
+	if os.Getenv(EnvBotName) != "" {
+		botName = os.Getenv(EnvBotName)
+	}
+
+	messagesAPIType := defaultMessagesAPIType
+	if os.Getenv(envMessagesAPIType) != "" {
+		messagesAPIType = os.Getenv(envMessagesAPIType)
+	}
+
+	return MessagesAPIConfig{
+		BaseURL:          os.Getenv(EnvBaseURL),
+		OAuthToken:       oAuthToken,
+		WebAPIOAuthToken: webAPIOAuthToken,
+		MainChannelAlias: mainChannelAlias,
+		MainChannelID:    os.Getenv(EnvMainChannelID),
+		BotUserID:        os.Getenv(EnvUserID),
+		BotName:          botName,
+		Type:             messagesAPIType,
+	}
+}
+
+func initDatabaseConfig() clients.DatabaseConfig {
+	dbConnection := defaultDatabaseConnection
+	if os.Getenv(DatabaseConnection) != "" {
+		dbConnection = os.Getenv(DatabaseConnection)
+	}
+
+	return clients.DatabaseConfig{
+		Type:     dbConnection,
+		Host:     os.Getenv(DatabaseHost),
+		Username: os.Getenv(DatabaseUsername),
+		Password: os.Getenv(DatabasePassword),
+		Database: os.Getenv(DatabaseName),
+	}
 }
 
 func initLogConfig() log.Config {
 	fieldContext := log.FieldContext
-	if "" != os.Getenv(LogFieldContext) {
-		fieldContext = os.Getenv(LogFieldContext)
+	if "" != os.Getenv(envLogFieldContext) {
+		fieldContext = os.Getenv(envLogFieldContext)
 	}
 
 	fieldLevelName := log.FieldLevelName
-	if "" != os.Getenv(LogFieldLevelName) {
-		fieldLevelName = os.Getenv(LogFieldLevelName)
+	if "" != os.Getenv(envLogFieldLevelName) {
+		fieldLevelName = os.Getenv(envLogFieldLevelName)
 	}
 
 	fieldErrorMessage := log.FieldErrorMessage
-	if "" != os.Getenv(LogFieldErrorMessage) {
-		fieldErrorMessage = os.Getenv(LogFieldErrorMessage)
+	if "" != os.Getenv(envLogFieldErrorMessage) {
+		fieldErrorMessage = os.Getenv(envLogFieldErrorMessage)
 	}
 
 	return log.Config{
-		Env:               os.Getenv(appEnv),
-		Level:             os.Getenv(LogLevel),
-		Output:            os.Getenv(LogOutput),
+		Env:               os.Getenv(envAppEnv),
+		Level:             os.Getenv(envLogLevel),
+		Output:            os.Getenv(envLogOutput),
 		FieldContext:      fieldContext,
 		FieldLevelName:    fieldLevelName,
 		FieldErrorMessage: fieldErrorMessage,
@@ -335,7 +328,7 @@ func (c Config) SetToEnv(field string, value string, writeToEnvFile bool) error 
 		}
 
 		defer f.Close()
-		if _, err := f.WriteString(fmt.Sprintf("\n%s=%s", field, value)); err != nil {
+		if _, err = f.WriteString(fmt.Sprintf("\n%s=%s", field, value)); err != nil {
 			return err
 		}
 	}

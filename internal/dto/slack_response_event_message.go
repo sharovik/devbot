@@ -32,3 +32,18 @@ type SlackResponseEventMessage struct {
 	UserTeam     string         `json:"user_team"`
 	Blocks       []MessageBlock `json:"blocks"`
 }
+
+//ToBaseOriginalMessage converts the SlackResponseEventMessage to BaseOriginalMessage object
+func (m SlackResponseEventMessage) ToBaseOriginalMessage() BaseOriginalMessage {
+	return BaseOriginalMessage{
+		Text:        m.Text,
+		User:        m.User,
+		Files:       m.Files,
+		Channel:     m.Channel,
+		ClientMsgID: m.ClientMsgID,
+		EventTs:     m.EventTs,
+		ThreadTS:    m.ThreadTS,
+		Ts:          m.Ts,
+		Type:        m.Type,
+	}
+}

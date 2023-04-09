@@ -2,11 +2,12 @@ package examplescenario
 
 import (
 	"fmt"
-	"github.com/sharovik/devbot/internal/database"
-	"github.com/sharovik/devbot/internal/helper"
-	"github.com/sharovik/devbot/internal/service/base"
+	"github.com/sharovik/devbot/internal/service/message/conversation"
 	"regexp"
 	"time"
+
+	"github.com/sharovik/devbot/internal/database"
+	"github.com/sharovik/devbot/internal/helper"
 
 	"github.com/sharovik/devbot/internal/log"
 
@@ -23,77 +24,66 @@ const (
 
 	helpMessage = "Ask me `write a message` and you will see the answer."
 
-	//The migrations folder, which can be used for event installation or for event update
-	migrationDirectoryPath = "./events/examplescenario/migrations"
-
 	regexChannel = `(?im)(?:[<#@]|(?:&lt;))(\w+)(?:[|>]|(?:&gt;))`
 
 	stepMessage = "What I need to write?"
 	stepChannel = "Where I need to post this message? If it's channel, the channel should be public."
 )
 
-//EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
+// EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
 type EventStruct struct {
-	EventName string
 }
 
-//Event - object which is ready to use
-var Event = EventStruct{
-	EventName: EventName,
+// Event - object which is ready to use
+var Event = EventStruct{}
+
+func (e EventStruct) Help() string {
+	return helpMessage
 }
 
-//Execute method which is called by message processor
+func (e EventStruct) Alias() string {
+	return EventName
+}
+
+// Execute method which is called by message processor
 func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
-	isHelpAnswerTriggered, err := helper.HelpMessageShouldBeTriggered(message.OriginalMessage.Text)
-	if err != nil {
-		log.Logger().Warn().Err(err).Msg("Something went wrong with help message parsing")
-	}
-
-	if isHelpAnswerTriggered {
-		message.Text = helpMessage
-		return message, nil
-	}
-
-	currentConversation := base.GetConversation(message.Channel)
+	currentConversation := conversation.GetConversation(message.Channel)
 
 	whatToWrite := ""
 	whereToWrite := ""
 
 	//If we don't have all variables for our conversation, that means, we didn't received answers for all questions of our scenario
-	if len(currentConversation.Variables) != 2 {
+	if len(currentConversation.Scenario.RequiredVariables) != 2 {
 		message.Text = "Not all variables are defined."
 
-		//We remove this conversation from the memory, because it is expired. You must do this, otherwise bot will think that this conversation is still opened.
-		base.DeleteConversation(message.Channel)
 		return message, nil
 	}
 
-	if currentConversation.Variables[0] != "" {
-		whatToWrite = removeCurrentUserFromTheMessage(currentConversation.Variables[0])
+	if currentConversation.Scenario.RequiredVariables[0].Value != "" {
+		whatToWrite = removeCurrentUserFromTheMessage(currentConversation.Scenario.RequiredVariables[0].Value)
 	}
 
-	if currentConversation.Variables[1] != "" {
-		whereToWrite = extractChannelName(currentConversation.Variables[1])
+	if currentConversation.Scenario.RequiredVariables[1].Value != "" {
+		whereToWrite = extractChannelName(currentConversation.Scenario.RequiredVariables[1].Value)
 
 		if whereToWrite == "" {
 			message.Text = "Something went wrong and I can't parse properly the channel name."
-			base.DeleteConversation(message.Channel)
 			return message, nil
 		}
 	}
 
-	_, _, err = container.C.MessageClient.SendMessage(dto.SlackRequestChatPostMessage{
+	_, _, err := container.C.MessageClient.SendMessage(dto.BaseChatMessage{
 		Channel:           whereToWrite,
 		Text:              whatToWrite,
 		AsUser:            true,
 		Ts:                time.Now(),
 		DictionaryMessage: dto.DictionaryMessage{},
-		OriginalMessage:   dto.SlackResponseEventMessage{},
+		OriginalMessage:   dto.BaseOriginalMessage{},
 	})
 
 	if err != nil {
 		log.Logger().AddError(err).Msg("Failed to send post-answer for selected event")
-		message.Text = fmt.Sprintf("Failed to send the message to the channel %s.\nReason: ```%s```", currentConversation.Variables[1], err.Error())
+		message.Text = fmt.Sprintf("Failed to send the message to the channel %s.\nReason: ```%s```", currentConversation.Scenario.RequiredVariables[1].Value, err.Error())
 		return message, err
 	}
 
@@ -101,8 +91,6 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 	//Leave message.Text empty, once you need to not show the message, once this event get triggered.
 	message.Text = "Done"
 
-	//We remove this conversation from the memory, because it is expired
-	base.DeleteConversation(message.Channel)
 	return message, nil
 }
 
@@ -119,28 +107,32 @@ func extractChannelName(text string) string {
 	return matches["1"]
 }
 
-//Install method for installation of event
+// Install method for installation of event
 func (e EventStruct) Install() error {
 	log.Logger().Debug().
 		Str("event_name", EventName).
 		Str("event_version", EventVersion).
 		Msg("Triggered event installation")
 
-	if err := container.C.Dictionary.InstallNewEventScenario(database.NewEventScenario{
+	if err := container.C.Dictionary.InstallNewEventScenario(database.EventScenario{
 		EventName:    EventName,
 		EventVersion: EventVersion,
-		Questions:    []database.Question{
+		Questions: []database.Question{
 			{
 				Question:      "write a message",
-				Answer:        stepMessage,
 				QuestionRegex: "(?i)(write a message)",
-				QuestionGroup: "",
 			},
 			{
-				Question:      "",
-				Answer:        stepChannel,
-				QuestionRegex: "(?i)(write a message)",
-				QuestionGroup: "",
+				Question:      "write message",
+				QuestionRegex: "(?i)(write message)",
+			},
+		},
+		RequiredVariables: []database.ScenarioVariable{
+			{
+				Question: stepMessage,
+			},
+			{
+				Question: stepChannel,
 			},
 		},
 	}); err != nil {
@@ -150,13 +142,13 @@ func (e EventStruct) Install() error {
 	return nil
 }
 
-//Update for event update actions
+// Update for event update actions
 func (e EventStruct) Update() error {
 	return nil
 }
 
 func removeCurrentUserFromTheMessage(message string) string {
-	regexString := fmt.Sprintf("(?im)(<@%s>)", container.C.Config.SlackConfig.BotUserID)
+	regexString := fmt.Sprintf("(?im)(<@%s>)", container.C.Config.MessagesAPIConfig.BotUserID)
 	re := regexp.MustCompile(regexString)
 	result := re.ReplaceAllString(message, ``)
 

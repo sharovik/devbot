@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto/databasedto"
@@ -23,11 +24,11 @@ func (m EventsTriggersHistoryMigration) GetName() string {
 }
 
 func (m EventsTriggersHistoryMigration) Execute() error {
-	client := container.C.Dictionary.GetNewClient()
+	client := container.C.Dictionary.GetDBClient()
 
 	//Create events table
 	q := new(clients.Query).
-		Create(&databasedto.EventTriggerHistoryModel).
+		Create(databasedto.EventTriggerHistoryModel).
 		IfNotExists().
 		AddIndex(dto.Index{
 			Name:   "user_index",

@@ -3,15 +3,12 @@ package mock
 import (
 	"errors"
 	"fmt"
-
-	"github.com/sharovik/devbot/internal/service/base"
 )
 
 type Service struct {
 }
 
 var (
-	MockedSlackService               base.ServiceInterface = Service{}
 	ErrorInitWebSocketReceiver       map[int]error
 	numberInitWebSocketReceiverCalls = 0
 )

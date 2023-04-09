@@ -20,11 +20,11 @@ func (m ExampleMigration) GetName() string {
 }
 
 func (m ExampleMigration) Execute() error {
-	client := container.C.Dictionary.GetNewClient()
+	client := container.C.Dictionary.GetDBClient()
 
 	q := new(clients.Query).
 		Select(databasedto.MigrationModel.GetColumns()).
-		From(&databasedto.MigrationModel).
+		From(databasedto.MigrationModel).
 		Where(query.Where{
 			First:    "1",
 			Operator: "=",

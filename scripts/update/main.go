@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/log"
@@ -10,11 +11,11 @@ import (
 )
 
 const (
-	descriptionEventAlias  = "The event alias for which Update method will be called"
+	descriptionEventAlias = "The event alias for which Update method will be called"
 )
 
 var (
-	m   = []database.BaseMigrationInterface{
+	m = []database.BaseMigrationInterface{
 		migrations.ExampleMigration{},
 		migrations.EventsTriggersHistoryMigration{},
 		migrations.UpdateEventsTriggersHistoryMigration{},
@@ -30,7 +31,13 @@ func main() {
 }
 
 func run() error {
-	container.C = container.C.Init()
+	cnt, err := container.Init()
+	if err != nil {
+		return err
+	}
+
+	container.C = cnt
+
 	definedevents.InitializeDefinedEvents()
 	if err := runMigrations(); err != nil {
 		log.Logger().AddError(err).Msg("Failed to run migrations")

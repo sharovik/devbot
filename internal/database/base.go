@@ -2,32 +2,22 @@ package database
 
 import (
 	"database/sql"
+	"strings"
+
 	"github.com/sharovik/orm/clients"
+	cdto "github.com/sharovik/orm/dto"
+	cquery "github.com/sharovik/orm/query"
 
 	"github.com/sharovik/devbot/internal/dto"
 )
 
-const (
-	//ConnectionSQLite the sqlite database connection type
-	ConnectionSQLite = "sqlite"
-	//ConnectionMySQL the sqlite database connection type
-	ConnectionMySQL = "mysql"
-)
-
-type Message struct {
-	Channel string
-	User string
-	Text string
-}
-
-//BaseDatabaseInterface interface for base database client
+// BaseDatabaseInterface interface for base database client
 type BaseDatabaseInterface interface {
-	InitDatabaseConnection() error
-	GetClient() *sql.DB
-	GetNewClient() clients.BaseClientInterface
+	InitDatabaseConnection(cfg clients.DatabaseConfig) error
+	GetDBClient() clients.BaseClientInterface
 	CloseDatabaseConnection() error
 	FindAnswer(message string) (dto.DictionaryMessage, error)
-	InsertQuestion(question string, answer string, scenarioID int64, questionRegex string, questionRegexGroup string) (int64, error)
+	InsertQuestion(question string, answer string, scenarioID int64, questionRegex string, questionRegexGroup string, isVariable bool) (int64, error)
 	InsertScenario(name string, eventID int64) (int64, error)
 	FindScenarioByID(scenarioID int64) (int64, error)
 	GetLastScenarioID() (int64, error)
@@ -37,45 +27,96 @@ type BaseDatabaseInterface interface {
 	FindRegex(regex string) (int64, error)
 	InsertQuestionRegex(questionRegex string, questionRegexGroup string) (int64, error)
 	GetAllRegex() (map[int64]string, error)
-	GetQuestionsByScenarioID(scenarioID int64) (result []QuestionObject, err error)
+	GetQuestionsByScenarioID(scenarioID int64, isVariable bool) (result []QuestionObject, err error)
 
-	//Should be used for custom event migrations loading
+	//RunMigrations Should be used for custom event migrations loading
 	RunMigrations(path string) error
 	IsMigrationAlreadyExecuted(name string) (bool, error)
 	MarkMigrationExecuted(name string) error
 
-	//Should be used for your custom event installation. This will create a new event row in the database if previously this row wasn't
+	//InstallEvent Should be used for your custom event installation. This will create a new event row in the database if previously this row wasn't
 	//exists and insert new scenario for specified question and answer
 	InstallEvent(eventName string, eventVersion string, question string, answer string, questionRegex string, questionRegexGroup string) error
 
 	//InstallNewEventScenario the method will be used for the new better way of scenario installation
-	InstallNewEventScenario(scenario NewEventScenario) error
+	InstallNewEventScenario(scenario EventScenario) error
 }
 
-//QuestionObject used for proper data mapping from questions table
+// QuestionObject used for proper data mapping from questions table
 type QuestionObject struct {
 	ID           int64
 	Question     string
 	Answer       string
 	ReactionType string
+	IsVariable   bool
 }
 
-//NewEventScenario the object can be used for the new event scenario installation
-type NewEventScenario struct {
-	EventName string
-	EventVersion string
-	Questions []Question
-}
-
-//Question the scenario question
-type Question struct {
+// ScenarioVariable similar to the Question, but here is a different concept. Question object is used as the main entrypoint for the scenario execution,
+//whereas ScenarioVariable is a part of already executed/triggered scenario. For example, you have a scenario, where before your logic execution you need to get the variables data from the answers.
+//In this case you will use scenario variables, just to make sure you ask required information.
+type ScenarioVariable struct {
+	Name     string
+	Value    string
 	Question string
-	Answer string
+}
+
+// EventScenario the main object of event scenario. It will be used during scenarios installation process, via `Install` method call.
+type EventScenario struct {
+	//EventName name of the event, to which we need connect the scenario
+	EventName string
+
+	//ScenarioName name of the scenario
+	ScenarioName string
+
+	//EventID the id of existing event in the database
+	EventID int64
+
+	//EventVersion version of the event
+	EventVersion string
+
+	//ID id of scenario
+	ID int64
+
+	//Questions scenario questions list
+	Questions []Question
+
+	//RequiredVariables required variables list we've expecting for this scenario
+	RequiredVariables []ScenarioVariable
+}
+
+//VariablesToString converts the variables to the string.
+func (e *EventScenario) VariablesToString() string {
+	var result []string
+	for _, variable := range e.RequiredVariables {
+		result = append(result, variable.Value)
+	}
+
+	return strings.Join(result, ";")
+}
+
+// Question the question, which will be asked during scenario execution. It's a main entry point for your scenario.
+// the combination of Question, QuestionRegex attributes will be used during the answer search.
+type Question struct {
+	Question      string
+	Answer        string
 	QuestionRegex string
 	QuestionGroup string
 }
 
-func installNewEventScenario(d BaseDatabaseInterface, scenario NewEventScenario) error {
+// GetUnAnsweredQuestion retrieves unanswered question from the list of questions of the scenario
+func (e *EventScenario) GetUnAnsweredQuestion() string {
+	for _, variable := range e.RequiredVariables {
+		if variable.Value != "" {
+			continue
+		}
+
+		return variable.Question
+	}
+
+	return ""
+}
+
+func installNewEventScenario(d BaseDatabaseInterface, scenario EventScenario) error {
 	eventID, err := d.FindEventByAlias(scenario.EventName)
 	if err != nil {
 		return err
@@ -88,17 +129,91 @@ func installNewEventScenario(d BaseDatabaseInterface, scenario NewEventScenario)
 		}
 	}
 
-	scenarioID, err := d.InsertScenario(scenario.EventName, eventID)
+	name := scenario.ScenarioName
+	if name == "" {
+		name = scenario.EventName
+	}
+
+	scenarioID, err := d.InsertScenario(name, eventID)
 	if err != nil {
 		return err
 	}
 
 	for _, q := range scenario.Questions {
-		_, err = d.InsertQuestion(q.Question, q.Answer, scenarioID, q.QuestionRegex, q.QuestionRegex)
+		_, err = d.InsertQuestion(q.Question, q.Answer, scenarioID, q.QuestionRegex, q.QuestionRegex, false)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, v := range scenario.RequiredVariables {
+		_, err = d.InsertQuestion("", v.Question, scenarioID, "", "", true)
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func getQuestionsByScenarioID(d BaseDatabaseInterface, scenarioID int64, isVariable bool) (result []QuestionObject, err error) {
+	query := new(clients.Query).
+		Select([]interface{}{
+			"questions.id",
+			"questions.question",
+			"questions.answer",
+			"questions.is_variable",
+			"events.alias",
+		}).
+		From(&cdto.BaseModel{TableName: "questions"}).
+		Join(cquery.Join{
+			Target:    cquery.Reference{Table: "scenarios", Key: "id"},
+			With:      cquery.Reference{Table: "questions", Key: "scenario_id"},
+			Condition: "=",
+			Type:      cquery.InnerJoinType,
+		}).
+		Join(cquery.Join{
+			Target:    cquery.Reference{Table: "events", Key: "id"},
+			With:      cquery.Reference{Table: "scenarios", Key: "event_id"},
+			Condition: "=",
+			Type:      cquery.InnerJoinType,
+		}).
+		Where(cquery.Where{
+			First:    "scenarios.id",
+			Operator: "=",
+			Second:   cquery.Bind{Field: "scenarios.id", Value: scenarioID},
+		}).
+		OrderBy("questions.id", cquery.OrderDirectionAsc)
+
+	if isVariable {
+		query.Where(cquery.Where{
+			First:    "questions.is_variable",
+			Operator: "=",
+			Second:   cquery.Bind{Field: "is_variable", Value: true},
+		})
+	}
+
+	res, err := d.GetDBClient().Execute(query)
+	if err == sql.ErrNoRows {
+		return result, nil
+	} else if err != nil {
+		return result, err
+	}
+
+	for _, item := range res.Items() {
+		isVar := false
+		if item.GetField("is_variable").Value.(int) == 1 {
+			isVar = true
+		}
+
+		result = append(result, QuestionObject{
+			ID:           int64(item.GetField("id").Value.(int)),
+			Question:     item.GetField("question").Value.(string),
+			Answer:       item.GetField("answer").Value.(string),
+			ReactionType: item.GetField("alias").Value.(string),
+			IsVariable:   isVar,
+		})
+	}
+
+	return result, nil
 }

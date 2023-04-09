@@ -477,7 +477,7 @@ func (b *BitBucketClient) RunPipeline(workspace string, repositorySlug string, r
 		log.Logger().FinishMessage("Run pipeline")
 		return dto.BitBucketResponseRunPipeline{}, err
 	}
-	
+
 	if len(request.Variables) == 0 {
 		request.Variables = []dto.Variable{}
 	}

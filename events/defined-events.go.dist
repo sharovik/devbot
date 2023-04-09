@@ -7,16 +7,19 @@ import (
 	"github.com/sharovik/devbot/events/examplescenario"
 	"github.com/sharovik/devbot/events/listopenconversations"
 	"github.com/sharovik/devbot/events/repeatevent"
+	"github.com/sharovik/devbot/events/scheduleevent"
 	"github.com/sharovik/devbot/events/unknownquestion"
-	"github.com/sharovik/devbot/internal/container"
+	"github.com/sharovik/devbot/internal/dto/event"
 )
 
-var DefinedEvents = map[string]container.DefinedEvent{
-	example.EventName: example.Event,
-	eventslist.EventName: eventslist.Event,
-	examplescenario.EventName: examplescenario.Event,
-	cancelscenario.EventName: cancelscenario.Event,
-	listopenconversations.EventName: listopenconversations.Event,
-	unknownquestion.EventName: unknownquestion.Event,
-	repeatevent.EventName: repeatevent.Event,
+// DefinedEvents variable contains the list of events, which will be installed/used by the devbot
+var DefinedEvents = []event.DefinedEventInterface{
+	example.Event,
+	eventslist.Event,
+	examplescenario.Event,
+	cancelscenario.Event,
+	listopenconversations.Event,
+	unknownquestion.Event,
+	repeatevent.Event,
+	scheduleevent.Event,
 }

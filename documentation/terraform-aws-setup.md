@@ -9,7 +9,7 @@ If you have AWS account you might need to install the DevBot there.
 - install terraform to your system
 - make sure you run `make build` before the project build
 ```
-aws  ecr get-login-password --region us-east-1
+aws ecr get-login-password --region us-east-1
 ```
 
 ## 1 Step - Push your image to AWS ECR repository
@@ -66,7 +66,7 @@ You for doing this you can manually run the next command `make tf-container-defi
 In that file you can add or update existing variables for your devbot ECS instance.
 
 ## 3 Step - Apply changes
-Before start you need first to initialize the terraform inside of the terraform folder.
+Before start, you need first to initialize the terraform inside of the terraform folder.
 
 So, please go to the `terraform` folder and run `terraform init` command there. If everything is good, then you can run next command `terraform apply`, which will applies the changes in AWS. Please, make sure you check changes before applying!
 If something goes wrong, you always can run `terraform destroy` to destroy all created instances.
