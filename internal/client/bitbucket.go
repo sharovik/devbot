@@ -12,7 +12,7 @@ import (
 	"github.com/sharovik/devbot/internal/log"
 )
 
-//BitBucketClient the bitbucket client struct
+// BitBucketClient the bitbucket client struct
 type BitBucketClient struct {
 	client           BaseHTTPClientInterface
 	OauthToken       string
@@ -51,7 +51,7 @@ const (
 	ErrorMsgNoAccess = "I received unauthorized response. Looks like I'm not permitted to do any actions to that repository."
 )
 
-//Init initialise the client
+// Init initialise the client
 func (b *BitBucketClient) Init(client BaseHTTPClientInterface) {
 	b.client = client
 }
@@ -85,7 +85,7 @@ func (b *BitBucketClient) beforeRequest() error {
 	return nil
 }
 
-//GetAuthToken method retrieves the access token which can be used for custom needs outside of the internal services
+// GetAuthToken method retrieves the access token which can be used for custom needs outside of the internal services
 func (b *BitBucketClient) GetAuthToken() (string, error) {
 	if err := b.beforeRequest(); err != nil {
 		log.Logger().FinishMessage("Can't load access token")
@@ -130,7 +130,7 @@ func (b *BitBucketClient) loadAuthToken() error {
 	return nil
 }
 
-//CreateBranch creates the branch in API
+// CreateBranch creates the branch in API
 func (b *BitBucketClient) CreateBranch(workspace string, repositorySlug string, branchName string) (dto.BitBucketResponseBranchCreate, error) {
 	log.Logger().StartMessage("Create branch")
 	if err := b.beforeRequest(); err != nil {
@@ -217,7 +217,7 @@ func (b *BitBucketClient) CreateBranch(workspace string, repositorySlug string, 
 	return responseObject, nil
 }
 
-//GetBranch creates the branch in API
+// GetBranch creates the branch in API
 func (b *BitBucketClient) GetBranch(workspace string, repositorySlug string, branchName string) (dto.BitBucketResponseBranchCreate, error) {
 	log.Logger().StartMessage("Get branch")
 	if err := b.beforeRequest(); err != nil {
@@ -256,7 +256,7 @@ func (b *BitBucketClient) GetBranch(workspace string, repositorySlug string, bra
 	return responseObject, nil
 }
 
-//PullRequestInfo gets the pull-requests information
+// PullRequestInfo gets the pull-requests information
 func (b *BitBucketClient) PullRequestInfo(workspace string, repositorySlug string, pullRequestID int64) (dto.BitBucketPullRequestInfoResponse, error) {
 	log.Logger().StartMessage("Get pull-request status")
 	if err := b.beforeRequest(); err != nil {
@@ -284,7 +284,7 @@ func (b *BitBucketClient) PullRequestInfo(workspace string, repositorySlug strin
 	return responseObject, nil
 }
 
-//MergePullRequest merge the selected pull-request
+// MergePullRequest merge the selected pull-request
 func (b *BitBucketClient) MergePullRequest(workspace string, repositorySlug string, pullRequestID int64, description string, strategy string) (dto.BitBucketPullRequestInfoResponse, error) {
 	log.Logger().StartMessage("Merge pull-request")
 	if err := b.beforeRequest(); err != nil {
@@ -354,7 +354,7 @@ func (b *BitBucketClient) MergePullRequest(workspace string, repositorySlug stri
 	return dtoResponse, nil
 }
 
-//ChangePullRequestDestination changes the pull-request destination to selected one
+// ChangePullRequestDestination changes the pull-request destination to selected one
 func (b *BitBucketClient) ChangePullRequestDestination(workspace string, repositorySlug string, pullRequestID int64, title string, branchName string) (dto.BitBucketPullRequestInfoResponse, error) {
 	log.Logger().StartMessage("Change destination")
 	if err := b.beforeRequest(); err != nil {
@@ -417,7 +417,7 @@ func (b *BitBucketClient) ChangePullRequestDestination(workspace string, reposit
 	return responseObject, nil
 }
 
-//CreatePullRequest creates the pull-request
+// CreatePullRequest creates the pull-request
 func (b *BitBucketClient) CreatePullRequest(workspace string, repositorySlug string, request dto.BitBucketRequestPullRequestCreate) (dto.BitBucketPullRequestInfoResponse, error) {
 	log.Logger().StartMessage("Create pull-request")
 	if err := b.beforeRequest(); err != nil {
@@ -470,7 +470,7 @@ func (b *BitBucketClient) CreatePullRequest(workspace string, repositorySlug str
 	return dtoResponse, nil
 }
 
-//RunPipeline runs the selected custom pipeline
+// RunPipeline runs the selected custom pipeline
 func (b *BitBucketClient) RunPipeline(workspace string, repositorySlug string, request dto.BitBucketRequestRunPipeline) (dto.BitBucketResponseRunPipeline, error) {
 	log.Logger().StartMessage("Run pipeline")
 	if err := b.beforeRequest(); err != nil {
@@ -524,4 +524,42 @@ func (b *BitBucketClient) RunPipeline(workspace string, repositorySlug string, r
 
 	log.Logger().FinishMessage("Run pipeline")
 	return responseObject, nil
+}
+
+// GetDefaultReviewers gets default reviewers
+func (b *BitBucketClient) GetDefaultReviewers(workspace string, repositorySlug string) (dto.BitBucketResponseDefaultReviewers, error) {
+	if err := b.beforeRequest(); err != nil {
+		return dto.BitBucketResponseDefaultReviewers{}, err
+	}
+
+	b.client.SetBaseURL(DefaultBitBucketBaseAPIUrl)
+	endpoint := fmt.Sprintf("/repositories/%s/%s/default-reviewers", workspace, repositorySlug)
+
+	response, statusCode, err := b.client.Get(endpoint, map[string]string{})
+	if err != nil {
+		log.Logger().
+			AddError(err).
+			RawJSON("response", response).
+			Int("status_code", statusCode).
+			Msg("Error during the request.")
+		return dto.BitBucketResponseDefaultReviewers{}, err
+	}
+
+	var dtoResponse = dto.BitBucketResponseDefaultReviewers{}
+	if err := json.Unmarshal(response, &dtoResponse); err != nil {
+		log.Logger().AddError(err).Msg("Error during the unmarshal")
+		return dto.BitBucketResponseDefaultReviewers{}, err
+	}
+
+	if statusCode == http.StatusUnauthorized {
+		log.Logger().Warn().Int("status_code", statusCode).Str("response", string(response)).Msg("Unauthorized status code")
+		return dto.BitBucketResponseDefaultReviewers{}, errors.New(ErrorMsgNoAccess)
+	}
+
+	if statusCode == http.StatusNotFound {
+		log.Logger().Warn().Int("status_code", statusCode).Str("response", string(response)).Msg("Not found status code")
+		return dto.BitBucketResponseDefaultReviewers{}, errors.New("Endpoint or selected branch was not found :( ")
+	}
+
+	return dtoResponse, nil
 }
