@@ -159,19 +159,7 @@ func TriggerAnswer(channel string, answerMessage dto.BaseChatMessage, shouldReme
 	}
 
 	go func() {
-		msg := dto.BaseChatMessage{
-			Channel:           answerMessage.Channel,
-			Text:              answerMessage.Text,
-			AsUser:            answerMessage.AsUser,
-			Ts:                answerMessage.Ts,
-			DictionaryMessage: answerMessage.DictionaryMessage,
-			OriginalMessage: dto.BaseOriginalMessage{
-				Text:  answerMessage.OriginalMessage.Text,
-				User:  answerMessage.OriginalMessage.User,
-				Files: answerMessage.OriginalMessage.Files,
-			},
-		}
-		answer, err := container.C.DefinedEvents[answerMessage.DictionaryMessage.ReactionType].Execute(msg)
+		answer, err := container.C.DefinedEvents[answerMessage.DictionaryMessage.ReactionType].Execute(answerMessage)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Failed to execute the event")
 			conversation.FinaliseConversation(channel)
@@ -188,17 +176,7 @@ func TriggerAnswer(channel string, answerMessage dto.BaseChatMessage, shouldReme
 		//or when we do have open conversation, but it is time to trigger the event execution
 		//so, we can store all variables
 		if shouldRemember && (0 == conversation.GetConversation(answerMessage.Channel).ScenarioID || conversation.GetConversation(answerMessage.Channel).EventReadyToBeExecuted) {
-			history.RememberEventExecution(dto.BaseChatMessage{
-				Channel:           answerMessage.Channel,
-				Text:              answerMessage.Text,
-				AsUser:            true,
-				Ts:                time.Now(),
-				DictionaryMessage: answerMessage.DictionaryMessage,
-				OriginalMessage: dto.BaseOriginalMessage{
-					Text: answerMessage.Text,
-					User: answerMessage.OriginalMessage.User,
-				},
-			})
+			history.RememberEventExecution(answerMessage)
 		}
 
 		if conversation.GetConversation(answerMessage.Channel).EventReadyToBeExecuted {
