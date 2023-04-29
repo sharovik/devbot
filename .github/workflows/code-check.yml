@@ -2,6 +2,8 @@ name: Go package
 
 on:
   push:
+  schedule:
+    - cron: "0 4 * * *" # run once a day at 4 AM
 
 jobs:
   build:
