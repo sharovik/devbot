@@ -18,10 +18,7 @@ jobs:
       - name: Build
         run: make build
 
-      - name: Test
-        run: make tests
-
-      - name: Code style check
+      - name: Code check
         run: make code-check
 
       - name: Vulnerabilities
