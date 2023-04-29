@@ -2,12 +2,12 @@ package databasedto
 
 import "github.com/sharovik/orm/dto"
 
-//MigrationStruct struct for MigrationModel object
+// MigrationStruct struct for MigrationModel object
 type MigrationStruct struct {
 	dto.BaseModel
 }
 
-//MigrationModel model for migrations table
+// MigrationModel model for migrations table
 var MigrationModel = New(
 	"migration",
 	[]interface{}{

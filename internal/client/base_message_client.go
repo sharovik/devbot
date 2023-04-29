@@ -4,17 +4,17 @@ import (
 	"github.com/sharovik/devbot/internal/dto"
 )
 
-//BaseMessageClient the base messages client
+// BaseMessageClient the base messages client
 type BaseMessageClient struct {
 	HTTPClient BaseHTTPClientInterface
 }
 
-//GetHTTPClient method for retrieving of the current http client
+// GetHTTPClient method for retrieving of the current http client
 func (c BaseMessageClient) GetHTTPClient() BaseHTTPClientInterface {
 	return c.HTTPClient
 }
 
-//MessageClientInterface interface for message client
+// MessageClientInterface interface for message client
 type MessageClientInterface interface {
 	GetHTTPClient() BaseHTTPClientInterface
 

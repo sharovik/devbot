@@ -52,8 +52,8 @@ type QuestionObject struct {
 }
 
 // ScenarioVariable similar to the Question, but here is a different concept. Question object is used as the main entrypoint for the scenario execution,
-//whereas ScenarioVariable is a part of already executed/triggered scenario. For example, you have a scenario, where before your logic execution you need to get the variables data from the answers.
-//In this case you will use scenario variables, just to make sure you ask required information.
+// whereas ScenarioVariable is a part of already executed/triggered scenario. For example, you have a scenario, where before your logic execution you need to get the variables data from the answers.
+// In this case you will use scenario variables, just to make sure you ask required information.
 type ScenarioVariable struct {
 	Name     string
 	Value    string
@@ -84,7 +84,7 @@ type EventScenario struct {
 	RequiredVariables []ScenarioVariable
 }
 
-//VariablesToString converts the variables to the string.
+// VariablesToString converts the variables to the string.
 func (e *EventScenario) VariablesToString() string {
 	var result []string
 	for _, variable := range e.RequiredVariables {

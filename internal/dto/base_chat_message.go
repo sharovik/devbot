@@ -2,7 +2,7 @@ package dto
 
 import "time"
 
-//File object
+// File object
 type File struct {
 	Created            int    `json:"created"`
 	Editable           bool   `json:"editable"`
@@ -27,7 +27,7 @@ type File struct {
 	Username           string `json:"username"`
 }
 
-//BaseOriginalMessage original message interface which will be used for identification of base original message object
+// BaseOriginalMessage original message interface which will be used for identification of base original message object
 type BaseOriginalMessage struct {
 	Text        string
 	User        string
@@ -40,7 +40,7 @@ type BaseOriginalMessage struct {
 	Type        string
 }
 
-//BaseChatMessage the chat message which will be retrieved from websocket api
+// BaseChatMessage the chat message which will be retrieved from websocket api
 type BaseChatMessage struct {
 	//The channel from where was message received
 	Channel string

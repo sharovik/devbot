@@ -2,12 +2,12 @@ package databasedto
 
 import "github.com/sharovik/orm/dto"
 
-//QuestionsRegexStruct struct for QuestionsRegexModel
+// QuestionsRegexStruct struct for QuestionsRegexModel
 type QuestionsRegexStruct struct {
 	dto.BaseModel
 }
 
-//QuestionsRegexModel model for questions_regex table
+// QuestionsRegexModel model for questions_regex table
 var QuestionsRegexModel = New(
 	"questions_regex",
 	[]interface{}{

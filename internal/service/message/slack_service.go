@@ -4,11 +4,12 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"github.com/sharovik/devbot/internal/service/message/conversation"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/sharovik/devbot/internal/service/message/conversation"
 
 	"github.com/sharovik/devbot/internal/client"
 	"github.com/sharovik/devbot/internal/config"
@@ -239,6 +240,10 @@ func (s SlackService) ProcessMessage(msg interface{}) error {
 		User:    message.Payload.Event.User,
 		Text:    message.Payload.Event.Text,
 	})
+	if err != nil {
+		log.Logger().AddError(err).Msg("Failed to get dictionary message answer")
+		return err
+	}
 
 	m, err := prepareAnswer(&dto.SlackResponseEventMessage{
 		Channel:      message.Payload.Event.Channel,
@@ -328,7 +333,7 @@ func (SlackService) wsConnect() (*websocket.Conn, int, error) {
 
 	ws, err := websocket.Dial(dtoResponse.URL, "", slackAPIOrigin)
 
-	return ws, statusCode, nil
+	return ws, statusCode, err
 }
 
 func isValidMessage(msg MsgAttributes) bool {
@@ -352,7 +357,7 @@ func isValidMessage(msg MsgAttributes) bool {
 		return false
 	}
 
-	if "" == msg.Text {
+	if msg.Text != "" {
 		log.Logger().Debug().Msg("This message has empty text. Skipping.")
 		return false
 	}

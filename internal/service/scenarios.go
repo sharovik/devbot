@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/dto/databasedto"
 	"github.com/sharovik/devbot/internal/service/analiser"
@@ -111,6 +112,7 @@ func GenerateDMAnswerForScenarioStep(step string) (dto.DictionaryMessage, error)
 	}, nil
 }
 
+// PrepareScenario based on scenarioID and reaction type, database.EventScenario will be generated
 func PrepareScenario(scenarioID int64, reactionType string) (scenario database.EventScenario, err error) {
 	scenario.ID = scenarioID
 	questions, err := container.C.Dictionary.GetQuestionsByScenarioID(scenario.ID, true)

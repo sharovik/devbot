@@ -2,6 +2,7 @@ package listopenconversations
 
 import (
 	"fmt"
+
 	"github.com/sharovik/devbot/internal/service/message/conversation"
 
 	"github.com/sharovik/devbot/internal/database"
@@ -19,9 +20,6 @@ const (
 	EventVersion = "1.0.0"
 
 	helpMessage = "Write me ```show open conversations``` and I will show you the list of open conversations."
-
-	//The migrations folder, which can be used for event installation or for event update
-	migrationDirectoryPath = "./events/listopenconversations/migrations"
 )
 
 // EventStruct the struct for the event object. It will be used for initialisation of the event in defined-events.go file.
@@ -31,10 +29,12 @@ type EventStruct struct {
 // Event - object which is ready to use
 var Event = EventStruct{}
 
+// Help retrieves the help message
 func (e EventStruct) Help() string {
 	return helpMessage
 }
 
+// Alias retrieves the event alias
 func (e EventStruct) Alias() string {
 	return EventName
 }
@@ -52,7 +52,7 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 		message.Text += "\n-------"
 		message.Text += fmt.Sprintf("\nScenario #%d was triggered in <@%s> chat", conv.ScenarioID, conv.LastQuestion.Channel)
 		if len(conv.Scenario.RequiredVariables) == 0 {
-			message.Text += fmt.Sprintf("\nAnd there is no answers received yet for that scenario.")
+			message.Text += "\nAnd there is no answers received yet for that scenario."
 		} else {
 			message.Text += "\nWith the next filled answers:"
 			for _, variable := range conv.Scenario.RequiredVariables {

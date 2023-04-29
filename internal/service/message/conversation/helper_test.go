@@ -1,9 +1,10 @@
 package conversation
 
 import (
-	"github.com/sharovik/devbot/internal/database"
 	"testing"
 	"time"
+
+	"github.com/sharovik/devbot/internal/database"
 
 	"github.com/sharovik/devbot/internal/dto"
 	"github.com/stretchr/testify/assert"

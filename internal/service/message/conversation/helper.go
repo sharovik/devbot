@@ -121,9 +121,6 @@ func IsScenarioStopTriggered(text string) bool {
 	}
 
 	matches := regex.FindStringSubmatch(text)
-	if len(matches) == 0 {
-		return false
-	}
 
-	return true
+	return len(matches) != 0
 }

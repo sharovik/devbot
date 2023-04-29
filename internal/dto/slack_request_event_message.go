@@ -1,6 +1,6 @@
 package dto
 
-//SlackRequestEventMessage object for message WS event message
+// SlackRequestEventMessage object for message WS event message
 type SlackRequestEventMessage struct {
 	ID      uint64 `json:"id"`
 	Type    string `json:"type"`

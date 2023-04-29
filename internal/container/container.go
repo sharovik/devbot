@@ -3,9 +3,10 @@ package container
 import (
 	"crypto/tls"
 	"errors"
-	"github.com/sharovik/devbot/internal/dto/event"
 	"net/http"
 	"time"
+
+	"github.com/sharovik/devbot/internal/dto/event"
 
 	"github.com/sharovik/devbot/internal/database"
 
@@ -14,7 +15,7 @@ import (
 	"github.com/sharovik/devbot/internal/log"
 )
 
-//Main container object
+// Main container object
 type Main struct {
 	Config           config.Config
 	MessageClient    client.MessageClientInterface
@@ -25,10 +26,10 @@ type Main struct {
 	DefinedEvents    map[string]event.DefinedEventInterface
 }
 
-//C container variable
+// C container variable
 var C Main
 
-//Init initialise container
+// Init initialise container
 func Init() (Main, error) {
 	C = Main{}
 	cfg, err := config.Init()
@@ -81,7 +82,7 @@ func Init() (Main, error) {
 	return C, nil
 }
 
-//Terminate terminates the properly connections
+// Terminate terminates the properly connections
 func (c *Main) Terminate() {
 	if err := c.Dictionary.CloseDatabaseConnection(); err != nil {
 		panic(err)
@@ -112,6 +113,6 @@ func (c *Main) initMessageClient() client.MessageClientInterface {
 
 		return sc
 	default:
-		panic(errors.New("Unknown messages API type"))
+		panic(errors.New("unknown messages API type"))
 	}
 }

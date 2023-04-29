@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -13,7 +13,7 @@ import (
 	"github.com/sharovik/devbot/internal/log"
 )
 
-//BaseHTTPClientInterface base interface for all http clients
+// BaseHTTPClientInterface base interface for all http clients
 type BaseHTTPClientInterface interface {
 	//Configuration methods
 	SetOauthToken(token string)
@@ -30,7 +30,7 @@ type BaseHTTPClientInterface interface {
 	Put(string, interface{}, map[string]string) ([]byte, int, error)
 }
 
-//HTTPClient main http client
+// HTTPClient main http client
 type HTTPClient struct {
 	Client *http.Client
 
@@ -41,43 +41,43 @@ type HTTPClient struct {
 	ClientSecret string
 }
 
-//SetOauthToken method sets the oauth token and retrieves its self
+// SetOauthToken method sets the oauth token and retrieves its self
 func (client *HTTPClient) SetOauthToken(token string) {
 	client.OAuthToken = token
 }
 
-//GetClientID method retrieves the clientID
+// GetClientID method retrieves the clientID
 func (client HTTPClient) GetClientID() string {
 	return client.ClientID
 }
 
-//GetClientSecret method retrieves the clientSecret
+// GetClientSecret method retrieves the clientSecret
 func (client HTTPClient) GetClientSecret() string {
 	return client.ClientSecret
 }
 
-//GetOAuthToken method retrieves the oauth token
+// GetOAuthToken method retrieves the oauth token
 func (client HTTPClient) GetOAuthToken() string {
 	return client.OAuthToken
 }
 
-//SetBaseURL method sets the base url and retrieves its self
+// SetBaseURL method sets the base url and retrieves its self
 func (client *HTTPClient) SetBaseURL(baseURL string) {
 	client.BaseURL = baseURL
 }
 
-//BasicAuth retrieves encode string for basic auth
+// BasicAuth retrieves encode string for basic auth
 func (client HTTPClient) BasicAuth(username string, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password)))
 }
 
-//Request method for API requests
+// Request method for API requests
 //
-//This method accepts parameters:
-//method - the method of request. Ex: POST, GET, PUT, DELETE, and etc
-//endpoint - endpoint to which we should do a request
-//body - it's a request body. Accepted types of body: string, url.Values(for form_data requests), byte
-//headers - request headers
+// This method accepts parameters:
+// method - the method of request. Ex: POST, GET, PUT, DELETE, and etc
+// endpoint - endpoint to which we should do a request
+// body - it's a request body. Accepted types of body: string, url.Values(for form_data requests), byte
+// headers - request headers
 func (client HTTPClient) Request(method string, endpoint string, body interface{}, headers map[string]string) ([]byte, int, error) {
 
 	log.Logger().StartMessage("Http request")
@@ -88,14 +88,14 @@ func (client HTTPClient) Request(method string, endpoint string, body interface{
 		err     error
 	)
 
-	switch body.(type) {
+	switch b := body.(type) {
 	case string:
 		log.Logger().Debug().
 			Str("endpoint", endpoint).
 			Str("method", method).
-			Str("body", body.(string)).
+			Str("body", b).
 			Msg("Endpoint call")
-		request, err = http.NewRequest(method, endpoint, strings.NewReader(fmt.Sprintf("%s", body)))
+		request, err = http.NewRequest(method, endpoint, strings.NewReader(b))
 		if err != nil {
 			log.Logger().AddError(err).Msg("Error during the request generation")
 			log.Logger().FinishMessage("Http request")
@@ -107,10 +107,10 @@ func (client HTTPClient) Request(method string, endpoint string, body interface{
 		log.Logger().Debug().
 			Str("endpoint", endpoint).
 			Str("method", method).
-			Interface("body", body).
+			Interface("body", b).
 			Msg("Endpoint call")
 
-		request, err = http.NewRequest(method, endpoint, strings.NewReader(body.(url.Values).Encode()))
+		request, err = http.NewRequest(method, endpoint, strings.NewReader(b.Encode()))
 		if err != nil {
 			log.Logger().AddError(err).Msg("Error during the request generation")
 			log.Logger().FinishMessage("Http request")
@@ -121,10 +121,10 @@ func (client HTTPClient) Request(method string, endpoint string, body interface{
 		log.Logger().Debug().
 			Str("endpoint", endpoint).
 			Str("method", method).
-			Interface("body", body).
+			Interface("body", b).
 			Msg("Endpoint call")
 
-		buff := body.(bytes.Buffer)
+		buff := b
 		request, err = http.NewRequest(method, endpoint, &buff)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Error during the request generation")
@@ -172,7 +172,7 @@ func (client HTTPClient) Request(method string, endpoint string, body interface{
 	}
 
 	defer resp.Body.Close()
-	byteResp, errorConversion := ioutil.ReadAll(resp.Body)
+	byteResp, errorConversion := io.ReadAll(resp.Body)
 	if errorConversion != nil {
 		log.Logger().AddError(errorConversion).
 			Err(errorConversion).
@@ -192,17 +192,17 @@ func (client HTTPClient) Request(method string, endpoint string, body interface{
 	return response, resp.StatusCode, nil
 }
 
-//Post method for POST http requests
+// Post method for POST http requests
 func (client HTTPClient) Post(endpoint string, body interface{}, headers map[string]string) ([]byte, int, error) {
 	return client.Request(http.MethodPost, client.generateAPIUrl(endpoint), body, headers)
 }
 
-//Put method for PUT http requests
+// Put method for PUT http requests
 func (client HTTPClient) Put(endpoint string, body interface{}, headers map[string]string) ([]byte, int, error) {
 	return client.Request(http.MethodPut, client.generateAPIUrl(endpoint), body, headers)
 }
 
-//Get method for GET http requests
+// Get method for GET http requests
 func (client *HTTPClient) Get(endpoint string, query map[string]string) ([]byte, int, error) {
 	if client.OAuthToken != "" {
 		query["access_token"] = client.OAuthToken
@@ -219,7 +219,7 @@ func (client *HTTPClient) Get(endpoint string, query map[string]string) ([]byte,
 		queryString += fmt.Sprintf("%s=%s", fieldName, value)
 	}
 
-	return client.Request(http.MethodGet, client.generateAPIUrl(endpoint)+fmt.Sprintf("%s", queryString), []byte(``), map[string]string{})
+	return client.Request(http.MethodGet, client.generateAPIUrl(endpoint)+queryString, []byte(``), map[string]string{})
 }
 
 func (client HTTPClient) generateAPIUrl(endpoint string) string {

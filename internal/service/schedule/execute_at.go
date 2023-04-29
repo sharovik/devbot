@@ -2,10 +2,11 @@ package schedule
 
 import (
 	"fmt"
-	"github.com/sharovik/devbot/internal/helper"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/sharovik/devbot/internal/helper"
 )
 
 const (
@@ -55,7 +56,7 @@ func (e *ExecuteAt) getDatetime() time.Time {
 			minutes = int(e.Minutes)
 		}
 
-		if e.IsRepeatable {
+		if e.IsRepeatable || e.IsDelayed {
 			e.generateDelayedDate()
 			return e.ExactDatetime
 		}
@@ -168,20 +169,14 @@ func (e *ExecuteAt) parseHours(text string) error {
 
 func (e *ExecuteAt) isRepeatable(text string) bool {
 	res := helper.FindMatches(repeatableRegexp, text)
-	if res["1"] == "" {
-		return false
-	}
 
-	return true
+	return res["1"] != ""
 }
 
 func (e *ExecuteAt) isDelayed(text string) bool {
 	res := helper.FindMatches(delayedTimeRegexp, text)
-	if res["1"] == "" {
-		return false
-	}
 
-	return true
+	return res["1"] != ""
 }
 
 func (e *ExecuteAt) FromString(text string) (ExecuteAt, error) {

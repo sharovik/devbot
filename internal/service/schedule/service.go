@@ -2,6 +2,9 @@ package schedule
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/dto"
@@ -12,8 +15,6 @@ import (
 	"github.com/sharovik/orm/clients"
 	cdto "github.com/sharovik/orm/dto"
 	"github.com/sharovik/orm/query"
-	"strings"
-	"time"
 )
 
 // Service schedule service struct

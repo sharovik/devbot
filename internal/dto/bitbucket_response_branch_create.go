@@ -2,25 +2,25 @@ package dto
 
 import "time"
 
-//DataKey the key struct
+// DataKey the key struct
 type DataKey struct {
 	Key string `json:"key"`
 }
 
-//Error the error struct
+// Error the error struct
 type Error struct {
 	Message string  `json:"message"`
 	Data    DataKey `json:"data"`
 }
 
-//BitBucketErrorResponseBranchCreate the bad response from the bitbucket api
+// BitBucketErrorResponseBranchCreate the bad response from the bitbucket api
 type BitBucketErrorResponseBranchCreate struct {
 	Data  DataKey `json:"data"`
 	Type  string  `json:"type"`
 	Error Error   `json:"error"`
 }
 
-//BitBucketResponseBranchCreate will be used for parsing of the response for branch-create request
+// BitBucketResponseBranchCreate will be used for parsing of the response for branch-create request
 type BitBucketResponseBranchCreate struct {
 	Name  string `json:"name"`
 	Links struct {

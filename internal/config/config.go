@@ -14,7 +14,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-//MessagesAPIConfig struct object
+// MessagesAPIConfig struct object
 type MessagesAPIConfig struct {
 	BaseURL          string
 	OAuthToken       string
@@ -26,7 +26,7 @@ type MessagesAPIConfig struct {
 	Type             string
 }
 
-//BitBucketConfig struct for bitbucket config
+// BitBucketConfig struct for bitbucket config
 type BitBucketConfig struct {
 	ClientID                     string
 	ClientSecret                 string
@@ -38,20 +38,20 @@ type BitBucketConfig struct {
 	RequiredReviewers            []BitBucketReviewer
 }
 
-//BitBucketReviewer is used for identifying of the reviewer user
+// BitBucketReviewer is used for identifying of the reviewer user
 type BitBucketReviewer struct {
 	UUID     string
 	SlackUID string
 }
 
-//HTTPClient the configuration for the http client
+// HTTPClient the configuration for the http client
 type HTTPClient struct {
 	RequestTimeout      int64
 	TLSHandshakeTimeout int64
 	InsecureSkipVerify  bool
 }
 
-//Config configuration object
+// Config configuration object
 type Config struct {
 	appEnv            string
 	LearningEnabled   bool
@@ -63,7 +63,7 @@ type Config struct {
 	LogConfig         log.Config
 }
 
-//cfg variable which contains initialised Config
+// cfg variable which contains initialised Config
 var (
 	cfg     Config
 	envPath string
@@ -161,7 +161,7 @@ const (
 	defaultEnvFileRootProjectPath  = "./../../.env"
 )
 
-//Init initialise configuration for this project
+// Init initialise configuration for this project
 func Init() (Config, error) {
 	if !cfg.IsInitialised() {
 
@@ -279,17 +279,17 @@ func initDatabaseConfig() clients.DatabaseConfig {
 
 func initLogConfig() log.Config {
 	fieldContext := log.FieldContext
-	if "" != os.Getenv(envLogFieldContext) {
+	if os.Getenv(envLogFieldContext) != "" {
 		fieldContext = os.Getenv(envLogFieldContext)
 	}
 
 	fieldLevelName := log.FieldLevelName
-	if "" != os.Getenv(envLogFieldLevelName) {
+	if os.Getenv(envLogFieldLevelName) != "" {
 		fieldLevelName = os.Getenv(envLogFieldLevelName)
 	}
 
 	fieldErrorMessage := log.FieldErrorMessage
-	if "" != os.Getenv(envLogFieldErrorMessage) {
+	if os.Getenv(envLogFieldErrorMessage) != "" {
 		fieldErrorMessage = os.Getenv(envLogFieldErrorMessage)
 	}
 
@@ -303,12 +303,12 @@ func initLogConfig() log.Config {
 	}
 }
 
-//IsInitialised method which retrieves current status of object
+// IsInitialised method which retrieves current status of object
 func (c Config) IsInitialised() bool {
 	return c.initialised
 }
 
-//GetAppEnv retrieve current environment
+// GetAppEnv retrieve current environment
 func (c Config) GetAppEnv() string {
 	if flag.Lookup("test.v") != nil {
 		return EnvironmentTesting
@@ -317,7 +317,7 @@ func (c Config) GetAppEnv() string {
 	return c.appEnv
 }
 
-//SetToEnv method for saving env variable into memory + into .env file
+// SetToEnv method for saving env variable into memory + into .env file
 func (c Config) SetToEnv(field string, value string, writeToEnvFile bool) error {
 
 	if writeToEnvFile {
@@ -340,7 +340,7 @@ func (c Config) SetToEnv(field string, value string, writeToEnvFile bool) error 
 	return nil
 }
 
-//PrepareBitBucketReviewers method retrieves the list of bitbucket reviewers
+// PrepareBitBucketReviewers method retrieves the list of bitbucket reviewers
 func PrepareBitBucketReviewers(reviewers string) []BitBucketReviewer {
 	entries := strings.Split(reviewers, ",")
 

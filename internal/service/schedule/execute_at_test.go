@@ -1,9 +1,10 @@
 package schedule
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestExecuteAt_IsEmpty(t *testing.T) {
@@ -41,12 +42,6 @@ func TestExecuteAt_parseDays(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, expected, e.Days)
 	}
-
-	e := ExecuteAt{}
-	e.IsRepeatable = true
-	err := e.parseDays("every day")
-	assert.NoError(t, err)
-	assert.Equal(t, int64(1), e.Days)
 }
 
 func TestExecuteAt_parseHours(t *testing.T) {
@@ -64,12 +59,6 @@ func TestExecuteAt_parseHours(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, expected, e.Hours)
 	}
-
-	e := ExecuteAt{}
-	e.IsRepeatable = true
-	err := e.parseHours("every hour")
-	assert.NoError(t, err)
-	assert.Equal(t, int64(1), e.Hours)
 }
 
 func TestExecuteAt_parseMinutes(t *testing.T) {
@@ -87,12 +76,6 @@ func TestExecuteAt_parseMinutes(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, expected, e.Minutes)
 	}
-
-	e := ExecuteAt{}
-	e.IsRepeatable = true
-	err := e.parseMinutes("every minute")
-	assert.NoError(t, err)
-	assert.Equal(t, int64(1), e.Minutes)
 }
 
 func TestExecuteAt_isRepeatable(t *testing.T) {

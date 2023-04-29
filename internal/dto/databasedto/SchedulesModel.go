@@ -2,12 +2,12 @@ package databasedto
 
 import "github.com/sharovik/orm/dto"
 
-//SchedulesStruct the struct for schedules model
+// SchedulesStruct the struct for schedules model
 type SchedulesStruct struct {
 	dto.BaseModel
 }
 
-//SchedulesModel the model for schedules table
+// SchedulesModel the model for schedules table
 var SchedulesModel = New(
 	"schedules",
 	[]interface{}{

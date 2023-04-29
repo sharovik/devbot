@@ -2,12 +2,12 @@ package databasedto
 
 import "github.com/sharovik/orm/dto"
 
-//QuestionsStruct struct for QuestionsModel object
+// QuestionsStruct struct for QuestionsModel object
 type QuestionsStruct struct {
 	dto.BaseModel
 }
 
-//QuestionsModel model for questions table
+// QuestionsModel model for questions table
 var QuestionsModel = New(
 	"questions",
 	[]interface{}{

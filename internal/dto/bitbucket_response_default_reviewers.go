@@ -1,5 +1,6 @@
 package dto
 
+// BitBucketResponseDefaultReviewers the bitbucket reviewers response object
 type BitBucketResponseDefaultReviewers struct {
 	Pagelen int `json:"pagelen"`
 	Values  []struct {

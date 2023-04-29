@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -15,17 +14,17 @@ import (
 	cquery "github.com/sharovik/orm/query"
 )
 
-//Dictionary the sqlite dictionary object
+// Dictionary the sqlite dictionary object
 type Dictionary struct {
 	db clients.BaseClientInterface
 }
 
-//GetDBClient method returns the client connection
+// GetDBClient method returns the client connection
 func (d *Dictionary) GetDBClient() clients.BaseClientInterface {
 	return d.db
 }
 
-//InitDatabaseConnection initialise the database connection
+// InitDatabaseConnection initialise the database connection
 func (d *Dictionary) InitDatabaseConnection(cfg clients.DatabaseConfig) error {
 	var err error
 	d.db, err = clients.InitClient(cfg)
@@ -33,12 +32,12 @@ func (d *Dictionary) InitDatabaseConnection(cfg clients.DatabaseConfig) error {
 	return err
 }
 
-//CloseDatabaseConnection method for database connection close
+// CloseDatabaseConnection method for database connection close
 func (d *Dictionary) CloseDatabaseConnection() error {
 	return d.db.Disconnect()
 }
 
-//FindAnswer used for searching of message in the database
+// FindAnswer used for searching of message in the database
 func (d *Dictionary) FindAnswer(message string) (dto.DictionaryMessage, error) {
 	var (
 		dmAnswer dto.DictionaryMessage
@@ -85,7 +84,7 @@ func (d *Dictionary) parsedByAvailableRegex(question string) (int64, error) {
 	return 0, nil
 }
 
-//answerByQuestionString method retrieves the answer data by selected question string
+// answerByQuestionString method retrieves the answer data by selected question string
 func (d *Dictionary) answerByQuestionString(questionText string, regexID int64) (dto.DictionaryMessage, error) {
 	query := new(clients.Query).
 		Select([]interface{}{
@@ -181,7 +180,7 @@ func (d *Dictionary) answerByQuestionString(questionText string, regexID int64) 
 	}, nil
 }
 
-//InsertScenario used for scenario creation
+// InsertScenario used for scenario creation
 func (d *Dictionary) InsertScenario(name string, eventID int64) (int64, error) {
 	var model = cdto.BaseModel{
 		TableName: "scenarios",
@@ -205,7 +204,7 @@ func (d *Dictionary) InsertScenario(name string, eventID int64) (int64, error) {
 	return res.LastInsertID(), nil
 }
 
-//FindScenarioByID search scenario by id
+// FindScenarioByID search scenario by id
 func (d *Dictionary) FindScenarioByID(scenarioID int64) (int64, error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
@@ -232,7 +231,7 @@ func (d *Dictionary) FindScenarioByID(scenarioID int64) (int64, error) {
 	return scenarioID, nil
 }
 
-//GetLastScenarioID retrieve the last scenario id
+// GetLastScenarioID retrieve the last scenario id
 func (d *Dictionary) GetLastScenarioID() (int64, error) {
 	query := new(clients.Query).
 		Select([]interface{}{cdto.ModelField{
@@ -257,7 +256,7 @@ func (d *Dictionary) GetLastScenarioID() (int64, error) {
 	return int64(item.GetField("id").Value.(int)), nil
 }
 
-//FindEventByAlias search event by alias
+// FindEventByAlias search event by alias
 func (d *Dictionary) FindEventByAlias(eventAlias string) (int64, error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
@@ -285,7 +284,7 @@ func (d *Dictionary) FindEventByAlias(eventAlias string) (int64, error) {
 	return int64(item.GetField("id").Value.(int)), nil
 }
 
-//FindEventBy search event by alias and version
+// FindEventBy search event by alias and version
 func (d *Dictionary) FindEventBy(eventAlias string, version string) (int64, error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
@@ -322,7 +321,7 @@ func (d *Dictionary) FindEventBy(eventAlias string, version string) (int64, erro
 	return int64(item.GetField("id").Value.(int)), nil
 }
 
-//InsertEvent used for event creation
+// InsertEvent used for event creation
 func (d *Dictionary) InsertEvent(alias string, version string) (int64, error) {
 	var model = cdto.BaseModel{
 		TableName: "events",
@@ -346,7 +345,7 @@ func (d *Dictionary) InsertEvent(alias string, version string) (int64, error) {
 	return res.LastInsertID(), nil
 }
 
-//InsertQuestion inserts the question into the database
+// InsertQuestion inserts the question into the database
 func (d *Dictionary) InsertQuestion(question string, answer string, scenarioID int64, questionRegex string, questionRegexGroup string, isVariable bool) (int64, error) {
 	var (
 		regexID int64
@@ -405,7 +404,7 @@ func (d *Dictionary) InsertQuestion(question string, answer string, scenarioID i
 	return res.LastInsertID(), nil
 }
 
-//FindRegex search regex by regex string
+// FindRegex search regex by regex string
 func (d *Dictionary) FindRegex(regex string) (int64, error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
@@ -433,7 +432,7 @@ func (d *Dictionary) FindRegex(regex string) (int64, error) {
 	return int64(item.GetField("id").Value.(int)), nil
 }
 
-//InsertQuestionRegex method insert the regex and returns the regexId. This regex can be connected to the multiple questions
+// InsertQuestionRegex method insert the regex and returns the regexId. This regex can be connected to the multiple questions
 func (d *Dictionary) InsertQuestionRegex(questionRegex string, questionRegexGroup string) (int64, error) {
 	var model = cdto.BaseModel{
 		TableName: "questions_regex",
@@ -457,7 +456,7 @@ func (d *Dictionary) InsertQuestionRegex(questionRegex string, questionRegexGrou
 	return res.LastInsertID(), nil
 }
 
-//GetAllRegex method retrieves all available regexs
+// GetAllRegex method retrieves all available regexs
 func (d *Dictionary) GetAllRegex() (res map[int64]string, err error) {
 	rows, err := d.db.Execute(new(clients.Query).Select(databasedto.QuestionsRegexModel.GetColumns()).From(&cdto.BaseModel{TableName: "questions_regex"}))
 	if err == sql.ErrNoRows {
@@ -478,7 +477,7 @@ func (d *Dictionary) GetAllRegex() (res map[int64]string, err error) {
 	return res, nil
 }
 
-//RunMigrations method for migrations load from specified path
+// RunMigrations method for migrations load from specified path
 func (d *Dictionary) RunMigrations(pathToFiles string) error {
 	if _, err := os.Stat(pathToFiles); os.IsNotExist(err) {
 		return nil
@@ -498,7 +497,7 @@ func (d *Dictionary) RunMigrations(pathToFiles string) error {
 
 	var db = d.GetDBClient().GetClient()
 	for file, filePath := range files {
-		migrationData, err := ioutil.ReadFile(filePath)
+		migrationData, err := os.ReadFile(filePath)
 		if err != nil {
 			return err
 		}
@@ -525,7 +524,7 @@ func (d *Dictionary) RunMigrations(pathToFiles string) error {
 	return nil
 }
 
-//IsMigrationAlreadyExecuted checks if the migration name was already executed
+// IsMigrationAlreadyExecuted checks if the migration name was already executed
 func (d *Dictionary) IsMigrationAlreadyExecuted(version string) (executed bool, err error) {
 	query := new(clients.Query).
 		Select([]interface{}{"id"}).
@@ -552,7 +551,7 @@ func (d *Dictionary) IsMigrationAlreadyExecuted(version string) (executed bool, 
 	return true, err
 }
 
-//MarkMigrationExecuted marks the selected migration version as executed
+// MarkMigrationExecuted marks the selected migration version as executed
 func (d *Dictionary) MarkMigrationExecuted(version string) (err error) {
 	var model = cdto.BaseModel{
 		TableName: "migration",
@@ -568,8 +567,8 @@ func (d *Dictionary) MarkMigrationExecuted(version string) (err error) {
 	return
 }
 
-//InstallEvent method installs the event(if it wasn't installed before) and creates the scenario for selected event with selected question and answer
-//Deprecated: please use InstallNewEventScenario instead
+// InstallEvent method installs the event(if it wasn't installed before) and creates the scenario for selected event with selected question and answer
+// Deprecated: please use InstallNewEventScenario instead
 func (d *Dictionary) InstallEvent(eventName string, eventVersion string, question string, answer string, questionRegex string, questionRegexGroup string) error {
 	eventID, err := d.FindEventByAlias(eventName)
 	if err != nil {
@@ -598,12 +597,12 @@ func (d *Dictionary) InstallEvent(eventName string, eventVersion string, questio
 	return nil
 }
 
-//GetQuestionsByScenarioID method retrieves all available questions and answers for selected scenarioID
+// GetQuestionsByScenarioID method retrieves all available questions and answers for selected scenarioID
 func (d *Dictionary) GetQuestionsByScenarioID(scenarioID int64, isVariable bool) (result []QuestionObject, err error) {
 	return getQuestionsByScenarioID(d, scenarioID, isVariable)
 }
 
-//InstallNewEventScenario the method for installing of the new event scenario
+// InstallNewEventScenario the method for installing of the new event scenario
 func (d *Dictionary) InstallNewEventScenario(scenario EventScenario) error {
 	return installNewEventScenario(d, scenario)
 }

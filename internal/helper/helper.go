@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,9 +12,9 @@ import (
 	"github.com/sharovik/devbot/internal/log"
 )
 
-//FileToBytes method gets the data from selected file and retrieve the byte value of it
+// FileToBytes method gets the data from selected file and retrieve the byte value of it
 func FileToBytes(filePath string) ([]byte, error) {
-	bytes, err := ioutil.ReadFile(filePath)
+	bytes, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +83,7 @@ func Unzip(src string, dest string) ([]string, error) {
 	return filenames, nil
 }
 
-//Zip method for zip the selected src to specific destination
+// Zip method for zip the selected src to specific destination
 func Zip(src string, dest string) error {
 	destinationFile, err := os.Create(dest)
 	if err != nil {
@@ -138,7 +137,7 @@ func Zip(src string, dest string) error {
 	return nil
 }
 
-//FindMatches method returns the matches map object which contains all matches which we can find in selected subject
+// FindMatches method returns the matches map object which contains all matches which we can find in selected subject
 func FindMatches(regex string, subject string) map[string]string {
 	re, err := regexp.Compile(regex)
 
@@ -171,12 +170,12 @@ func FindMatches(regex string, subject string) map[string]string {
 	return result
 }
 
-//HelpMessageShouldBeTriggered method which can be used for help string parsing in the custom events to identifying if need to show help message, or not
+// HelpMessageShouldBeTriggered method which can be used for help string parsing in the custom events to identifying if need to show help message, or not
 func HelpMessageShouldBeTriggered(text string) (bool, error) {
 	return IsFoundMatches("(?i)(--help)", text)
 }
 
-//IsFoundMatches method checks if there are matches for selected regexp pattern in the received text
+// IsFoundMatches method checks if there are matches for selected regexp pattern in the received text
 func IsFoundMatches(regexPattern string, text string) (bool, error) {
 	re, err := regexp.Compile(regexPattern)
 	if err != nil {

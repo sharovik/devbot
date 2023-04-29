@@ -2,12 +2,12 @@ package databasedto
 
 import "github.com/sharovik/orm/dto"
 
-//EventsStruct struct for EventModel object
+// EventsStruct struct for EventModel object
 type EventsStruct struct {
 	dto.BaseModel
 }
 
-//EventModel model for events table
+// EventModel model for events table
 var EventModel = New(
 	"events",
 	[]interface{}{
