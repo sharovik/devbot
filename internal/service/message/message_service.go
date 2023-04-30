@@ -176,7 +176,7 @@ func TriggerAnswer(channel string, answerMessage dto.BaseChatMessage, shouldReme
 		//We will trigger the event history save in case when we don't have open conversation
 		//or when we do have open conversation, but it is time to trigger the event execution
 		//so, we can store all variables
-		if shouldRemember && (conversation.GetConversation(answerMessage.Channel).ScenarioID != 0 || conversation.GetConversation(answerMessage.Channel).EventReadyToBeExecuted) {
+		if shouldRemember && (conversation.GetConversation(answerMessage.Channel).ScenarioID == 0 || conversation.GetConversation(answerMessage.Channel).EventReadyToBeExecuted) {
 			history.RememberEventExecution(answerMessage)
 		}
 
