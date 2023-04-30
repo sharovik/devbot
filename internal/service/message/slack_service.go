@@ -357,7 +357,7 @@ func isValidMessage(msg MsgAttributes) bool {
 		return false
 	}
 
-	if msg.Text != "" {
+	if msg.Text == "" {
 		log.Logger().Debug().Msg("This message has empty text. Skipping.")
 		return false
 	}
