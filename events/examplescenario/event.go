@@ -2,9 +2,10 @@ package examplescenario
 
 import (
 	"fmt"
-	"github.com/sharovik/devbot/internal/service/message/conversation"
 	"regexp"
 	"time"
+
+	"github.com/sharovik/devbot/internal/service/message/conversation"
 
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/helper"
@@ -37,10 +38,12 @@ type EventStruct struct {
 // Event - object which is ready to use
 var Event = EventStruct{}
 
+// Help retrieves the help message
 func (e EventStruct) Help() string {
 	return helpMessage
 }
 
+// Alias retrieves the event alias
 func (e EventStruct) Alias() string {
 	return EventName
 }

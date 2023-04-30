@@ -1,9 +1,10 @@
 package history
 
 import (
-	"github.com/sharovik/devbot/internal/service/message/conversation"
 	"strings"
 	"time"
+
+	"github.com/sharovik/devbot/internal/service/message/conversation"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
@@ -13,11 +14,18 @@ import (
 	cdto "github.com/sharovik/orm/dto"
 )
 
-const variablesSeparator = ";"
+const (
+	variablesSeparator = ";"
+	ignoredRepeatEvent = "repeatevent"
+)
 
-//RememberEventExecution method for store the history of the event execution
+// RememberEventExecution method for store the history of the event execution
 func RememberEventExecution(msg dto.BaseChatMessage) {
-	command := msg.Text
+	if msg.DictionaryMessage.ReactionType == ignoredRepeatEvent {
+		return
+	}
+
+	command := msg.OriginalMessage.Text
 	if conversation.GetConversation(msg.Channel).Question != "" {
 		command = conversation.GetConversation(msg.Channel).Question
 	}
@@ -28,6 +36,7 @@ func RememberEventExecution(msg dto.BaseChatMessage) {
 	}
 
 	item := databasedto.EventTriggerHistoryModel
+	item.RemoveModelField("id")
 	item.AddModelField(cdto.ModelField{
 		Name:  "event_id",
 		Value: msg.DictionaryMessage.EventID,

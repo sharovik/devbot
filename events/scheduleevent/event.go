@@ -2,6 +2,8 @@ package scheduleevent
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/dto"
@@ -11,7 +13,6 @@ import (
 	"github.com/sharovik/devbot/internal/service/message"
 	"github.com/sharovik/devbot/internal/service/message/conversation"
 	"github.com/sharovik/devbot/internal/service/schedule"
-	"strings"
 )
 
 const (
@@ -45,17 +46,18 @@ var (
 	requestedScenarios = map[string]requestedScenario{}
 )
 
+// Help retrieves the help message
 func (e EventStruct) Help() string {
 	return helpMessage
 }
 
+// Alias retrieves the event alias
 func (e EventStruct) Alias() string {
 	return EventName
 }
 
 // Execute method which is called by message processor
 func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, error) {
-	initScenarioService()
 
 	//We schedule the scenario
 	if requestedScenarios[message.Channel].Scenario.ID != 0 {

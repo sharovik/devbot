@@ -1,6 +1,6 @@
 package dto
 
-//Profile object
+// Profile object
 type Profile struct {
 	Title                 string      `json:"title"`
 	Phone                 string      `json:"phone"`
@@ -28,7 +28,7 @@ type Profile struct {
 	Team                  string      `json:"team"`
 }
 
-//SlackMember object which is used in SlackResponseUsersList object
+// SlackMember object which is used in SlackResponseUsersList object
 type SlackMember struct {
 	ID                string      `json:"id"`
 	TeamID            string      `json:"team_id"`
@@ -50,12 +50,12 @@ type SlackMember struct {
 	Updated           int         `json:"updated"`
 }
 
-//ResponseMetadata object of metadata
+// ResponseMetadata object of metadata
 type ResponseMetadata struct {
 	NextCursor string `json:"next_cursor"`
 }
 
-//SlackResponseUsersList response object from users.list
+// SlackResponseUsersList response object from users.list
 type SlackResponseUsersList struct {
 	Ok               bool             `json:"ok"`
 	Error            string           `json:"error,omitempty"`

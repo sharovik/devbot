@@ -13,7 +13,7 @@ import (
 	"github.com/sharovik/devbot/internal/log"
 )
 
-//SlackClient client for message api calls
+// SlackClient client for message api calls
 type SlackClient struct {
 	BaseMessageClient
 	Client     *http.Client
@@ -21,7 +21,7 @@ type SlackClient struct {
 	OAuthToken string
 }
 
-//AttachFileTo method for attachment file send to specific channel
+// AttachFileTo method for attachment file send to specific channel
 func (client SlackClient) AttachFileTo(channel string, pathToFile string, filename string) ([]byte, int, error) {
 	log.Logger().StartMessage("Slack attachment request")
 
@@ -64,7 +64,7 @@ func (client SlackClient) AttachFileTo(channel string, pathToFile string, filena
 	return client.HTTPClient.Post("/files.upload", &buf, map[string]string{})
 }
 
-//SendMessage method for post message send through simple API request
+// SendMessage method for post message send through simple API request
 func (client SlackClient) SendMessage(message dto.BaseChatMessage) (resp dto.BaseResponseInterface, status int, err error) {
 	log.Logger().Debug().Interface("message", message).Msg("Start chat.postMessage")
 	byteStr, err := json.Marshal(dto.SlackRequestChatPostMessage{
@@ -105,7 +105,7 @@ func (client SlackClient) SendMessage(message dto.BaseChatMessage) (resp dto.Bas
 	return &dtoResponse, statusCode, nil
 }
 
-//GetConversationsList method which returns the conversations list of current workspace
+// GetConversationsList method which returns the conversations list of current workspace
 func (client SlackClient) GetConversationsList() (dto.SlackResponseConversationsList, int, error) {
 	response, statusCode, err := client.HTTPClient.Get("/conversations.list", map[string]string{})
 	if err != nil {
@@ -124,7 +124,7 @@ func (client SlackClient) GetConversationsList() (dto.SlackResponseConversations
 	return dtoResponse, statusCode, nil
 }
 
-//GetUsersList method which returns the users list of current workspace
+// GetUsersList method which returns the users list of current workspace
 func (client SlackClient) GetUsersList() (dto.SlackResponseUsersList, int, error) {
 	response, statusCode, err := client.HTTPClient.Get("/users.list", map[string]string{})
 	if err != nil {

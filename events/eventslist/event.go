@@ -36,10 +36,12 @@ var (
 	}
 )
 
+// Help retrieves the help message
 func (e EventStruct) Help() string {
 	return helpMessage
 }
 
+// Alias retrieves the event alias
 func (e EventStruct) Alias() string {
 	return EventName
 }

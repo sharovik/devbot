@@ -1,6 +1,6 @@
 package dto
 
-//MessageBlock child struct of SlackResponseEventMessage
+// MessageBlock child struct of SlackResponseEventMessage
 type MessageBlock struct {
 	BlockID  string `json:"block_id"`
 	Elements []struct {
@@ -14,7 +14,7 @@ type MessageBlock struct {
 	Type string `json:"type"`
 }
 
-//SlackResponseEventMessage main event message object
+// SlackResponseEventMessage main event message object
 type SlackResponseEventMessage struct {
 	Channel      string         `json:"channel"`
 	ClientMsgID  string         `json:"client_msg_id"`
@@ -33,7 +33,7 @@ type SlackResponseEventMessage struct {
 	Blocks       []MessageBlock `json:"blocks"`
 }
 
-//ToBaseOriginalMessage converts the SlackResponseEventMessage to BaseOriginalMessage object
+// ToBaseOriginalMessage converts the SlackResponseEventMessage to BaseOriginalMessage object
 func (m SlackResponseEventMessage) ToBaseOriginalMessage() BaseOriginalMessage {
 	return BaseOriginalMessage{
 		Text:        m.Text,

@@ -1,6 +1,6 @@
 package dto
 
-//SlackResponseChatPostMessage response object for message chat postMessage endpoint response
+// SlackResponseChatPostMessage response object for message chat postMessage endpoint response
 type SlackResponseChatPostMessage struct {
 	BaseResponse
 	Ok      bool   `json:"ok"`
@@ -30,12 +30,12 @@ type SlackResponseChatPostMessage struct {
 	} `json:"message"`
 }
 
-//SetByteResponse sets the byte response
+// SetByteResponse sets the byte response
 func (r *SlackResponseChatPostMessage) SetByteResponse(response []byte) {
 	r.ByteResponse = response
 }
 
-//GetByteResponse returns the byte response
+// GetByteResponse returns the byte response
 func (r *SlackResponseChatPostMessage) GetByteResponse() []byte {
 	return r.ByteResponse
 }

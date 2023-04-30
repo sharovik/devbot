@@ -3,9 +3,10 @@ package container
 import (
 	"crypto/tls"
 	"errors"
-	"github.com/sharovik/devbot/internal/dto/event"
 	"net/http"
 	"time"
+
+	"github.com/sharovik/devbot/internal/dto/event"
 
 	"github.com/sharovik/devbot/internal/database"
 
@@ -14,7 +15,7 @@ import (
 	"github.com/sharovik/devbot/internal/log"
 )
 
-//Main container object
+// Main container object
 type Main struct {
 	Config           config.Config
 	MessageClient    client.MessageClientInterface
@@ -25,10 +26,10 @@ type Main struct {
 	DefinedEvents    map[string]event.DefinedEventInterface
 }
 
-//C container variable
+// C container variable
 var C Main
 
-//Init initialise container
+// Init initialise container
 func Init() (Main, error) {
 	C = Main{}
 	cfg, err := config.Init()
@@ -43,29 +44,19 @@ func Init() (Main, error) {
 		return Main{}, err
 	}
 
-	netTransport := &http.Transport{
-		TLSHandshakeTimeout: time.Duration(C.Config.HTTPClient.TLSHandshakeTimeout) * time.Second,
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: C.Config.HTTPClient.InsecureSkipVerify,
-		},
-	}
-
-	httpClient := http.Client{
-		Timeout:   time.Duration(C.Config.HTTPClient.RequestTimeout) * time.Second,
-		Transport: netTransport,
-	}
-
 	bitBucketClient := client.BitBucketClient{}
-	bitBucketClient.Init(&client.HTTPClient{
-		Client:       &httpClient,
-		BaseURL:      client.DefaultBitBucketBaseAPIUrl,
-		ClientID:     C.Config.BitBucketConfig.ClientID,
-		ClientSecret: C.Config.BitBucketConfig.ClientSecret,
-	})
+
+	bH := initHttpClient()
+	bH.BaseURL = client.DefaultBitBucketBaseAPIUrl
+	bH.ClientID = C.Config.BitBucketConfig.ClientID
+	bH.ClientSecret = C.Config.BitBucketConfig.ClientSecret
+
+	bitBucketClient.Init(&bH)
+
 	C.BibBucketClient = &bitBucketClient
-	C.HTTPClient = &client.HTTPClient{
-		Client: &httpClient,
-	}
+
+	h := initHttpClient()
+	C.HTTPClient = &h
 
 	C.MessageClient = C.initMessageClient()
 
@@ -81,7 +72,7 @@ func Init() (Main, error) {
 	return C, nil
 }
 
-//Terminate terminates the properly connections
+// Terminate terminates the properly connections
 func (c *Main) Terminate() {
 	if err := c.Dictionary.CloseDatabaseConnection(); err != nil {
 		panic(err)
@@ -102,16 +93,34 @@ func (c *Main) loadDictionary() error {
 func (c *Main) initMessageClient() client.MessageClientInterface {
 	switch c.Config.MessagesAPIConfig.Type {
 	case config.MessagesAPITypeSlack:
-		h := c.HTTPClient
+		h := initHttpClient()
 
 		h.SetOauthToken(c.Config.MessagesAPIConfig.WebAPIOAuthToken)
 		h.SetBaseURL(c.Config.MessagesAPIConfig.BaseURL)
 
 		sc := client.SlackClient{}
-		sc.HTTPClient = h
+		sc.HTTPClient = &h
 
 		return sc
 	default:
-		panic(errors.New("Unknown messages API type"))
+		panic(errors.New("unknown messages API type"))
+	}
+}
+
+func initHttpClient() client.HTTPClient {
+	netTransport := &http.Transport{
+		TLSHandshakeTimeout: time.Duration(C.Config.HTTPClient.TLSHandshakeTimeout) * time.Second,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: C.Config.HTTPClient.InsecureSkipVerify,
+		},
+	}
+
+	httpClient := http.Client{
+		Timeout:   time.Duration(C.Config.HTTPClient.RequestTimeout) * time.Second,
+		Transport: netTransport,
+	}
+
+	return client.HTTPClient{
+		Client: &httpClient,
 	}
 }

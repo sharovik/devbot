@@ -2,7 +2,7 @@ package event
 
 import "github.com/sharovik/devbot/internal/dto"
 
-//DefinedEventInterface the interface for events
+// DefinedEventInterface the interface for events
 type DefinedEventInterface interface {
 	//Help returns the help message string
 	Help() string

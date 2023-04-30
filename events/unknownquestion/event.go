@@ -3,6 +3,9 @@ package unknownquestion
 import (
 	"database/sql"
 	"fmt"
+	"regexp"
+	"strings"
+
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/service"
 	"github.com/sharovik/devbot/internal/service/message"
@@ -10,8 +13,6 @@ import (
 	"github.com/sharovik/orm/clients"
 	cdto "github.com/sharovik/orm/dto"
 	cquery "github.com/sharovik/orm/query"
-	"regexp"
-	"strings"
 
 	"github.com/sharovik/devbot/internal/log"
 
@@ -41,10 +42,12 @@ var (
 	selectedConversations = map[string]string{}
 )
 
+// Help retrieves the help message
 func (e EventStruct) Help() string {
 	return helpMessage
 }
 
+// Alias retrieves the event alias
 func (e EventStruct) Alias() string {
 	return EventName
 }
@@ -101,7 +104,7 @@ func getAnswer(message dto.BaseChatMessage) (result bool) {
 	//If we already have opened conversation, we will try to get the answer from the required variables
 	if conv.Scenario.ID != int64(0) {
 		for _, variable := range conv.Scenario.RequiredVariables {
-			if "" != variable.Value {
+			if variable.Value != "" {
 				answer := strings.ToLower(variable.Value)
 				switch answer {
 				case "yes":

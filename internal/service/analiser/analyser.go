@@ -1,8 +1,9 @@
 package analiser
 
 import (
-	"github.com/sharovik/devbot/internal/service/message/conversation"
 	"time"
+
+	"github.com/sharovik/devbot/internal/service/message/conversation"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/database"
@@ -65,7 +66,7 @@ func GetDmAnswer(message Message) (dmAnswer dto.DictionaryMessage, err error) {
 		log.Logger().AddError(err).Msg("Failed to parse the help template")
 	}
 
-	if "" != dmAnswer.ReactionType && isHelpAnswerTriggered {
+	if dmAnswer.ReactionType != "" && isHelpAnswerTriggered {
 		dmAnswer.Answer = container.C.DefinedEvents[dmAnswer.ReactionType].Help()
 		dmAnswer.IsHelpTriggered = true
 

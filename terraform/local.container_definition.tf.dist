@@ -9,27 +9,31 @@ locals {
         value = "development"
       },
       {
-        name  = "SLACK_MAIN_CHANNEL_ALIAS"
+        name  = "MESSAGES_API_MAIN_CHANNEL_ALIAS"
         value = "general"
       },
       {
-        name  = "SLACK_BASE_URL"
+        name  = "MESSAGES_API_BASE_URL"
         value = "https://slack.com/api"
       },
       {
-        name  = "SLACK_OAUTH_TOKEN"
+        name  = "MESSAGES_API_OAUTH_TOKEN"
         value = "TOKEN_HERE"
       },
       {
-        name  = "SLACK_BOT_NAME"
+        name  = "MESSAGES_API_WEB_API_OAUTH_TOKEN"
+        value = "TOKEN_HERE"
+      },
+      {
+        name  = "MESSAGES_API_BOT_NAME"
         value = "DevBot"
       },
       {
-        name  = "SLACK_USER_ID"
+        name  = "MESSAGES_API_USER_ID"
         value = "__PUT_USER_ID_HERE__"
       },
       {
-        name  = "SLACK_MAIN_CHANNEL_ID"
+        name  = "MESSAGES_API_MAIN_CHANNEL_ID"
         value = "__PUT_MAIN_ID_HERE__"
       },
       {

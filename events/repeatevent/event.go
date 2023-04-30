@@ -2,10 +2,11 @@ package repeatevent
 
 import (
 	"fmt"
-	"github.com/sharovik/devbot/internal/service/message/conversation"
-	"github.com/sharovik/devbot/internal/service/schedule"
 	"strings"
 	"time"
+
+	"github.com/sharovik/devbot/internal/service/message/conversation"
+	"github.com/sharovik/devbot/internal/service/schedule"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/database"
@@ -36,10 +37,12 @@ var (
 	Event = EventStruct{}
 )
 
+// Help retrieves the help message
 func (e EventStruct) Help() string {
 	return helpMessage
 }
 
+// Alias retrieves the event alias
 func (e EventStruct) Alias() string {
 	return EventName
 }
@@ -148,7 +151,6 @@ func lastExecutedEvent(message dto.BaseChatMessage) (cdto.ModelInterface, error)
 				Name:  f.Name,
 				Value: f.Value,
 			})
-			break
 		default:
 			continue
 		}
@@ -173,7 +175,7 @@ func getEventAliasByID(eventID int) (string, error) {
 	}
 
 	if len(item.Items()) == 0 {
-		return "", fmt.Errorf("Failed to find the event alias for selected ID")
+		return "", fmt.Errorf("failed to find the event alias for selected ID")
 	}
 
 	return item.Items()[0].GetField("alias").Value.(string), nil
@@ -190,7 +192,7 @@ func triggerScenario(item cdto.ModelInterface) (dto.BaseChatMessage, error) {
 		channel   = item.GetField("channel").Value.(string)
 	)
 
-	if "" != item.GetField("variables").Value.(string) {
+	if item.GetField("variables").Value.(string) != "" {
 		scenario := database.EventScenario{
 			RequiredVariables: nil,
 		}

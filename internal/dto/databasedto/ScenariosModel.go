@@ -2,12 +2,12 @@ package databasedto
 
 import "github.com/sharovik/orm/dto"
 
-//ScenariosStruct struct for scenarios object
+// ScenariosStruct struct for scenarios object
 type ScenariosStruct struct {
 	dto.BaseModel
 }
 
-//ScenariosModel model for scenarios table
+// ScenariosModel model for scenarios table
 var ScenariosModel = New(
 	"scenarios",
 	[]interface{}{

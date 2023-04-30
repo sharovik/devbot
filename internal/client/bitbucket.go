@@ -48,7 +48,7 @@ const (
 	StrategyMerge = "merge_commit"
 
 	//ErrorMsgNoAccess error message response of bot, once he got a bad status code from the API
-	ErrorMsgNoAccess = "I received unauthorized response. Looks like I'm not permitted to do any actions to that repository."
+	ErrorMsgNoAccess = "received unauthorized response. Looks like I'm not permitted to do any actions to that repository"
 )
 
 // Init initialise the client
@@ -165,6 +165,14 @@ func (b *BitBucketClient) CreateBranch(workspace string, repositorySlug string, 
 
 		endpoint := fmt.Sprintf("/repositories/%s/%s/refs/branches", workspace, repositorySlug)
 		response, statusCode, err := b.client.Post(endpoint, byteRequest, map[string]string{})
+		if err != nil {
+			log.Logger().AddError(err).
+				Msg("Failed to trigger request")
+			log.Logger().FinishMessage("Create branch")
+
+			return dto.BitBucketResponseBranchCreate{}, err
+		}
+
 		if err := json.Unmarshal(response, &responseObject); err != nil {
 			log.Logger().Info().
 				Str("branch", branchName).
@@ -195,7 +203,7 @@ func (b *BitBucketClient) CreateBranch(workspace string, repositorySlug string, 
 				Msg("Bad status code received")
 
 			log.Logger().FinishMessage("Create branch")
-			return dto.BitBucketResponseBranchCreate{}, errors.New("Wrong status code received during the branch creation. See the logs for more information. ")
+			return dto.BitBucketResponseBranchCreate{}, errors.New("wrong status code received during the branch creation. See the logs for more information. ")
 		}
 
 		log.Logger().Info().
@@ -236,12 +244,12 @@ func (b *BitBucketClient) GetBranch(workspace string, repositorySlug string, bra
 
 	if statusCode == http.StatusNotFound {
 		log.Logger().FinishMessage("Get branch")
-		return dto.BitBucketResponseBranchCreate{}, errors.New("This branch doesn't exist. ")
+		return dto.BitBucketResponseBranchCreate{}, errors.New("this branch doesn't exist. ")
 	}
 
 	if statusCode == http.StatusForbidden {
 		log.Logger().FinishMessage("Get branch")
-		return dto.BitBucketResponseBranchCreate{}, errors.New("Action is not permitted. ")
+		return dto.BitBucketResponseBranchCreate{}, errors.New("action is not permitted. ")
 	}
 
 	responseObject := dto.BitBucketResponseBranchCreate{}
@@ -337,7 +345,7 @@ func (b *BitBucketClient) MergePullRequest(workspace string, repositorySlug stri
 
 	if statusCode == http.StatusBadRequest {
 		log.Logger().FinishMessage("Merge pull-request")
-		return dto.BitBucketPullRequestInfoResponse{}, fmt.Errorf("Bitbucket response with the error: %s", dtoResponse.Error.Message)
+		return dto.BitBucketPullRequestInfoResponse{}, fmt.Errorf("bitbucket response with the error: %s", dtoResponse.Error.Message)
 	}
 
 	if statusCode == http.StatusUnauthorized {
@@ -347,7 +355,7 @@ func (b *BitBucketClient) MergePullRequest(workspace string, repositorySlug stri
 
 	if statusCode == http.StatusNotFound {
 		log.Logger().FinishMessage("Merge pull-request")
-		return dto.BitBucketPullRequestInfoResponse{}, errors.New("Selected pull-request was not found :( ")
+		return dto.BitBucketPullRequestInfoResponse{}, errors.New("selected pull-request was not found :( ")
 	}
 
 	log.Logger().FinishMessage("Merge pull-request")
@@ -403,7 +411,7 @@ func (b *BitBucketClient) ChangePullRequestDestination(workspace string, reposit
 
 	if statusCode == http.StatusNotFound {
 		log.Logger().FinishMessage("Change destination")
-		return dto.BitBucketPullRequestInfoResponse{}, errors.New("Selected pull-request was not found :( ")
+		return dto.BitBucketPullRequestInfoResponse{}, errors.New("selected pull-request was not found :( ")
 	}
 
 	var responseObject dto.BitBucketPullRequestInfoResponse
@@ -463,7 +471,7 @@ func (b *BitBucketClient) CreatePullRequest(workspace string, repositorySlug str
 	if statusCode == http.StatusNotFound {
 		log.Logger().Warn().Int("status_code", statusCode).Str("response", string(response)).Msg("Not found status code")
 		log.Logger().FinishMessage("Create pull-request")
-		return dto.BitBucketPullRequestInfoResponse{}, errors.New("Endpoint or selected branch was not found :( ")
+		return dto.BitBucketPullRequestInfoResponse{}, errors.New("endpoint or selected branch was not found :( ")
 	}
 
 	log.Logger().FinishMessage("Create pull-request")
@@ -519,7 +527,7 @@ func (b *BitBucketClient) RunPipeline(workspace string, repositorySlug string, r
 	if statusCode == http.StatusNotFound {
 		log.Logger().Warn().Int("status_code", statusCode).Str("response", string(response)).Msg("Not found status code")
 		log.Logger().FinishMessage("Run pipeline")
-		return dto.BitBucketResponseRunPipeline{}, errors.New("Endpoint or selected branch was not found :( ")
+		return dto.BitBucketResponseRunPipeline{}, errors.New("endpoint or selected branch was not found :( ")
 	}
 
 	log.Logger().FinishMessage("Run pipeline")
@@ -558,7 +566,7 @@ func (b *BitBucketClient) GetDefaultReviewers(workspace string, repositorySlug s
 
 	if statusCode == http.StatusNotFound {
 		log.Logger().Warn().Int("status_code", statusCode).Str("response", string(response)).Msg("Not found status code")
-		return dto.BitBucketResponseDefaultReviewers{}, errors.New("Endpoint or selected branch was not found :( ")
+		return dto.BitBucketResponseDefaultReviewers{}, errors.New("endpoint or selected branch was not found :( ")
 	}
 
 	return dtoResponse, nil

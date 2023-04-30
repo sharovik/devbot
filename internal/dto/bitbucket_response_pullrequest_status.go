@@ -2,7 +2,7 @@ package dto
 
 import "time"
 
-//Rendered the rendered information
+// Rendered the rendered information
 type Rendered struct {
 	Description struct {
 		Raw    string `json:"raw"`
@@ -18,7 +18,7 @@ type Rendered struct {
 	} `json:"title"`
 }
 
-//Links the links action object
+// Links the links action object
 type Links struct {
 	Decline struct {
 		Href string `json:"href"`
@@ -55,7 +55,7 @@ type Links struct {
 	} `json:"statuses"`
 }
 
-//Reviewer the reviewer object
+// Reviewer the reviewer object
 type Reviewer struct {
 	DisplayName string `json:"display_name"`
 	UUID        string `json:"uuid"`
@@ -75,7 +75,7 @@ type Reviewer struct {
 	AccountID string `json:"account_id"`
 }
 
-//Destination the destination object
+// Destination the destination object
 type Destination struct {
 	Commit struct {
 		Hash  string `json:"hash"`
@@ -111,7 +111,7 @@ type Destination struct {
 	} `json:"branch"`
 }
 
-//Summary the summary description
+// Summary the summary description
 type Summary struct {
 	Raw    string `json:"raw"`
 	Markup string `json:"markup"`
@@ -119,7 +119,7 @@ type Summary struct {
 	Type   string `json:"type"`
 }
 
-//Source the source object from where was made this pull-request
+// Source the source object from where was made this pull-request
 type Source struct {
 	Commit struct {
 		Hash  string `json:"hash"`
@@ -155,7 +155,7 @@ type Source struct {
 	} `json:"branch"`
 }
 
-//ParticipantUser the user of participant object
+// ParticipantUser the user of participant object
 type ParticipantUser struct {
 	DisplayName string `json:"display_name"`
 	UUID        string `json:"uuid"`
@@ -175,7 +175,7 @@ type ParticipantUser struct {
 	AccountID string `json:"account_id"`
 }
 
-//Participant the participant object
+// Participant the participant object
 type Participant struct {
 	Role           string          `json:"role"`
 	ParticipatedOn time.Time       `json:"participated_on"`
@@ -184,7 +184,7 @@ type Participant struct {
 	User           ParticipantUser `json:"user"`
 }
 
-//Author the author object
+// Author the author object
 type Author struct {
 	DisplayName string `json:"display_name"`
 	UUID        string `json:"uuid"`
@@ -204,7 +204,7 @@ type Author struct {
 	AccountID string `json:"account_id"`
 }
 
-//BitBucketPullRequestInfoResponse the response object from the BitBucket api
+// BitBucketPullRequestInfoResponse the response object from the BitBucket api
 type BitBucketPullRequestInfoResponse struct {
 	Rendered          Rendered      `json:"rendered"`
 	Type              string        `json:"type"`

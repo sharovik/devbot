@@ -2,12 +2,12 @@ package databasedto
 
 import "github.com/sharovik/orm/dto"
 
-//EventTriggerHistoryStruct the struct for event history table
+// EventTriggerHistoryStruct the struct for event history table
 type EventTriggerHistoryStruct struct {
 	dto.BaseModel
 }
 
-//EventTriggerHistoryModel the actual object of event history table
+// EventTriggerHistoryModel the actual object of event history table
 var EventTriggerHistoryModel = New(
 	"events_triggers_history",
 	[]interface{}{
