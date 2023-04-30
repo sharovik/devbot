@@ -44,29 +44,19 @@ func Init() (Main, error) {
 		return Main{}, err
 	}
 
-	netTransport := &http.Transport{
-		TLSHandshakeTimeout: time.Duration(C.Config.HTTPClient.TLSHandshakeTimeout) * time.Second,
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: C.Config.HTTPClient.InsecureSkipVerify,
-		},
-	}
-
-	httpClient := http.Client{
-		Timeout:   time.Duration(C.Config.HTTPClient.RequestTimeout) * time.Second,
-		Transport: netTransport,
-	}
-
 	bitBucketClient := client.BitBucketClient{}
-	bitBucketClient.Init(&client.HTTPClient{
-		Client:       &httpClient,
-		BaseURL:      client.DefaultBitBucketBaseAPIUrl,
-		ClientID:     C.Config.BitBucketConfig.ClientID,
-		ClientSecret: C.Config.BitBucketConfig.ClientSecret,
-	})
+
+	bH := initHttpClient()
+	bH.BaseURL = client.DefaultBitBucketBaseAPIUrl
+	bH.ClientID = C.Config.BitBucketConfig.ClientID
+	bH.ClientSecret = C.Config.BitBucketConfig.ClientSecret
+
+	bitBucketClient.Init(&bH)
+
 	C.BibBucketClient = &bitBucketClient
-	C.HTTPClient = &client.HTTPClient{
-		Client: &httpClient,
-	}
+
+	h := initHttpClient()
+	C.HTTPClient = &h
 
 	C.MessageClient = C.initMessageClient()
 
@@ -103,16 +93,34 @@ func (c *Main) loadDictionary() error {
 func (c *Main) initMessageClient() client.MessageClientInterface {
 	switch c.Config.MessagesAPIConfig.Type {
 	case config.MessagesAPITypeSlack:
-		h := c.HTTPClient
+		h := initHttpClient()
 
 		h.SetOauthToken(c.Config.MessagesAPIConfig.WebAPIOAuthToken)
 		h.SetBaseURL(c.Config.MessagesAPIConfig.BaseURL)
 
 		sc := client.SlackClient{}
-		sc.HTTPClient = h
+		sc.HTTPClient = &h
 
 		return sc
 	default:
 		panic(errors.New("unknown messages API type"))
+	}
+}
+
+func initHttpClient() client.HTTPClient {
+	netTransport := &http.Transport{
+		TLSHandshakeTimeout: time.Duration(C.Config.HTTPClient.TLSHandshakeTimeout) * time.Second,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: C.Config.HTTPClient.InsecureSkipVerify,
+		},
+	}
+
+	httpClient := http.Client{
+		Timeout:   time.Duration(C.Config.HTTPClient.RequestTimeout) * time.Second,
+		Transport: netTransport,
+	}
+
+	return client.HTTPClient{
+		Client: &httpClient,
 	}
 }

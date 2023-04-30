@@ -39,6 +39,10 @@ func GetSecret(secretName string, region string) (secrets SecretConfigValues, er
 		Region: aws.String(region),
 	})
 
+	if err != nil {
+		return SecretConfigValues{}, err
+	}
+
 	//Create a Secrets Manager client
 	svc := secretsmanager.New(awsSession, aws.NewConfig().WithRegion(region))
 	input := &secretsmanager.GetSecretValueInput{
