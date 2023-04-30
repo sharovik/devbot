@@ -3,13 +3,11 @@ package config
 import (
 	"flag"
 	"fmt"
+	"github.com/sharovik/devbot/internal/log"
+	"github.com/sharovik/orm/clients"
 	"os"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/sharovik/devbot/internal/log"
-	"github.com/sharovik/orm/clients"
 
 	"github.com/joho/godotenv"
 )
@@ -152,13 +150,18 @@ const (
 	//MessagesAPITypeSlack message messages API type
 	MessagesAPITypeSlack = "slack"
 
-	defaultMainChannelAlias        = "general"
-	defaultBotName                 = "devbot"
-	defaultMessagesAPIType         = MessagesAPITypeSlack
-	defaultDatabaseConnection      = "sqlite"
-	defaultEnvFilePath             = "./.env"
-	defaultOpenConversationTimeout = time.Second * 600
-	defaultEnvFileRootProjectPath  = "./../../.env"
+	defaultMainChannelAlias       = "general"
+	defaultBotName                = "devbot"
+	defaultMessagesAPIType        = MessagesAPITypeSlack
+	defaultDatabaseConnection     = "sqlite"
+	defaultEnvFilePath            = "./.env"
+	defaultEnvFileRootProjectPath = "./../../.env"
+
+	//AWSSecretsBucket the bucket for secrets manager. If it's specified then the secret values will be loaded
+	AWSSecretsBucket = "AWS_SECRETS_BUCKET"
+
+	//AWSSecretsRegion the region selected for the aws session
+	AWSSecretsRegion = "AWS_REGION"
 )
 
 // Init initialise configuration for this project
@@ -248,6 +251,14 @@ func initMessagesAPIConfig() MessagesAPIConfig {
 	messagesAPIType := defaultMessagesAPIType
 	if os.Getenv(envMessagesAPIType) != "" {
 		messagesAPIType = os.Getenv(envMessagesAPIType)
+	}
+
+	if os.Getenv(AWSSecretsBucket) != "" {
+		secrets, _ := GetSecret(os.Getenv(AWSSecretsBucket), os.Getenv(AWSSecretsRegion))
+		cfg.BitBucketConfig.ClientID = secrets.BitBucketClientID
+		cfg.BitBucketConfig.ClientSecret = secrets.BitBucketClientSecret
+		cfg.MessagesAPIConfig.OAuthToken = secrets.MessagesAPIOAuthToken
+		cfg.MessagesAPIConfig.WebAPIOAuthToken = secrets.MessagesAPIWebAPIOAuthToken
 	}
 
 	return MessagesAPIConfig{
