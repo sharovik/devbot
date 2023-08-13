@@ -1,7 +1,6 @@
 package scheduleevent
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -170,7 +169,7 @@ func askEventQuestions(eventType string, channel string, scheduleTime schedule.E
 	}
 
 	if eventID == 0 {
-		err = errors.New(fmt.Sprintf("Failed to find the event `%s`", eventType))
+		err = fmt.Errorf("failed to find the event `%s` ", eventType)
 		return
 	}
 
