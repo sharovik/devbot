@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+	"github.com/sharovik/devbot/internal/log"
 
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/dto/databasedto"
@@ -154,6 +155,14 @@ func PrepareEventScenario(eventID int64, reactionType string) (scenario database
 	res, err := container.C.Dictionary.GetDBClient().Execute(q)
 	if err != nil {
 		return scenario, err
+	}
+
+	if len(res.Items()) == 0 {
+		log.Logger().Warn().
+			Int64("event_id", eventID).
+			Str("reaction_type", reactionType).
+			Msg("No scenarios found")
+		return scenario, nil
 	}
 
 	scenario.ID = int64(res.Items()[0].GetField("id").Value.(int))

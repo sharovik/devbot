@@ -105,20 +105,24 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 	scheduleTime := getScheduleTime(message)
 	//if event type is defined, we ask questions from that event to collect the answers and use them during schedule.
 	if eventType != "" {
-		if err := askEventQuestions(eventType, message.Channel); err != nil {
+		rScenario, forceSchedule, err := askEventQuestions(eventType, message.Channel, scheduleTime)
+		if err != nil {
 			message.Text = "I cannot ask you the questions from that event. Please, try again."
 			return message, err
 		}
 
-		rScenario := requestedScenarios[message.Channel]
-		if rScenario.ExecuteAt.IsEmpty() {
-			rScenario.ExecuteAt = scheduleTime
-			requestedScenarios[message.Channel] = rScenario
+		if forceSchedule {
+			if err = scheduleRequestedScenario(rScenario, message, scheduleTime); err != nil {
+				message.Text = "Failed to schedule scenario"
+				message.Text += fmt.Sprintf("\nReason: %s", err.Error())
+
+				return message, err
+			}
+
+			message.Text = fmt.Sprintf("Scenario `%s` scheduled.", rScenario.Scenario.EventName)
+
+			return message, nil
 		}
-
-		message.Text = ""
-
-		return message, nil
 	}
 
 	message.Text = ""
@@ -158,30 +162,48 @@ func scheduleRequestedScenario(rScenario requestedScenario, message dto.BaseChat
 	return schedule.S.Schedule(item)
 }
 
-func askEventQuestions(eventType string, channel string) error {
+func askEventQuestions(eventType string, channel string, scheduleTime schedule.ExecuteAt) (rScenario requestedScenario, forceSchedule bool, err error) {
 	eventID, err := container.C.Dictionary.FindEventByAlias(eventType)
 	if err != nil {
-		return err
+		return
 	}
 
-	//We prepare the scenario, with our event name, to make sure we execute the right at the end
+	if eventID == 0 {
+		err = fmt.Errorf("failed to find the event `%s` ", eventType)
+		return
+	}
+
+	//We prepare the scenario, with our event name, to make sure we execute the right at the end.
+	//By doing this, we are rewriting the scenario event alias to make sure, after all questions were asked, we point to our schedule event back
 	scenario, err := service.PrepareEventScenario(eventID, EventName)
 	if err != nil {
-		return err
+		return
 	}
 
-	if err = message.TriggerScenario(channel, scenario, false); err != nil {
-		return err
+	if len(scenario.RequiredVariables) > 0 {
+		if err = message.TriggerScenario(channel, scenario, false); err != nil {
+			return
+		}
+
+		//We change back the event type of scenario to the original one, to make sure we schedule the right event
+		scenario.EventName = eventType
+
+		requestedScenarios[channel] = requestedScenario{
+			Scenario:  scenario,
+			ExecuteAt: scheduleTime,
+		}
+
+		return
 	}
 
 	//We change back the event type of scenario to the original one, to make sure we schedule the right event
 	scenario.EventName = eventType
 
-	requestedScenarios[channel] = requestedScenario{
-		Scenario: scenario,
-	}
-
-	return nil
+	//We schedule this event right away, because it does not have any questions/required variables to ask
+	return requestedScenario{
+		Scenario:  scenario,
+		ExecuteAt: scheduleTime,
+	}, true, nil
 }
 
 func askScenarioQuestions(scenarioID int64, channel string) error {
