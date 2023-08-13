@@ -148,6 +148,14 @@ func (s *Service) trigger(item Item) {
 	})
 
 	go func() {
+		if s.DefinedEvents[item.ReactionType] == nil {
+			log.Logger().Error().
+				Str("reaction_type", item.ReactionType).
+				Msg("Reaction type not exists")
+
+			return
+		}
+
 		if _, err := s.DefinedEvents[item.ReactionType].Execute(conversation.GetConversation(item.Channel).LastQuestion); err != nil {
 			log.Logger().AddError(err).Msg("Failed to execute event")
 		}
