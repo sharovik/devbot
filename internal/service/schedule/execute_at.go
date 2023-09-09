@@ -24,6 +24,7 @@ const (
 
 	repeatableRegexp  = `(?im)(?:^|\s)(repeat|every)\s`
 	delayedTimeRegexp = `(?im)(?:^|\s)(in|after)\s`
+	exactTimeRegexp   = `(?im)(\d+):(\d+)`
 
 	timeFormat = "2006-01-02 15:04"
 )
@@ -35,10 +36,35 @@ type ExecuteAt struct {
 	IsRepeatable  bool
 	IsDelayed     bool
 	ExactDatetime time.Time
+	IsExactHours  bool
+}
+
+func (e *ExecuteAt) parseExactTime(text string) error {
+	res := helper.FindMatches(exactTimeRegexp, text)
+	if len(res) == 0 {
+		return nil
+	}
+
+	hour, err := strconv.Atoi(res["1"])
+	if err != nil {
+		return err
+	}
+
+	minute, err := strconv.Atoi(res["2"])
+	if err != nil {
+		return err
+	}
+
+	e.Hours = int64(hour)
+	e.Minutes = int64(minute)
+
+	e.IsExactHours = true
+
+	return nil
 }
 
 func (e *ExecuteAt) getDatetime() time.Time {
-	t := time.Now()
+	t := time.Now().In(time.UTC)
 
 	if e.Days != 0 || e.Minutes != 0 || e.Hours != 0 {
 		days := t.Day()
@@ -208,6 +234,10 @@ func (e *ExecuteAt) FromString(text string) (ExecuteAt, error) {
 		return ExecuteAt{}, err
 	}
 
+	if err := e.parseExactTime(text); err != nil {
+		return ExecuteAt{}, err
+	}
+
 	if e.IsDelayed || e.IsRepeatable {
 		e.generateDelayedDate()
 	}
@@ -216,20 +246,26 @@ func (e *ExecuteAt) FromString(text string) (ExecuteAt, error) {
 }
 
 func (e *ExecuteAt) generateDelayedDate() {
-	t := time.Now()
+	t := time.Now().In(time.UTC)
 	days := t.Day()
 	if e.Days != 0 {
 		days += int(e.Days)
 	}
 
 	hours := t.Hour()
-	if e.Hours != 0 {
-		hours += int(e.Hours)
-	}
-
 	minutes := t.Minute()
-	if e.Minutes != 0 {
-		minutes += int(e.Minutes)
+
+	if !e.IsExactHours {
+		if e.Hours != 0 {
+			hours += int(e.Hours)
+		}
+
+		if e.Minutes != 0 {
+			minutes += int(e.Minutes)
+		}
+	} else {
+		hours = int(e.Hours)
+		minutes = int(e.Minutes)
 	}
 
 	e.ExactDatetime = time.Date(t.Year(), t.Month(), days, hours, minutes, 0, 0, time.UTC)

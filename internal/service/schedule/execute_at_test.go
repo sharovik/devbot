@@ -83,7 +83,8 @@ func TestExecuteAt_isRepeatable(t *testing.T) {
 		cases = map[string]bool{
 			"repeat daily": true,
 			"every hour":   true,
-			"in 1 hour":    false,
+			"repeat 1 days and 9 hours and 30 minutes": true,
+			"in 1 hour": false,
 		}
 	)
 
@@ -112,7 +113,7 @@ func TestExecuteAt_getDatetime(t *testing.T) {
 	var (
 		actual       ExecuteAt
 		expectedDate time.Time
-		ct           = time.Now()
+		ct           = time.Now().In(time.UTC)
 		err          error
 	)
 
@@ -155,5 +156,10 @@ func TestExecuteAt_getDatetime(t *testing.T) {
 	actual, err = new(ExecuteAt).FromString("2 days")
 	assert.NoError(t, err)
 	expectedDate = time.Date(ct.Year(), ct.Month(), 2, ct.Hour(), ct.Minute(), 0, 0, ct.Location())
+	assert.Equal(t, expectedDate.Format(timeFormat), actual.getDatetime().Format(timeFormat))
+
+	actual, err = new(ExecuteAt).FromString("repeat 1 days at 9:30")
+	assert.NoError(t, err)
+	expectedDate = time.Date(ct.Year(), ct.Month(), ct.Day()+1, 9, 30, 0, 0, ct.Location())
 	assert.Equal(t, expectedDate.Format(timeFormat), actual.getDatetime().Format(timeFormat))
 }
