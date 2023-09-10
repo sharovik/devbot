@@ -111,12 +111,16 @@ func (e *ExecuteAt) toString() string {
 		res = append(res, fmt.Sprintf("%d days", e.Days))
 	}
 
-	if e.Hours != 0 {
-		res = append(res, fmt.Sprintf("%d hours", e.Hours))
-	}
+	if e.IsExactHours {
+		res = append(res, fmt.Sprintf("at %d:%d", e.Hours, e.Minutes))
+	} else {
+		if e.Hours != 0 {
+			res = append(res, fmt.Sprintf("%d hours", e.Hours))
+		}
 
-	if e.Minutes != 0 {
-		res = append(res, fmt.Sprintf("%d minutes", e.Minutes))
+		if e.Minutes != 0 {
+			res = append(res, fmt.Sprintf("%d minutes", e.Minutes))
+		}
 	}
 
 	if len(res) == 0 {

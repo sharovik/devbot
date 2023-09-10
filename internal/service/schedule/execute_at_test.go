@@ -158,8 +158,9 @@ func TestExecuteAt_getDatetime(t *testing.T) {
 	expectedDate = time.Date(ct.Year(), ct.Month(), 2, ct.Hour(), ct.Minute(), 0, 0, ct.Location())
 	assert.Equal(t, expectedDate.Format(timeFormat), actual.getDatetime().Format(timeFormat))
 
-	actual, err = new(ExecuteAt).FromString("repeat 1 days at 9:30")
+	actual, err = new(ExecuteAt).FromString("repeat 1 days and at 9:30")
 	assert.NoError(t, err)
 	expectedDate = time.Date(ct.Year(), ct.Month(), ct.Day()+1, 9, 30, 0, 0, ct.Location())
 	assert.Equal(t, expectedDate.Format(timeFormat), actual.getDatetime().Format(timeFormat))
+	assert.Equal(t, "repeat 1 days and at 9:30", actual.toString())
 }
