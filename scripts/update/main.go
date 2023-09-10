@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"github.com/sharovik/devbot/internal/service/schedule"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/database"
@@ -39,6 +40,8 @@ func run() error {
 	container.C = cnt
 
 	definedevents.InitializeDefinedEvents()
+	schedule.InitS(container.C.Config, container.C.Dictionary.GetDBClient(), container.C.DefinedEvents)
+
 	if err := runMigrations(); err != nil {
 		log.Logger().AddError(err).Msg("Failed to run migrations")
 		return err
