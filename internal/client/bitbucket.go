@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	_time "github.com/sharovik/devbot/internal/service/time"
 	"net/http"
 	"net/url"
 	"time"
@@ -62,7 +63,7 @@ func (b *BitBucketClient) isTokenInvalid() bool {
 		return true
 	}
 
-	if b.OauthTokenExpire.Unix() <= time.Now().Unix() {
+	if b.OauthTokenExpire.Unix() <= _time.Service.Now().Unix() {
 		log.Logger().Warn().Time("time", b.OauthTokenExpire).Str("error", "expired").Msg("Invalid token")
 		return true
 	}
@@ -122,7 +123,7 @@ func (b *BitBucketClient) loadAuthToken() error {
 	}
 
 	b.RefreshToken = responseObject.RefreshToken
-	b.OauthTokenExpire = time.Now().Add(time.Second * time.Duration(responseObject.ExpiresIn))
+	b.OauthTokenExpire = _time.Service.Now().Add(time.Second * time.Duration(responseObject.ExpiresIn))
 	b.OauthToken = responseObject.AccessToken
 	b.client.SetOauthToken(responseObject.AccessToken)
 

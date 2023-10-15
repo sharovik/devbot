@@ -2,6 +2,7 @@ package message
 
 import (
 	"fmt"
+	_time "github.com/sharovik/devbot/internal/service/time"
 	"time"
 
 	"github.com/sharovik/devbot/internal/database"
@@ -78,7 +79,7 @@ func prepareAnswer(message *dto.SlackResponseEventMessage, dm dto.DictionaryMess
 		Text:            dm.Answer,
 		ThreadTS:        message.ThreadTS,
 		AsUser:          true,
-		Ts:              time.Now(),
+		Ts:              _time.Service.Now(),
 		OriginalMessage: message.ToBaseOriginalMessage(),
 	}
 
@@ -93,7 +94,7 @@ func triggerUnknownAnswerScenario(message *dto.SlackResponseEventMessage) (answe
 		Text:            "Hmmm",
 		AsUser:          true,
 		ThreadTS:        message.ThreadTS,
-		Ts:              time.Now(),
+		Ts:              _time.Service.Now(),
 		OriginalMessage: message.ToBaseOriginalMessage(),
 		DictionaryMessage: dto.DictionaryMessage{
 			ReactionType: "unknownquestion",
@@ -113,7 +114,7 @@ func TriggerScenario(channel string, scenario database.EventScenario, shouldReme
 		Channel:           channel,
 		AsUser:            true,
 		Text:              scenario.GetUnAnsweredQuestion(),
-		Ts:                time.Now(),
+		Ts:                _time.Service.Now(),
 		DictionaryMessage: dmAnswer,
 		OriginalMessage: dto.BaseOriginalMessage{
 			Text: scenario.GetUnAnsweredQuestion(),

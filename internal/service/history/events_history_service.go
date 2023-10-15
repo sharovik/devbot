@@ -1,10 +1,9 @@
 package history
 
 import (
-	"strings"
-	"time"
-
 	"github.com/sharovik/devbot/internal/service/message/conversation"
+	_time "github.com/sharovik/devbot/internal/service/time"
+	"strings"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"
@@ -67,7 +66,7 @@ func RememberEventExecution(msg dto.BaseChatMessage) {
 	})
 	item.AddModelField(cdto.ModelField{
 		Name:  "created",
-		Value: time.Now().Unix(),
+		Value: _time.Service.Now().Unix(),
 	})
 
 	c := container.C.Dictionary.GetDBClient()

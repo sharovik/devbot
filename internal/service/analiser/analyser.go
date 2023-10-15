@@ -1,9 +1,8 @@
 package analiser
 
 import (
-	"time"
-
 	"github.com/sharovik/devbot/internal/service/message/conversation"
+	_time "github.com/sharovik/devbot/internal/service/time"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/database"
@@ -81,7 +80,7 @@ func GetDmAnswer(message Message) (dmAnswer dto.DictionaryMessage, err error) {
 			Channel:           message.Channel,
 			Text:              message.Text,
 			AsUser:            false,
-			Ts:                time.Now(),
+			Ts:                _time.Service.Now(),
 			DictionaryMessage: dmAnswer,
 			OriginalMessage: dto.BaseOriginalMessage{
 				Text: message.Text,

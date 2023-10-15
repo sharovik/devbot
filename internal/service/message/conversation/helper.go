@@ -2,6 +2,7 @@ package conversation
 
 import (
 	"fmt"
+	_time "github.com/sharovik/devbot/internal/service/time"
 	"regexp"
 	"strings"
 	"time"
@@ -75,7 +76,7 @@ func MarkAsReadyEventToBeExecuted(channel string) {
 
 // CleanUpExpiredMessages removes the messages from the CleanUpExpiredMessages map object, which are expired
 func CleanUpExpiredMessages() {
-	currentTime := time.Now()
+	currentTime := _time.Service.Now()
 
 	for channel, conversation := range GetCurrentConversations() {
 		elapsed := time.Duration(currentTime.Sub(conversation.LastQuestion.Ts).Nanoseconds())

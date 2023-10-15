@@ -3,13 +3,13 @@ package config
 import (
 	"flag"
 	"fmt"
+	"github.com/joho/godotenv"
 	"github.com/sharovik/devbot/internal/log"
 	"github.com/sharovik/orm/clients"
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/joho/godotenv"
+	"time"
 )
 
 // MessagesAPIConfig struct object
@@ -52,6 +52,7 @@ type HTTPClient struct {
 // Config configuration object
 type Config struct {
 	appEnv            string
+	Timezone          *time.Location
 	LearningEnabled   bool
 	MessagesAPIConfig MessagesAPIConfig
 	BitBucketConfig   BitBucketConfig
@@ -162,7 +163,11 @@ const (
 
 	//AWSSecretsRegion the region selected for the aws session
 	AWSSecretsRegion = "AWS_REGION"
+
+	envTimezone = "APP_TIMEZONE"
 )
+
+var DefaultTimezone = time.UTC
 
 // Init initialise configuration for this project
 func Init() (Config, error) {
@@ -192,6 +197,8 @@ func Init() (Config, error) {
 			Database:          initDatabaseConfig(),
 			LogConfig:         initLogConfig(),
 		}
+
+		cfg.loadTimezone()
 
 		return cfg, nil
 	}
@@ -377,4 +384,22 @@ func getBoolValue(field string) bool {
 	}
 
 	return res
+}
+
+func (c *Config) loadTimezone() {
+	if os.Getenv(envTimezone) != "" {
+		c.Timezone, _ = time.LoadLocation(os.Getenv(envTimezone))
+	}
+
+	if c.Timezone == nil {
+		c.Timezone = DefaultTimezone
+	}
+}
+
+func (c Config) GetTimezone() (timeZone *time.Location) {
+	if c.Timezone == nil {
+		c.Timezone = DefaultTimezone
+	}
+
+	return c.Timezone
 }
