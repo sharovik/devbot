@@ -1,6 +1,7 @@
 package main
 
 import (
+	_time "github.com/sharovik/devbot/internal/service/time"
 	"time"
 
 	"github.com/sharovik/devbot/internal/service/schedule"
@@ -51,7 +52,7 @@ func run() error {
 				return err
 			}
 
-			currentTime := time.Now()
+			currentTime := _time.Service.Now()
 
 			//We set to 0 number of retries if there were no any retries since 30 minutes
 			elapsed := time.Duration(currentTime.Sub(lastRetry).Nanoseconds())
@@ -60,7 +61,7 @@ func run() error {
 			}
 
 			numberOfRetries++
-			lastRetry = time.Now()
+			lastRetry = _time.Service.Now()
 
 			log.Logger().AppendGlobalContext(map[string]interface{}{
 				"number_retries": numberOfRetries,

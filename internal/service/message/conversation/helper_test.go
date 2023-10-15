@@ -1,6 +1,7 @@
 package conversation
 
 import (
+	_time "github.com/sharovik/devbot/internal/service/time"
 	"testing"
 	"time"
 
@@ -60,7 +61,7 @@ func TestAddConversation(t *testing.T) {
 }
 
 func TestCleanUpExpiredMessages(t *testing.T) {
-	now := time.Now()
+	now := _time.Service.Now()
 	scenario := database.EventScenario{}
 
 	AddConversation(scenario, dto.BaseChatMessage{
@@ -89,7 +90,7 @@ func TestCleanUpExpiredMessages(t *testing.T) {
 }
 
 func TestGetConversation(t *testing.T) {
-	now := time.Now()
+	now := _time.Service.Now()
 	currentConversations = map[string]Conversation{}
 	scenario := database.EventScenario{}
 

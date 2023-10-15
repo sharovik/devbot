@@ -1,6 +1,7 @@
 package schedule
 
 import (
+	_time "github.com/sharovik/devbot/internal/service/time"
 	"testing"
 	"time"
 
@@ -16,7 +17,7 @@ func TestExecuteAt_IsEmpty(t *testing.T) {
 			Hours: 1,
 		},
 		{
-			ExactDatetime: time.Now(),
+			ExactDatetime: _time.Service.Now(),
 		},
 	}
 
@@ -113,7 +114,7 @@ func TestExecuteAt_getDatetime(t *testing.T) {
 	var (
 		actual       ExecuteAt
 		expectedDate time.Time
-		ct           = time.Now().In(time.UTC)
+		ct           = _time.Service.Now()
 		err          error
 	)
 

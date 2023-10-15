@@ -11,6 +11,7 @@ Free, opensource "ChatBot" project, based on GoLang. Using this project you can 
 - [Install to AWS](documentation/terraform-aws-setup.md)
 - [How to write custom event](documentation/events.md)
 - [How to build scenario](documentation/scenarios.md)
+- [How to schedule scenario](documentation/schedules.md)
 - [Migrations](documentation/migrations.md)
 - [Features out of the box](documentation/features-out-of-the-box.md)
 - [Internal functionalities](documentation/available-features.md)

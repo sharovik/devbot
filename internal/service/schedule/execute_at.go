@@ -2,6 +2,7 @@ package schedule
 
 import (
 	"fmt"
+	_time "github.com/sharovik/devbot/internal/service/time"
 	"strconv"
 	"strings"
 	"time"
@@ -64,7 +65,7 @@ func (e *ExecuteAt) parseExactTime(text string) error {
 }
 
 func (e *ExecuteAt) getDatetime() time.Time {
-	t := time.Now().In(time.UTC)
+	t := _time.Service.Now()
 
 	if e.Days != 0 || e.Minutes != 0 || e.Hours != 0 {
 		days := t.Day()
@@ -250,7 +251,7 @@ func (e *ExecuteAt) FromString(text string) (ExecuteAt, error) {
 }
 
 func (e *ExecuteAt) generateDelayedDate() {
-	t := time.Now().In(time.UTC)
+	t := _time.Service.Now()
 	days := t.Day()
 	if e.Days != 0 {
 		days += int(e.Days)

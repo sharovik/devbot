@@ -2,6 +2,7 @@ package schedule
 
 import (
 	"fmt"
+	_time "github.com/sharovik/devbot/internal/service/time"
 	"strings"
 	"time"
 
@@ -36,15 +37,29 @@ var (
 
 // Item the item struct for schedule object
 type Item struct {
-	ID           int
-	Author       string
-	Channel      string
-	ScenarioID   int64
-	EventID      int64
+	ID int
+
+	// Author - who triggers the event
+	Author string
+
+	//Channel - target channel, where event will output the response
+	Channel string
+
+	//ScenarioID - id of scenario, which should be triggered
+	ScenarioID int64
+
+	//EventID - id of event. It should be used in combination with scenario id
+	EventID int64
+
+	//ReactionType - the event alias, which will be used during the event execution
 	ReactionType string
-	Variables    string //; separated
-	Scenario     database.EventScenario
-	ExecuteAt    ExecuteAt
+
+	//Variables - the event variables, which will be used during the event execution
+	Variables string //; separated
+	Scenario  database.EventScenario
+
+	//ExecuteAt - time of event execution
+	ExecuteAt ExecuteAt
 	//IsRepeatable if it is set to true, that means we want to repeat it
 	IsRepeatable bool
 }
@@ -72,16 +87,14 @@ func (s *Service) Run() (err error) {
 	return err
 }
 
-func alreadyExists(timeStr string, item Item) bool {
-	if len(toBeExecuted[timeStr]) == 0 {
-		return false
-	}
-
+func alreadyExists(item Item) bool {
 	//Check if the entry already exists. If so, false will be returned
-	for _, entry := range toBeExecuted[timeStr] {
-		if generateItemID(entry) == generateItemID(item) {
-			//it's already exists
-			return true
+	for _, scheduledTimeSlot := range toBeExecuted {
+		for _, entry := range scheduledTimeSlot {
+			if generateItemID(entry) == generateItemID(item) {
+				//it's already exists
+				return true
+			}
 		}
 	}
 
@@ -89,10 +102,10 @@ func alreadyExists(timeStr string, item Item) bool {
 }
 
 func (s *Service) triggerEvents() {
-	now := time.Now()
+	now := _time.Service.Now()
 	for _, item := range s.getSchedules() {
 		if !item.IsRepeatable && now.After(item.ExecuteAt.getDatetime()) {
-			if alreadyExists(item.ExecuteAt.getDatetime().Format(timeFormat), item) {
+			if alreadyExists(item) {
 				continue
 			}
 
@@ -100,14 +113,15 @@ func (s *Service) triggerEvents() {
 			continue
 		}
 
-		if alreadyExists(item.ExecuteAt.getDatetime().Format(timeFormat), item) {
+		if alreadyExists(item) {
 			continue
 		}
 
 		toBeExecuted[item.ExecuteAt.getDatetime().Format(timeFormat)] = append(toBeExecuted[item.ExecuteAt.getDatetime().Format(timeFormat)], item)
 	}
 
-	for _, item := range toBeExecuted[now.Format(timeFormat)] {
+	tStr := now.Format(timeFormat)
+	for _, item := range toBeExecuted[tStr] {
 		s.trigger(item)
 	}
 
@@ -115,6 +129,7 @@ func (s *Service) triggerEvents() {
 }
 
 func (s *Service) trigger(item Item) {
+	log.Logger().Info().Interface("item", item).Msg("Trigger scheduled event")
 	scenario := database.EventScenario{
 		ID:        item.ScenarioID,
 		EventName: item.ReactionType,
@@ -138,7 +153,7 @@ func (s *Service) trigger(item Item) {
 	conversation.AddConversation(scenario, dto.BaseChatMessage{
 		Channel: item.Channel,
 		AsUser:  true,
-		Ts:      time.Now(),
+		Ts:      _time.Service.Now(),
 		DictionaryMessage: dto.DictionaryMessage{
 			ScenarioID:   item.ScenarioID,
 			EventID:      item.EventID,
@@ -179,6 +194,8 @@ func (s *Service) trigger(item Item) {
 				Msg("Failed to delete scheduled item from the database")
 		}
 	}
+
+	log.Logger().Info().Interface("item", item).Msg("Scheduled event has been executed")
 }
 
 func (s *Service) Schedule(item Item) (err error) {
