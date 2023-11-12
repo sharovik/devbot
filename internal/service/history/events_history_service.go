@@ -1,9 +1,10 @@
 package history
 
 import (
+	"strings"
+
 	"github.com/sharovik/devbot/internal/service/message/conversation"
 	_time "github.com/sharovik/devbot/internal/service/time"
-	"strings"
 
 	"github.com/sharovik/devbot/internal/container"
 	"github.com/sharovik/devbot/internal/dto"

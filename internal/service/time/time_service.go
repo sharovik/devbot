@@ -1,8 +1,9 @@
 package time
 
 import (
-	"github.com/sharovik/devbot/internal/config"
 	"time"
+
+	"github.com/sharovik/devbot/internal/config"
 )
 
 var Service TimeService

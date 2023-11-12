@@ -2,10 +2,11 @@ package conversation
 
 import (
 	"fmt"
-	_time "github.com/sharovik/devbot/internal/service/time"
 	"regexp"
 	"strings"
 	"time"
+
+	_time "github.com/sharovik/devbot/internal/service/time"
 
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/dto"

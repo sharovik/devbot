@@ -1,9 +1,10 @@
 package conversation
 
 import (
-	_time "github.com/sharovik/devbot/internal/service/time"
 	"testing"
 	"time"
+
+	_time "github.com/sharovik/devbot/internal/service/time"
 
 	"github.com/sharovik/devbot/internal/database"
 

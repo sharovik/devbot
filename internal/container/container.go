@@ -3,9 +3,10 @@ package container
 import (
 	"crypto/tls"
 	"errors"
-	_time "github.com/sharovik/devbot/internal/service/time"
 	"net/http"
 	"time"
+
+	_time "github.com/sharovik/devbot/internal/service/time"
 
 	"github.com/sharovik/devbot/internal/dto/event"
 
