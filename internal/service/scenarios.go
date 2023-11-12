@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+
 	"github.com/sharovik/devbot/internal/log"
 
 	"github.com/sharovik/devbot/internal/database"

@@ -3,13 +3,14 @@ package config
 import (
 	"flag"
 	"fmt"
-	"github.com/joho/godotenv"
-	"github.com/sharovik/devbot/internal/log"
-	"github.com/sharovik/orm/clients"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/joho/godotenv"
+	"github.com/sharovik/devbot/internal/log"
+	"github.com/sharovik/orm/clients"
 )
 
 // MessagesAPIConfig struct object

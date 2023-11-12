@@ -1,8 +1,9 @@
 package main
 
 import (
-	_time "github.com/sharovik/devbot/internal/service/time"
 	"time"
+
+	_time "github.com/sharovik/devbot/internal/service/time"
 
 	"github.com/sharovik/devbot/internal/service/schedule"
 

@@ -2,9 +2,10 @@ package schedule
 
 import (
 	"fmt"
-	_time "github.com/sharovik/devbot/internal/service/time"
 	"strings"
 	"time"
+
+	_time "github.com/sharovik/devbot/internal/service/time"
 
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/database"

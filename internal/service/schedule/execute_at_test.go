@@ -1,9 +1,10 @@
 package schedule
 
 import (
-	_time "github.com/sharovik/devbot/internal/service/time"
 	"testing"
 	"time"
+
+	_time "github.com/sharovik/devbot/internal/service/time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -45,37 +46,32 @@ func TestExecuteAt_parseDays(t *testing.T) {
 	}
 }
 
-func TestExecuteAt_parseHours(t *testing.T) {
+func TestExecuteAt_parse(t *testing.T) {
 	var (
-		cases = map[string]int64{
-			"in 2 hours":   int64(2),
-			"after 1 hour": int64(1),
-			"every hour":   int64(0),
+		cases = map[string]interface{}{
+			"in 2 hours":   2,
+			"after 1 hour": 1,
+			"every hour":   nil,
 		}
 	)
 
 	for text, expected := range cases {
 		e := ExecuteAt{}
-		err := e.parseHours(text)
+		hours, err := e.parse(text, HourRegexp)
 		assert.NoError(t, err)
-		assert.Equal(t, expected, e.Hours)
+		assert.Equal(t, expected, hours)
 	}
-}
 
-func TestExecuteAt_parseMinutes(t *testing.T) {
-	var (
-		cases = map[string]int64{
-			"in 2 minutes":   int64(2),
-			"after 1 minute": int64(1),
-			"every minute":   int64(0),
-		}
-	)
+	cases = map[string]interface{}{
+		"in 20 minutes": 20,
+		"every minute":  nil,
+	}
 
 	for text, expected := range cases {
 		e := ExecuteAt{}
-		err := e.parseMinutes(text)
+		minutes, err := e.parse(text, MinuteRegexp)
 		assert.NoError(t, err)
-		assert.Equal(t, expected, e.Minutes)
+		assert.Equal(t, expected, minutes)
 	}
 }
 
@@ -130,12 +126,12 @@ func TestExecuteAt_getDatetime(t *testing.T) {
 
 	actual, err = new(ExecuteAt).FromString("1 hour")
 	assert.NoError(t, err)
-	expectedDate = time.Date(ct.Year(), ct.Month(), ct.Day(), 1, ct.Minute(), 0, 0, ct.Location())
+	expectedDate = time.Date(ct.Year(), ct.Month(), ct.Day(), ct.Hour(), ct.Minute()+60, 0, 0, ct.Location())
 	assert.Equal(t, expectedDate.Format(timeFormat), actual.getDatetime().Format(timeFormat))
 
 	actual, err = new(ExecuteAt).FromString("23 minutes")
 	assert.NoError(t, err)
-	expectedDate = time.Date(ct.Year(), ct.Month(), ct.Day(), ct.Hour(), 23, 0, 0, ct.Location())
+	expectedDate = time.Date(ct.Year(), ct.Month(), ct.Day(), ct.Hour(), ct.Minute()+23, 0, 0, ct.Location())
 	assert.Equal(t, expectedDate.Format(timeFormat), actual.getDatetime().Format(timeFormat))
 
 	actual, err = new(ExecuteAt).FromString("2022-12-18 11:22")
@@ -156,7 +152,7 @@ func TestExecuteAt_getDatetime(t *testing.T) {
 
 	actual, err = new(ExecuteAt).FromString("2 days")
 	assert.NoError(t, err)
-	expectedDate = time.Date(ct.Year(), ct.Month(), 2, ct.Hour(), ct.Minute(), 0, 0, ct.Location())
+	expectedDate = time.Date(ct.Year(), ct.Month(), ct.Day()+2, ct.Hour(), ct.Minute(), 0, 0, ct.Location())
 	assert.Equal(t, expectedDate.Format(timeFormat), actual.getDatetime().Format(timeFormat))
 
 	actual, err = new(ExecuteAt).FromString("repeat 1 days and at 9:30")
@@ -164,4 +160,29 @@ func TestExecuteAt_getDatetime(t *testing.T) {
 	expectedDate = time.Date(ct.Year(), ct.Month(), ct.Day()+1, 9, 30, 0, 0, ct.Location())
 	assert.Equal(t, expectedDate.Format(timeFormat), actual.getDatetime().Format(timeFormat))
 	assert.Equal(t, "repeat 1 days and at 9:30", actual.toString())
+}
+
+func TestExecuteAt_ParseDays(t *testing.T) {
+	var (
+		actual       ExecuteAt
+		expectedDate time.Time
+		ct           = _time.Service.Now()
+		err          error
+	)
+
+	actual, err = new(ExecuteAt).FromString("Sunday at 10:00")
+	assert.NoError(t, err)
+	expectedDate = time.Date(ct.Year(), ct.Month(), ct.Day(), 10, 00, 0, 0, ct.Location())
+	assert.Equal(t, expectedDate.Format(timeFormat), actual.getDatetime().Format(timeFormat))
+	assert.Equal(t, "Sunday and at 10:0", actual.toString())
+
+	actual, err = new(ExecuteAt).FromString("every monday at 9:10")
+	assert.NoError(t, err)
+
+	days := int((7 + (time.Monday - ct.Weekday())) % 7)
+	now := _time.Service.Now()
+	_, _, d := now.AddDate(0, 0, days).Date()
+	expectedDate = time.Date(ct.Year(), ct.Month(), d, 9, 10, 0, 0, ct.Location())
+	assert.Equal(t, expectedDate.Format(timeFormat), actual.getDatetime().Format(timeFormat))
+	assert.Equal(t, "repeat Monday and at 9:10", actual.toString())
 }
