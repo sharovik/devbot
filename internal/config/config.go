@@ -201,10 +201,24 @@ func Init() (Config, error) {
 
 		cfg.loadTimezone()
 
+		cfg = loadSecrets(cfg)
+
 		return cfg, nil
 	}
 
 	return cfg, nil
+}
+
+func loadSecrets(cfg Config) Config {
+	if os.Getenv(AWSSecretsBucket) != "" {
+		secrets, _ := GetSecret(os.Getenv(AWSSecretsBucket), os.Getenv(AWSSecretsRegion))
+		cfg.BitBucketConfig.ClientID = secrets.BitBucketClientID
+		cfg.BitBucketConfig.ClientSecret = secrets.BitBucketClientSecret
+		cfg.MessagesAPIConfig.OAuthToken = secrets.MessagesAPIOAuthToken
+		cfg.MessagesAPIConfig.WebAPIOAuthToken = secrets.MessagesAPIWebAPIOAuthToken
+	}
+
+	return cfg
 }
 
 func initHTTPClientConfig() (c HTTPClient, err error) {
@@ -259,14 +273,6 @@ func initMessagesAPIConfig() MessagesAPIConfig {
 	messagesAPIType := defaultMessagesAPIType
 	if os.Getenv(envMessagesAPIType) != "" {
 		messagesAPIType = os.Getenv(envMessagesAPIType)
-	}
-
-	if os.Getenv(AWSSecretsBucket) != "" {
-		secrets, _ := GetSecret(os.Getenv(AWSSecretsBucket), os.Getenv(AWSSecretsRegion))
-		cfg.BitBucketConfig.ClientID = secrets.BitBucketClientID
-		cfg.BitBucketConfig.ClientSecret = secrets.BitBucketClientSecret
-		cfg.MessagesAPIConfig.OAuthToken = secrets.MessagesAPIOAuthToken
-		cfg.MessagesAPIConfig.WebAPIOAuthToken = secrets.MessagesAPIWebAPIOAuthToken
 	}
 
 	return MessagesAPIConfig{
