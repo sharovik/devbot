@@ -170,18 +170,22 @@ func TestExecuteAt_ParseDays(t *testing.T) {
 		err          error
 	)
 
+	days := int((7 + (time.Sunday - ct.Weekday())) % 7)
+	now := _time.Service.Now()
+	_, _, d := now.AddDate(0, 0, days).Date()
+
 	actual, err = new(ExecuteAt).FromString("Sunday at 10:00")
 	assert.NoError(t, err)
-	expectedDate = time.Date(ct.Year(), ct.Month(), ct.Day(), 10, 00, 0, 0, ct.Location())
+	expectedDate = time.Date(ct.Year(), ct.Month(), d, 10, 00, 0, 0, ct.Location())
 	assert.Equal(t, expectedDate.Format(timeFormat), actual.getDatetime().Format(timeFormat))
 	assert.Equal(t, "Sunday and at 10:0", actual.toString())
 
 	actual, err = new(ExecuteAt).FromString("every monday at 9:10")
 	assert.NoError(t, err)
 
-	days := int((7 + (time.Monday - ct.Weekday())) % 7)
-	now := _time.Service.Now()
-	_, _, d := now.AddDate(0, 0, days).Date()
+	days = int((7 + (time.Monday - ct.Weekday())) % 7)
+	now = _time.Service.Now()
+	_, _, d = now.AddDate(0, 0, days).Date()
 	expectedDate = time.Date(ct.Year(), ct.Month(), d, 9, 10, 0, 0, ct.Location())
 	assert.Equal(t, expectedDate.Format(timeFormat), actual.getDatetime().Format(timeFormat))
 	assert.Equal(t, "repeat Monday and at 9:10", actual.toString())
