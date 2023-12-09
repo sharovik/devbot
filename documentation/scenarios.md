@@ -60,6 +60,7 @@ func (e EventStruct) Install() error {
 	return container.C.Dictionary.InstallNewEventScenario(database.EventScenario{
 		EventName:    EventName,
 		EventVersion: EventVersion,
+		//The triggers, which will trigger the event
 		Questions: []database.Question{
 			{
 				Question:      "who are you?",
@@ -68,48 +69,28 @@ func (e EventStruct) Install() error {
 				QuestionGroup: "",
 			},
 		},
+        RequiredVariables: []database.ScenarioVariable{
+            {
+                Question: "First scenario question",
+            },
+            {
+                Question: "Second scenario question",
+            },
+        },
 	})
 }
 ```
 
-As you can see, in the `database.EventScenario` struct you can define multiple questions, which will be connected to a one scenario.
-Where each `database.Question` is a trigger for the scenario.
+As you can see, in the `database.EventScenario` struct you can define multiple triggers for our event and its variables.
 
-If your scenario require to have a variables filled, please use the following structure
+In this example, each `database.ScenarioVariable` is a variable, which need to be filled. The variable questions will be asked in the order you specified in `Install` method.
+
+## Usage of scenario variables in event
+Once the scenario was triggered and your event was called, in order to retrieve the conversation in your event you can call `conversation.GetConversation` method.
 ```go
-// Install method for installation of event
-func (e EventStruct) Install() error {
-	log.Logger().Debug().
-		Str("event_name", EventName).
-		Str("event_version", EventVersion).
-		Msg("Triggered event installation")
-
-	if err := container.C.Dictionary.InstallNewEventScenario(database.EventScenario{
-		EventName:    EventName,
-		EventVersion: EventVersion,
-		Questions: []database.Question{
-			{
-				Question:      "write a message",
-				QuestionRegex: "(?i)(write a message)",
-			},
-			{
-				Question:      "write message",
-				QuestionRegex: "(?i)(write message)",
-			},
-		},
-		RequiredVariables: []database.ScenarioVariable{
-			{
-				Question: stepMessage,
-			},
-			{
-				Question: stepChannel,
-			},
-		},
-	}); err != nil {
-		return err
-	}
-
-	return nil
-}
+currentConversation := conversation.GetConversation(message.Channel)
 ```
-In this example, each `database.ScenarioVariable` is a variable, which need to be filled. The questions will be asked in that order, you specified in `Install` method
+
+Then, in the received object you will find the `currentConversation.Scenario.RequiredVariables` attribute, which will contain all required variables, you defined in your scenario with their answers.
+
+As an example, please check out the [examplescenario](../events/examplescenario/event.go) event.
