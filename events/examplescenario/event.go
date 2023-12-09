@@ -55,7 +55,7 @@ func (e EventStruct) Execute(message dto.BaseChatMessage) (dto.BaseChatMessage, 
 	whatToWrite := ""
 	whereToWrite := ""
 
-	//If we don't have all variables for our conversation, that means, we didn't received answers for all questions of our scenario
+	//If we don't have all variables for our conversation, that means, we didn't receive answers for all questions of our scenario
 	if len(currentConversation.Scenario.RequiredVariables) != 2 {
 		message.Text = "Not all variables are defined."
 
