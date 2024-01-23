@@ -2,11 +2,6 @@ package schedule
 
 import (
 	"fmt"
-	"strings"
-	"time"
-
-	_time "github.com/sharovik/devbot/internal/service/time"
-
 	"github.com/sharovik/devbot/internal/config"
 	"github.com/sharovik/devbot/internal/database"
 	"github.com/sharovik/devbot/internal/dto"
@@ -14,9 +9,12 @@ import (
 	"github.com/sharovik/devbot/internal/dto/event"
 	"github.com/sharovik/devbot/internal/log"
 	"github.com/sharovik/devbot/internal/service/message/conversation"
+	_time "github.com/sharovik/devbot/internal/service/time"
 	"github.com/sharovik/orm/clients"
 	cdto "github.com/sharovik/orm/dto"
 	"github.com/sharovik/orm/query"
+	"strings"
+	"time"
 )
 
 // Service schedule service struct
@@ -77,9 +75,15 @@ func InitS(cfg config.Config, db clients.BaseClientInterface, definedEvents map[
 func (s *Service) Run() (err error) {
 	log.Logger().Debug().Msg("Start schedule service")
 	go func() {
+		lastExecutedStr := ""
 		for {
-			time.Sleep(time.Second)
+			if lastExecutedStr == time.Now().Format("2006-01-02T15:04") {
+				time.Sleep(time.Second)
+				continue
+			}
+
 			s.triggerEvents()
+			lastExecutedStr = time.Now().Format("2006-01-02T15:04")
 		}
 	}()
 
