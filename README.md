@@ -59,14 +59,5 @@ Here you can find an examples of custom events, which are ready for installation
 ## Authors
 * **Pavel Simzicov** - *Main work* - [sharovik](https://github.com/sharovik)
 
-### Vendors used
-* github.com/joho/godotenv - for env files loading
-* github.com/sharovik/orm - the ORM for database queries
-* github.com/karalabe/xgo - for cross-platform build
-* github.com/pkg/errors - for errors wrapper and trace extracting in logger
-* github.com/rs/zerolog - for logger
-* github.com/stretchr/testify - for asserts in tests
-* golang.org/x/net - for websocket connection
-
 ## License
 This project licensed under the BSD License - see the [LICENSE.md](LICENSE.md) file for details
