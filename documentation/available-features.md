@@ -1,5 +1,5 @@
 # Available internal features
-Here you can see the list potential useful features of the framework, which can be useful during your custom event build.
+Here you can see the list potential useful features of the project, which can be useful during your custom events build.
 
 ## Table of contents
 - [BitBucket API client](#bitbucket-api-client)
