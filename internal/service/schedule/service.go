@@ -131,7 +131,7 @@ func (s *Service) triggerEvents() {
 	}
 
 	//We clean up the already executed events
-	for timeStr, _ := range toBeExecuted {
+	for timeStr := range toBeExecuted {
 		targ, err := time.ParseInLocation(timeFormat, timeStr, _time.Service.TimeZone)
 		if err != nil {
 			log.Logger().AddError(err).Msg("Failed to parse time")
