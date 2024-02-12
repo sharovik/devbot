@@ -9,6 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func init() {
+	_time.InitNOW(time.UTC)
+}
+
 func TestExecuteAt_IsEmpty(t *testing.T) {
 	cases := []ExecuteAt{
 		{
