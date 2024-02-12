@@ -95,7 +95,7 @@ func (e *ExecuteAt) getDatetime() time.Time {
 			return e.ExactDatetime
 		}
 
-		return time.Date(t.Year(), t.Month(), e.generateDays(t), hours, minutes, 0, 0, time.UTC)
+		return time.Date(t.Year(), t.Month(), e.generateDays(t), hours, minutes, 0, 0, t.Location())
 	}
 
 	return e.ExactDatetime
@@ -172,7 +172,7 @@ func (e *ExecuteAt) parseDateTime(text string) error {
 		return nil
 	}
 
-	result, err := time.ParseInLocation(timeFormat, text, time.UTC)
+	result, err := time.ParseInLocation(timeFormat, text, _time.Service.TimeZone)
 	if err != nil {
 		return err
 	}
@@ -338,5 +338,5 @@ func (e *ExecuteAt) generateDelayedDate() {
 		minutes = int(e.Minutes)
 	}
 
-	e.ExactDatetime = time.Date(t.Year(), t.Month(), e.generateDays(t), hours, minutes, 0, 0, time.UTC)
+	e.ExactDatetime = time.Date(t.Year(), t.Month(), e.generateDays(t), hours, minutes, 0, 0, t.Location())
 }
