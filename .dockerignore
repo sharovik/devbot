@@ -3,7 +3,6 @@
 .DS_store
 
 devbot.sqlite
-.env
 
 project-build
 .github
