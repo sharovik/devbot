@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 golang:alpine as base
+FROM --platform=linux/amd64 golang:1.21-alpine3.17 as base
 
 MAINTAINER Pavel Simzicov <sharovik89@ya.ru>
 
@@ -18,7 +18,7 @@ RUN apk add --no-cache bash && apk add --no-cache make && apk add build-base && 
 
 RUN make build && make cleanup
 
-FROM --platform=linux/amd64 alpine:latest as run
+FROM --platform=linux/amd64 alpine:1.21-alpine3.17 as run
 RUN apk --no-cache add ca-certificates
 
 ENV APP_PATH="/home/go/src/github.com/sharovik/devbot"
