@@ -142,3 +142,24 @@ func (client SlackClient) GetUsersList() (dto.SlackResponseUsersList, int, error
 
 	return dtoResponse, statusCode, nil
 }
+
+// GetUsersListPaged method which returns the users list of current workspace using selected cursor
+func (client SlackClient) GetUsersListPaged(cursor string) (result dto.SlackResponseUsersList, err error) {
+	response, _, err := client.HTTPClient.Get("/users.list", map[string]string{
+		"cursor": cursor,
+	})
+	if err != nil {
+		return dto.SlackResponseUsersList{}, err
+	}
+
+	var dtoResponse dto.SlackResponseUsersList
+	if err := json.Unmarshal(response, &dtoResponse); err != nil {
+		return dto.SlackResponseUsersList{}, err
+	}
+
+	if !dtoResponse.Ok {
+		return dtoResponse, errors.New(dtoResponse.Error)
+	}
+
+	return dtoResponse, nil
+}

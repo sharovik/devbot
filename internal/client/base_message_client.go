@@ -21,6 +21,7 @@ type MessageClientInterface interface {
 	//Methods for slackAPI endpoints
 	GetConversationsList() (dto.SlackResponseConversationsList, int, error)
 	GetUsersList() (dto.SlackResponseUsersList, int, error)
+	GetUsersListPaged(cursor string) (result dto.SlackResponseUsersList, err error)
 
 	//SendMessage sends the message to selected channel
 	SendMessage(message dto.BaseChatMessage) (response dto.BaseResponseInterface, status int, err error)
