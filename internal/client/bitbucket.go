@@ -352,7 +352,7 @@ func (b *BitBucketClient) MergePullRequest(workspace string, repositorySlug stri
 
 	if statusCode == http.StatusUnauthorized {
 		log.Logger().FinishMessage("Merge pull-request")
-		return dto.BitBucketPullRequestInfoResponse{}, fmt.Errorf(ErrorMsgNoAccess)
+		return dto.BitBucketPullRequestInfoResponse{}, errors.New(ErrorMsgNoAccess)
 	}
 
 	if statusCode == http.StatusNotFound {
