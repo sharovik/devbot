@@ -1,6 +1,7 @@
 module github.com/sharovik/devbot
 
 go 1.21
+toolchain go1.23.7
 
 require (
 	github.com/aws/aws-sdk-go v1.50.34
@@ -9,7 +10,7 @@ require (
 	github.com/rs/zerolog v1.32.0
 	github.com/sharovik/orm v1.2.5
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/net v0.27.0
+	golang.org/x/net v0.36.0
 )
 
 require (
@@ -20,6 +21,6 @@ require (
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
